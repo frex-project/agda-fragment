@@ -1,0 +1,6 @@
+syn match agdaInfixFunction "\<∘\>\|\<≡\>\|\<⊔\>"
+syn match agdaFunction "\<_∘_\>\|\<_≡_\>\|\<_⊔_\>\|\<Opᵣ\>\|\<Op₁\>\|\<Op₂\>\|\<Opₗ\>\|\<Rel\>"
+syn match agdaFunction "\<Setω\>"
+syn match agdaFunction "\<IsMagma\>"
+syn match agdaFunction "\<IsCoproduct₁\>"
+syn match agdaFunction "\<IsEquivalence\>"

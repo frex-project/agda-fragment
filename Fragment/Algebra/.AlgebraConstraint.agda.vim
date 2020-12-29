@@ -1,0 +1,5 @@
+syn match agdaInfixFunction "\<⊔\>"
+syn match agdaFunction "\<_⊔_\>\|\<Opᵣ\>\|\<Op₁\>\|\<Op₂\>\|\<Opₗ\>\|\<Rel\>"
+syn match agdaFunction "\<Setoid\>"
+syn match agdaFunction "\<IsEquivalence\>"
+syn match agdaFunction "\<IsAlgebraConstraint₁\>"
