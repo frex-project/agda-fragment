@@ -1,0 +1,3 @@
+name: fragment-library
+depend: standard-library
+include: ./
