@@ -9,7 +9,7 @@ module Fragment.Algebra.Coproduct
   {N : Set a} (_≈ₙ_ : Rel N ℓ)
   where
 
-open import Level using (_⊔_; Setω)
+open import Level using (_⊔_; suc)
 open import Function using (_∘_)
 open import Relation.Binary.PropositionalEquality using (_≡_)
 
@@ -25,7 +25,7 @@ record IsCoproduct₁
     {_∙ₙ_ : Op₂ N}
     (IsAlgebra : {A : Set a} → Rel A ℓ → Op₂ A → Set a)
     (_ : IsAlgebra (_≈ₘ_) (_∙ₘ_))
-    (_ : IsAlgebra (_≈ₙ_) (_∙ₙ_)) : Setω where
+    (_ : IsAlgebra (_≈ₙ_) (_∙ₙ_)) : Set (suc (a ⊔ ℓ)) where
   field
     Coprod : Set a
     _≈_ : Rel Coprod ℓ
