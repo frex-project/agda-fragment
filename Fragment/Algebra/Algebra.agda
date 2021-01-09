@@ -8,7 +8,6 @@ module Fragment.Algebra.Algebra
   where
 
 open import Level using (_⊔_)
-
 open import Data.Product using (_×_)
 open import Data.Vec
 open import Data.Vec.Relation.Binary.Equality.Setoid S using (_≋_)
@@ -22,9 +21,8 @@ Interpretation Σ = ∀ {arity} → (f : ops Σ arity) → Vec A arity → A
 
 Congruence : (Σ : Signature) → (Interpretation Σ) → Set (a ⊔ ℓ)
 Congruence Σ ⟦_⟧ = ∀ {arity}
-                 → (f : ops Σ arity)
-                 → (xs : Vec A arity) → (ys : Vec A arity)
-                 → xs ≋ ys → ⟦ f ⟧ xs ≈ ⟦ f ⟧ ys
+                   → (f : ops Σ arity)
+                   → ∀ {xs ys} → xs ≋ ys → ⟦ f ⟧ xs ≈ ⟦ f ⟧ ys
 
 record IsAlgebra (Σ : Signature) : Set (a ⊔ ℓ) where
   field

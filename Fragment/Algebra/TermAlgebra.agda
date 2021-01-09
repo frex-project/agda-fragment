@@ -6,11 +6,8 @@ module Fragment.Algebra.TermAlgebra (Σ : Signature) where
 
 open import Relation.Binary using (Setoid; Rel; IsEquivalence)
 open import Relation.Binary.PropositionalEquality using (_≡_; cong; setoid)
-
 open import Data.Vec using (Vec; []; _∷_)
 open import Data.Vec.Relation.Binary.Equality.Propositional using (≋⇒≡)
-
-open Signature
 
 data Expr : Set where
   term : ∀ {arity} → (f : ops Σ arity) → Vec Expr arity → Expr
@@ -31,7 +28,7 @@ open import Fragment.Algebra.Algebra Herbrand
   using (Congruence; IsAlgebra)
 
 term-cong : Congruence Σ term
-term-cong f xs ys p = cong (term f) (≋⇒≡ p)
+term-cong f p = cong (term f) (≋⇒≡ p)
 
 |T| : IsAlgebra Σ
 |T| = record { ⟦_⟧     = term
