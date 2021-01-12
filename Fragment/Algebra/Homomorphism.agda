@@ -27,4 +27,4 @@ record Homomorphism : Set (a ⊔ b ⊔ ℓ₁ ⊔ ℓ₂) where
     h     : A → B
     h-hom : ∀ {arity} → (f : ops Σ arity)
             → (xs : Vec A arity)
-            → h (S⟦ f ⟧ xs) ≈ₜ T⟦ f ⟧ (map h xs)
+            → T⟦ f ⟧ (map h xs) ≈ₜ h (S⟦ f ⟧ xs)
