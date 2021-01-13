@@ -8,7 +8,6 @@ module Fragment.Algebra.Algebra
   where
 
 open import Level using (_⊔_)
-open import Data.Product using (_×_)
 open import Data.Vec
 open import Data.Vec.Relation.Binary.Equality.Setoid S using (_≋_)
 
