@@ -24,13 +24,17 @@ _<_>₂_ s f t = term f (s ∷ t ∷ [])
 Herbrand : Setoid _ _
 Herbrand = setoid Expr
 
-open import Fragment.Algebra.Algebra Herbrand
-  using (Congruence; IsAlgebra)
+open import Fragment.Algebra.Algebra
 
-term-cong : Congruence Σ term
+term-cong : Congruence Σ Herbrand term
 term-cong f p = cong (term f) (≋⇒≡ p)
 
-|T| : IsAlgebra Σ
-|T| = record { ⟦_⟧     = term
-             ; ⟦⟧-cong = term-cong
+|T|-isAlgebra : IsAlgebra Σ Herbrand
+|T|-isAlgebra = record { ⟦_⟧     = term
+                       ; ⟦⟧-cong = term-cong
+                       }
+
+|T| : Algebra Σ
+|T| = record { S         = Herbrand
+             ; isAlgebra = |T|-isAlgebra
              }

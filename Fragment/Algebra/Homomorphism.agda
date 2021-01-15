@@ -4,26 +4,24 @@ open import Fragment.Algebra.Signature
 
 module Fragment.Algebra.Homomorphism (Σ : Signature) where
 
-open import Level using (_⊔_)
+open import Level using (Level; _⊔_)
 open import Data.Vec
 open import Function
 open import Relation.Binary using (Rel; Setoid; IsEquivalence)
 
 open import Fragment.Algebra.Algebra
 
+private
+  variable
+    a b c d ℓ₁ ℓ₂ ℓ₃ ℓ₄ : Level
+
 module _
-  {a b ℓ₁ ℓ₂}
-  {S : Setoid a ℓ₁}
-  {T : Setoid b ℓ₂}
-  (Sᴬ : IsAlgebra S Σ)
-  (Tᴬ : IsAlgebra T Σ)
+  (S : Algebra Σ {a} {ℓ₁})
+  (T : Algebra Σ {b} {ℓ₂})
   where
 
-  open Setoid S renaming (Carrier to A; _≈_ to _≈ₛ_)
-  open Setoid T renaming (Carrier to B; _≈_ to _≈ₜ_)
-
-  open IsAlgebra Sᴬ renaming (⟦_⟧ to S⟦_⟧)
-  open IsAlgebra Tᴬ renaming (⟦_⟧ to T⟦_⟧)
+  open Algebra S renaming (Carrier to A; _≈_ to _≈ₛ_; ⟦_⟧ to S⟦_⟧)
+  open Algebra T renaming (Carrier to B; _≈_ to _≈ₜ_; ⟦_⟧ to T⟦_⟧)
 
   Homomorphic : (A → B) → Set (a ⊔ ℓ₂)
   Homomorphic h = ∀ {arity} → (f : ops Σ arity)
@@ -37,30 +35,30 @@ module _
       h-hom  : Homomorphic h
 
 module _
-  {a b ℓ₁ ℓ₂}
-  {S : Setoid a ℓ₁}
-  {T : Setoid b ℓ₂}
-  (Sᴬ : IsAlgebra S Σ)
-  (Tᴬ : IsAlgebra T Σ)
+  {S : Algebra Σ {a} {ℓ₁}}
+  {T : Algebra Σ {b} {ℓ₂}}
   where
 
-  open Setoid T
+  open Algebra T
+
+  infix 4 _≈ₕ_
+
+  _≈ₕ_ : Rel (S →ₕ T) (a ⊔ ℓ₂)
+  F ≈ₕ G = ∀ {x} → f x ≈ g x
+    where open _→ₕ_ F renaming (h to f)
+          open _→ₕ_ G renaming (h to g)
 
   open import Relation.Binary.Definitions
     using (Reflexive; Transitive; Symmetric)
-  open import Data.Vec.Relation.Binary.Equality.Setoid T
-
-  _≈ₕ_ : Rel (Sᴬ →ₕ Tᴬ) (a ⊔ ℓ₂)
-  fₕ ≈ₕ gₕ = ∀ {x} → (_→ₕ_.h fₕ) x ≈ (_→ₕ_.h gₕ) x
 
   ≈ₕ-refl : Reflexive _≈ₕ_
   ≈ₕ-refl = refl
 
   ≈ₕ-sym : Symmetric _≈ₕ_
-  ≈ₕ-sym fₕ≈ₕgₕ = ?
+  ≈ₕ-sym F≈ₕG {x} = sym (F≈ₕG {x})
 
   ≈ₕ-trans : Transitive _≈ₕ_
-  ≈ₕ-trans = ?
+  ≈ₕ-trans F≈ₕG G≈ₕH {x} = trans (F≈ₕG {x}) (G≈ₕH {x})
 
   {-
   ≈ₕ-isEquivalence : IsEquivalence _≈ₕ_
@@ -70,69 +68,63 @@ module _
                             }
 
   ≈ₕ-setoid : Setoid _ _
-  ≈ₕ-setoid = record { Carrier       = Sᴬ →ₕ Tᴬ
+  ≈ₕ-setoid = record { Carrier       = S →ₕ T
                      ; _≈_           = _≈ₕ_
                      ; isEquivalence = ≈ₕ-isEquivalence
                      }
   -}
 
-module _ {a ℓ} {S : Setoid a ℓ} (Sᴬ : IsAlgebra S Σ) where
+module _ (S : Algebra Σ {a} {ℓ₁}) where
 
-  open Setoid S renaming (Carrier to A)
-  open IsAlgebra Sᴬ
+  open Algebra S
 
   open import Data.Vec.Properties using (map-id)
-  open import Data.Vec.Relation.Binary.Equality.Setoid S
-  open import Relation.Binary.Reasoning.Setoid S
+  open import Data.Vec.Relation.Binary.Equality.Setoid Carrierₛ
 
   id-cong : Congruent _≈_ _≈_ id
   id-cong x≈y = x≈y
 
-  id-hom : Homomorphic Sᴬ Sᴬ id
-  id-hom {n} f xs = begin
-      ⟦ f ⟧ (map id xs)
-    ≈⟨ ⟦⟧-cong f $ IsEquivalence.reflexive (≋-isEquivalence n) (map-id xs) ⟩
-      ⟦ f ⟧ (xs)
-    ∎
+  id-hom : Homomorphic S S id
+  id-hom {n} f xs =
+    ⟦⟧-cong f $ IsEquivalence.reflexive (≋-isEquivalence n) (map-id xs)
 
-  idₕ : Sᴬ →ₕ Sᴬ
+  idₕ : S →ₕ S
   idₕ = record { h      = id
                ; h-cong = id-cong
                ; h-hom  = id-hom
                }
 
 module _
-  {a b c ℓ₁ ℓ₂ ℓ₃}
-  {S : Setoid a ℓ₁}
-  {T : Setoid b ℓ₂}
-  {U : Setoid c ℓ₃}
-  {Sᴬ : IsAlgebra S Σ}
-  {Tᴬ : IsAlgebra T Σ}
-  {Uᴬ : IsAlgebra U Σ}
-  (hₕ : Tᴬ →ₕ Uᴬ)
-  (gₕ : Sᴬ →ₕ Tᴬ)
+  {S : Algebra Σ {a} {ℓ₁}}
+  {T : Algebra Σ {b} {ℓ₂}}
+  {U : Algebra Σ {c} {ℓ₃}}
+  (H : T →ₕ U)
+  (G : S →ₕ T)
   where
 
-  open Setoid S renaming (Carrier to A; _≈_ to _≈ₛ_)
-  open Setoid T renaming (Carrier to B; _≈_ to _≈ₜ_)
-  open Setoid U renaming (Carrier to C; _≈_ to _≈ᵤ_; isEquivalence to ≈ᵤ-isEquivalence)
+  open Algebra S renaming (Carrier to A; _≈_ to _≈ₛ_; ⟦_⟧ to S⟦_⟧)
+  open Algebra T renaming (Carrier to B; _≈_ to _≈ₜ_; ⟦_⟧ to T⟦_⟧)
+  open Algebra U
+    renaming ( Carrier       to C
+             ; _≈_           to _≈ᵤ_
+             ; Carrierₛ      to Cₛ
+             ; isEquivalence to ≈ᵤ-isEquivalence
+             ; ⟦_⟧           to U⟦_⟧
+             ; ⟦⟧-cong       to U⟦⟧-cong
+             )
 
-  open IsAlgebra Sᴬ renaming (⟦_⟧ to S⟦_⟧)
-  open IsAlgebra Tᴬ renaming (⟦_⟧ to T⟦_⟧)
-  open IsAlgebra Uᴬ renaming (⟦_⟧ to U⟦_⟧; ⟦⟧-cong to U⟦⟧-cong)
-
-  open _→ₕ_ hₕ
-  open _→ₕ_ gₕ renaming (h to g; h-cong to g-cong; h-hom to g-hom)
+  open _→ₕ_ H
+  open _→ₕ_ G renaming (h to g; h-cong to g-cong; h-hom to g-hom)
 
   open import Data.Vec.Properties using (map-∘)
-  open import Data.Vec.Relation.Binary.Equality.Setoid U
-  open import Relation.Binary.Reasoning.Setoid U
+  open import Data.Vec.Relation.Binary.Equality.Setoid Cₛ
+  open import Relation.Binary.Reasoning.Setoid Cₛ
   open import Function.Construct.Composition using (congruent)
 
   ∘ₕ-cong : Congruent _≈ₛ_ _≈ᵤ_ (h ∘ g)
   ∘ₕ-cong = congruent _≈ₛ_ _≈ₜ_ _≈ᵤ_ g-cong h-cong
 
-  ∘ₕ-hom : Homomorphic Sᴬ Uᴬ (h ∘ g)
+  ∘ₕ-hom : Homomorphic S U (h ∘ g)
   ∘ₕ-hom {n} f xs = begin
       U⟦ f ⟧ (map (h ∘ g) xs)
     ≈⟨ U⟦⟧-cong f $ IsEquivalence.reflexive (≋-isEquivalence n) (map-∘ h g xs) ⟩
@@ -143,26 +135,45 @@ module _
       h (g (S⟦ f ⟧ xs))
     ∎
 
-  _∘ₕ_ : (Sᴬ →ₕ Uᴬ)
+  infixr 9 _∘ₕ_
+
+  _∘ₕ_ : (S →ₕ U)
   _∘ₕ_ = record { h      = h ∘ g
                 ; h-cong = ∘ₕ-cong
                 ; h-hom  = ∘ₕ-hom
                 }
 
 module _
-  {a b c d ℓ₁ ℓ₂ ℓ₃ ℓ₄}
-  {S : Setoid a ℓ₁}
-  {T : Setoid b ℓ₂}
-  {U : Setoid c ℓ₃}
-  {V : Setoid d ℓ₄}
-  {Sᴬ : IsAlgebra S Σ}
-  {Tᴬ : IsAlgebra T Σ}
-  {Uᴬ : IsAlgebra U Σ}
-  {Vᴬ : IsAlgebra V Σ}
-  (hₕ : Uᴬ →ₕ Vᴬ)
-  (gₕ : Tᴬ →ₕ Uᴬ)
-  (fₕ : Sᴬ →ₕ Tᴬ)
+  {S : Algebra Σ {a} {ℓ₁}}
+  {T : Algebra Σ {b} {ℓ₂}}
+  (H : S →ₕ T)
   where
 
-  ∘ₕ-assoc : _≈ₕ_ Sᴬ Vᴬ ((hₕ ∘ₕ gₕ) ∘ₕ fₕ) (hₕ ∘ₕ (gₕ ∘ₕ fₕ))
-  ∘ₕ-assoc = ?
+  open Algebra T
+
+  idₕ-unitˡ : idₕ T ∘ₕ H ≈ₕ H
+  idₕ-unitˡ {x} = refl
+
+  idₕ-unitʳ : H ∘ₕ idₕ S ≈ₕ H
+  idₕ-unitʳ {x} = refl
+
+module _
+  {S : Algebra Σ {a} {ℓ₁}}
+  {T : Algebra Σ {b} {ℓ₂}}
+  {U : Algebra Σ {c} {ℓ₃}}
+  {V : Algebra Σ {d} {ℓ₄}}
+  (H : U →ₕ V)
+  (G : T →ₕ U)
+  (F : S →ₕ T)
+  where
+
+  open Algebra V
+
+  open _→ₕ_ H
+  open _→ₕ_ G renaming (h to g; h-cong to g-cong; h-hom to g-hom)
+  open _→ₕ_ F renaming (h to f; h-cong to f-cong; h-hom to f-hom)
+
+  open import Relation.Binary.Reasoning.Setoid Carrierₛ
+
+  ∘ₕ-assoc : (H ∘ₕ G) ∘ₕ F ≈ₕ H ∘ₕ (G ∘ₕ F)
+  ∘ₕ-assoc {x} = refl
