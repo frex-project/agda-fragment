@@ -6,7 +6,7 @@ module Fragment.Algebra.Homomorphism (Σ : Signature) where
 
 open import Level using (Level; _⊔_)
 open import Data.Vec
-open import Function
+open import Function using (_∘_; id; _$_)
 open import Relation.Binary using (Rel; Setoid; IsEquivalence)
 
 open import Fragment.Algebra.Algebra
@@ -23,6 +23,8 @@ module _
   open Algebra S renaming (Carrier to A; _≈_ to _≈ₛ_; ⟦_⟧ to S⟦_⟧)
   open Algebra T renaming (Carrier to B; _≈_ to _≈ₜ_; ⟦_⟧ to T⟦_⟧)
 
+  open import Function.Definitions using (Congruent) public
+
   Homomorphic : (A → B) → Set (a ⊔ ℓ₂)
   Homomorphic h = ∀ {arity} → (f : ops Σ arity)
                   → (xs : Vec A arity)
@@ -37,6 +39,20 @@ module _
 module _
   {S : Algebra Σ {a} {ℓ₁}}
   {T : Algebra Σ {b} {ℓ₂}}
+  (F : S →ₕ T)
+  where
+
+  open Algebra S renaming (Carrier to A)
+  open Algebra T renaming (Carrier to B)
+
+  open _→ₕ_ F renaming (h to f)
+
+  applyₕ : A → B
+  applyₕ x = f x
+
+module Equivalence
+  (S : Algebra Σ {a} {ℓ₁})
+  (T : Algebra Σ {b} {ℓ₂})
   where
 
   open Algebra T
@@ -44,9 +60,7 @@ module _
   infix 4 _≈ₕ_
 
   _≈ₕ_ : Rel (S →ₕ T) (a ⊔ ℓ₂)
-  F ≈ₕ G = ∀ {x} → f x ≈ g x
-    where open _→ₕ_ F renaming (h to f)
-          open _→ₕ_ G renaming (h to g)
+  F ≈ₕ G = ∀ {x} → applyₕ F x ≈ applyₕ G x
 
   open import Relation.Binary.Definitions
     using (Reflexive; Transitive; Symmetric)
@@ -60,7 +74,7 @@ module _
   ≈ₕ-trans : Transitive _≈ₕ_
   ≈ₕ-trans F≈ₕG G≈ₕH {x} = trans (F≈ₕG {x}) (G≈ₕH {x})
 
-  {-
+{-
   ≈ₕ-isEquivalence : IsEquivalence _≈ₕ_
   ≈ₕ-isEquivalence = record { refl  = ≈ₕ-refl
                             ; sym   = ≈ₕ-sym
@@ -72,7 +86,7 @@ module _
                      ; _≈_           = _≈ₕ_
                      ; isEquivalence = ≈ₕ-isEquivalence
                      }
-  -}
+-}
 
 module _ (S : Algebra Σ {a} {ℓ₁}) where
 
@@ -150,6 +164,7 @@ module _
   where
 
   open Algebra T
+  open Equivalence S T
 
   idₕ-unitˡ : idₕ T ∘ₕ H ≈ₕ H
   idₕ-unitˡ {x} = refl
@@ -168,12 +183,7 @@ module _
   where
 
   open Algebra V
-
-  open _→ₕ_ H
-  open _→ₕ_ G renaming (h to g; h-cong to g-cong; h-hom to g-hom)
-  open _→ₕ_ F renaming (h to f; h-cong to f-cong; h-hom to f-hom)
-
-  open import Relation.Binary.Reasoning.Setoid Carrierₛ
+  open Equivalence S V
 
   ∘ₕ-assoc : (H ∘ₕ G) ∘ₕ F ≈ₕ H ∘ₕ (G ∘ₕ F)
   ∘ₕ-assoc {x} = refl
