@@ -1,70 +1,44 @@
 {-# OPTIONS --without-K --safe #-}
 
-open import Relation.Binary using (Rel; IsEquivalence)
-open import Algebra.Core
+open import Fragment.Algebra.Signature
 
-module Fragment.Algebra.Coproduct
-  {a ℓ}
-  {M : Set a} (_≈ₘ_ : Rel M ℓ)
-  {N : Set a} (_≈ₙ_ : Rel N ℓ)
+module Fragment.Algebra.Coproduct (Σ : Signature) where
+
+open import Fragment.Algebra.Algebra
+
+open import Level using (Level; Setω)
+
+private
+  variable
+    a b c ℓ₁ ℓ₂ ℓ₃ : Level
+
+module _
+  (S : Algebra Σ {a} {ℓ₁})
+  (T : Algebra Σ {b} {ℓ₂})
+  (S+T : Algebra Σ {c} {ℓ₃})
   where
 
-open import Level using (_⊔_; suc)
-open import Function using (_∘_)
-open import Relation.Binary.PropositionalEquality using (_≡_)
+  open import Fragment.Algebra.Homomorphism Σ
+  open import Fragment.Algebra.Homomorphism.Setoid Σ using (_≡ₕ_)
 
-open import Algebra.Structures using (IsMagma)
-open import Algebra.Morphism.Definitions using (Homomorphic₂)
+  record IsCoproduct : Setω where
+    field
+      inl : S →ₕ S+T
+      inr : T →ₕ S+T
 
--------------------------------------------------------------------------------
--- Coproduct of algebras with a single binary operation
--------------------------------------------------------------------------------
+      [_,_] : ∀ {d ℓ₄} {W : Algebra Σ {d} {ℓ₄}}
+              → (S →ₕ W) → (T →ₕ W) → S+T →ₕ W
 
-record IsCoproduct₁
-    {_∙ₘ_ : Op₂ M}
-    {_∙ₙ_ : Op₂ N}
-    (IsAlgebra : {A : Set a} → Rel A ℓ → Op₂ A → Set a)
-    (_ : IsAlgebra (_≈ₘ_) (_∙ₘ_))
-    (_ : IsAlgebra (_≈ₙ_) (_∙ₙ_)) : Set (suc (a ⊔ ℓ)) where
-  field
-    Coprod : Set a
-    _≈_ : Rel Coprod ℓ
-    _∙_ : Op₂ Coprod
+      .commute₁ : ∀ {d ℓ₄} {W : Algebra Σ {d} {ℓ₄}}
+                  → {F : S →ₕ W} {G : T →ₕ W}
+                  → [ F , G ] ∘ₕ inl ≡ₕ F
 
-    isAlgebra : IsAlgebra (_≈_) (_∙_)
+      .commute₂ : ∀ {d ℓ₄} {W : Algebra Σ {d} {ℓ₄}}
+                  → {F : S →ₕ W} {G : T →ₕ W}
+                  → [ F , G ] ∘ₕ inr ≡ₕ G
 
-    inl : M → Coprod
-    inr : N → Coprod
-
-    .inl-Homomorhpic₂ : Homomorphic₂ M Coprod (_≈_) inl (_∙ₘ_) (_∙_)
-    .inr-Homomorhpic₂ : Homomorphic₂ N Coprod (_≈_) inr (_∙ₙ_) (_∙_)
-
-    [_,_] : ∀ {O _≈ₒ_ _∙ₒ_ f g} {{ _ : IsAlgebra (_≈ₒ_) (_∙ₒ_) }}
-            → (Homomorphic₂ M O (_≈ₒ_) f (_∙ₘ_) (_∙ₒ_))
-            → (Homomorphic₂ N O (_≈ₒ_) g (_∙ₙ_) (_∙ₒ_))
-            → (Coprod → O)
-
-    .[]-Homomorhpic₂ : ∀ {O _≈ₒ_ _∙ₒ_ f g} {{ _ : IsAlgebra (_≈ₒ_) (_∙ₒ_) }}
-                       → (p : Homomorphic₂ M O (_≈ₒ_) f (_∙ₘ_) (_∙ₒ_))
-                       → (q : Homomorphic₂ N O (_≈ₒ_) g (_∙ₙ_) (_∙ₒ_))
-                       → Homomorphic₂ Coprod O (_≈ₒ_) [ p , q ] (_∙_) (_∙ₒ_)
-
-    -- FIXME only need to be equivalences up to _≈ₒ_ not _≡_
-    .commute₁ : ∀ {O _≈ₒ_ _∙ₒ_ f g} {{ _ : IsAlgebra (_≈ₒ_) (_∙ₒ_) }}
-                → (p : Homomorphic₂ M O (_≈ₒ_) f (_∙ₘ_) (_∙ₒ_))
-                → (q : Homomorphic₂ N O (_≈ₒ_) g (_∙ₙ_) (_∙ₒ_))
-                → [ p , q ] ∘ inl ≡ f
-
-    .commute₂ : ∀ {O _≈ₒ_ _∙ₒ_ f g} {{ _ : IsAlgebra (_≈ₒ_) (_∙ₒ_) }}
-                → (p : Homomorphic₂ M O (_≈ₒ_) f (_∙ₘ_) (_∙ₒ_))
-                → (q : Homomorphic₂ N O (_≈ₒ_) g (_∙ₙ_) (_∙ₒ_))
-                → [ p , q ] ∘ inr ≡ g
-
-    .universal : ∀ {O _≈ₒ_ _∙ₒ_} {{isAlgebra : IsAlgebra (_≈ₒ_) (_∙ₒ_)}}
-                 → (∀ {f g h}
-                    → (p : Homomorphic₂ M O (_≈ₒ_) f (_∙ₘ_) (_∙ₒ_))
-                    → (q : Homomorphic₂ N O (_≈ₒ_) g (_∙ₙ_) (_∙ₒ_))
-                    → (r : Homomorphic₂ Coprod O (_≈ₒ_) h (_∙_) (_∙ₒ_))
-                    → h ∘ inl ≡ f
-                    → h ∘ inr ≡ g
-                    → [ p , q ] ≡ h)
+      .universal : ∀ {d ℓ₄} {W : Algebra Σ {d} {ℓ₄}}
+                   → {F : S →ₕ W} {G : T →ₕ W} {H : S+T →ₕ W}
+                   → H ∘ₕ inl ≡ₕ F
+                   → H ∘ₕ inr ≡ₕ G
+                   → [ F , G ] ≡ₕ H

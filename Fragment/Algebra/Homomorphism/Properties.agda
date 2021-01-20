@@ -21,7 +21,7 @@ module _
 
   open Algebra T
   
-  open import Fragment.Algebra.Homomorphism.Setoid Σ S T
+  open import Fragment.Algebra.Homomorphism.Setoid Σ
 
   idₕ-unitˡ : idₕ T ∘ₕ H ≡ₕ H
   idₕ-unitˡ {x} = refl
@@ -41,7 +41,7 @@ module _
 
   open Algebra V
 
-  open import Fragment.Algebra.Homomorphism.Setoid Σ S V
+  open import Fragment.Algebra.Homomorphism.Setoid Σ
 
   ∘ₕ-assoc : (H ∘ₕ G) ∘ₕ F ≡ₕ H ∘ₕ (G ∘ₕ F)
   ∘ₕ-assoc {x} = refl
