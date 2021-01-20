@@ -34,11 +34,10 @@ F ≡ₕ G = ∀ {x} → applyₕ F x ≈ applyₕ G x
 ≡ₕ-trans : Transitive _≡ₕ_
 ≡ₕ-trans F≡ₕG G≡ₕH {x} = trans (F≡ₕG {x}) (G≡ₕH {x})
 
-{-
 ≡ₕ-isEquivalence : IsEquivalence _≡ₕ_
-≡ₕ-isEquivalence = record { refl  = ≡ₕ-refl
-                          ; sym   = ≡ₕ-sym
-                          ; trans = ≡ₕ-trans
+≡ₕ-isEquivalence = record { refl  = λ {F} → ≡ₕ-refl {F}
+                          ; sym   = λ {F G} → ≡ₕ-sym {F} {G}
+                          ; trans = λ {F G H} → ≡ₕ-trans {F} {G} {H}
                           }
 
 ≡ₕ-setoid : Setoid _ _
@@ -46,4 +45,3 @@ F ≡ₕ G = ∀ {x} → applyₕ F x ≈ applyₕ G x
                    ; _≈_           = _≡ₕ_
                    ; isEquivalence = ≡ₕ-isEquivalence
                    }
--}
