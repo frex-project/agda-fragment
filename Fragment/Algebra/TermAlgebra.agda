@@ -35,6 +35,6 @@ term-cong f p = cong (term f) (≋⇒≡ p)
                        }
 
 |T| : Algebra Σ
-|T| = record { S         = Herbrand
+|T| = record { Carrierₛ  = Herbrand
              ; isAlgebra = |T|-isAlgebra
              }
