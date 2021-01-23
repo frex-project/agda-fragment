@@ -5,7 +5,7 @@ open import Fragment.Algebra.Signature
 module Fragment.Algebra.Algebra (Σ : Signature) where
 
 open import Level using (Level; _⊔_; suc)
-open import Relation.Binary using (Setoid; Rel; IsEquivalence)
+open import Relation.Binary using (Setoid)
 
 private
   variable

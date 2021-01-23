@@ -4,25 +4,26 @@ module Fragment.Equational.Theory where
 
 open import Fragment.Algebra.Signature
 
+import Fragment.Algebra.TermAlgebra as T
+
 open import Data.Nat using (ℕ)
-open import Data.Fin using (#_)
-open import Data.List using (List; _∷_; [])
-open import Data.Product using (_×_; _,_)
-open import Data.Sum using (inj₁; inj₂)
+open import Data.List using (List)
+open import Data.Product using (_×_)
 
 Eq : (Σ : Signature) → (n : ℕ) → Set
 Eq Σ n = Expr × Expr
-  where open import Fragment.Algebra.TermAlgebra (Σ ⦉ n ⦊)
+  where open T (Σ ⦉ n ⦊)
 
 record Theory : Set₁ where
   field
     Σ   : Signature
-    eqs : (n : ℕ) → List (Eq Σ n)
+    eqs : (arity : ℕ) → List (Eq Σ arity)
 
   open Signature Σ
 
 open Theory public
 
+{-
 module _ (Σ : Signature) (e : ops Σ 0) where
 
   open import Fragment.Algebra.TermAlgebra (Σ ⦉ 1 ⦊)
@@ -67,3 +68,4 @@ monoid-theory : Theory
 monoid-theory = record { Σ   = monoid-sig
                        ; eqs = monoid-eqs
                        }
+-}

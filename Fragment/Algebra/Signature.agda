@@ -10,19 +10,21 @@ record Signature : Set₁ where
   field
     ops : ℕ → Set
 
-frex : (ℕ → Set) → ℕ → ℕ → Set
-frex ops n 0 = ops 0 ⊎ Fin n
-frex ops _ n = ops n
-
-_⦉_⦊ : (Σ : Signature) → ℕ → Signature
-Σ ⦉ n ⦊ = record { ops = frex ops n }
-  where open Signature Σ
-
 open Signature public
 
+frex : Signature → ℕ → ℕ → Set
+frex Σ n 0 = (ops Σ 0) ⊎ Fin n
+frex Σ _ n = ops Σ n
+
+_⦉_⦊ : (Σ : Signature) → ℕ → Signature
+Σ ⦉ n ⦊ = record { ops = frex Σ n }
+
+
+{-
 data MonoidOp : ℕ → Set where
   e : MonoidOp 0
   • : MonoidOp 2
 
 monoid-sig : Signature
 monoid-sig = record { ops = MonoidOp }
+-}
