@@ -17,6 +17,7 @@ private
 
 open Theory Θ
 
+{--
 _⊨⟨_⟩_ : {n : ℕ}
          → (S : Setoid a ℓ)
          → (⟦_⟧ : Interpretation (Σ ⦉ n ⦊) S)
@@ -24,7 +25,6 @@ _⊨⟨_⟩_ : {n : ℕ}
          → Set a
 S ⊨⟨ f ⟩ eq = ?
 
-{--
 _⊨_ : (Algebra (Σ Θ) {a} {ℓ})
       → {n : ℕ} → Eq (Σ Θ) n
       → Set a
