@@ -18,13 +18,3 @@ frex Σ _ n = ops Σ n
 
 _⦉_⦊ : (Σ : Signature) → ℕ → Signature
 Σ ⦉ n ⦊ = record { ops = frex Σ n }
-
-
-{-
-data MonoidOp : ℕ → Set where
-  e : MonoidOp 0
-  • : MonoidOp 2
-
-monoid-sig : Signature
-monoid-sig = record { ops = MonoidOp }
--}

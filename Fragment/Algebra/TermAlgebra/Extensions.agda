@@ -6,10 +6,15 @@ open import Fragment.Algebra.Signature
 open import Fragment.Algebra.Algebra
 
 import Relation.Binary.PropositionalEquality as PE
+open import Level using (Level)
 open import Data.Nat using (ℕ)
 open import Data.Sum using (inj₁)
 open import Data.Vec using ([]; _∷_)
 open import Data.Vec.Relation.Binary.Equality.Propositional using (≋⇒≡)
+
+private
+  variable
+    a ℓ : Level
 
 module _ (Σ : Signature) (n : ℕ) where
 
