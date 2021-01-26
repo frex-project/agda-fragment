@@ -32,6 +32,7 @@ module _ (S : Setoid a ℓ) where
       ⟦⟧-cong : Congruence ⟦_⟧
 
 record Algebra : Set (suc a ⊔ suc ℓ) where
+  constructor algebra
   field
     Carrierₛ  : Setoid a ℓ
     isAlgebra : IsAlgebra Carrierₛ
