@@ -13,7 +13,7 @@ open import Fragment.Algebra.Homomorphism.Setoid Σ using (_≡ₕ_)
 
 open import Level using (Level)
 
-open import Relation.Binary using (Setoid; Rel; IsEquivalence)
+open import Relation.Binary using (IsEquivalence)
 open import Relation.Binary.PropositionalEquality as PE using (_≡_)
 
 import Data.Vec.Relation.Binary.Pointwise.Inductive as PW

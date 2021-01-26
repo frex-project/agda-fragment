@@ -7,12 +7,18 @@ open import Fragment.Algebra.Signature
 open import Fragment.Equational.Theory
 
 open import Level using (Level; _⊔_)
+open import Function using (_$_)
+
 open import Data.Fin using (Fin)
 open import Data.Nat using (ℕ)
 open import Data.Product using (_,_)
 open import Data.Sum using (inj₁; inj₂)
-open import Data.Vec using (Vec; []; _∷_; map)
+
+open import Relation.Binary using (IsEquivalence)
 open import Relation.Binary.PropositionalEquality as PE using (_≡_)
+
+import Data.Vec.Relation.Binary.Pointwise.Inductive as PW
+open import Data.Vec using (Vec; []; _∷_; map)
 
 private
   variable
@@ -34,14 +40,14 @@ module _ {Σ n}
   open import Fragment.Algebra.TermAlgebra.Extensions
 
   open import Relation.Binary.Reasoning.Setoid Carrierₛ
-  open import Data.Vec.Relation.Binary.Equality.Setoid Carrierₛ using (_≋_)
+  open import Data.Vec.Relation.Binary.Equality.Setoid Carrierₛ
 
   Substitution : (Expr → A) → Set a
   Substitution f = ∀ {k : Fin n}
                    → f (term (inj₂ k) []) ≡ θ k
 
   Substitutionₕ : (|T| Σ ⦉ n ⦊) →ₕ S → Set a
-  Substitutionₕ F = Substitution (_→ₕ_.h F)
+  Substitutionₕ H = Substitution (_→ₕ_.h H)
 
   mutual
     subst-args : ∀ {arity} → Vec Expr arity → Vec A arity
@@ -62,7 +68,12 @@ module _ {Σ n}
   subst-cong x≡y = reflexive (PE.cong subst x≡y)
 
   subst-hom : Homomorphic (|T| Σ ⦉ n ⦊) S subst
-  subst-hom f xs = ?
+  subst-hom {_} f []       = refl
+  subst-hom {m} f (x ∷ xs) =
+    ⟦⟧-cong f $
+      IsEquivalence.reflexive
+        (≋-isEquivalence m)
+        (subst-args≡map {_} {x ∷ xs})
 
   substₕ : (|T| Σ ⦉ n ⦊) →ₕ S
   substₕ = record { h      = subst
@@ -75,6 +86,34 @@ module _ {Σ n}
 
   substₕ-subst : Substitutionₕ substₕ
   substₕ-subst = subst-subst
+
+  mutual
+    subst-args-universal : (H : (|T| Σ ⦉ n ⦊) →ₕ S)
+                           → Substitutionₕ H
+                           → ∀ {arity} {xs : Vec Expr arity}
+                           → map (_→ₕ_.h H) xs ≋ subst-args xs
+    subst-args-universal H _       {_} {[]}     = PW.[]
+    subst-args-universal H h-subst {_} {x ∷ xs} =
+      PW._∷_
+        (substₕ-universal H h-subst {x})
+        (subst-args-universal H h-subst {_} {xs})
+
+    substₕ-universal : (H : (|T| Σ ⦉ n ⦊) →ₕ S)
+                       → Substitutionₕ H
+                       → H ≡ₕ substₕ
+    substₕ-universal H h-subst {term (inj₂ k) []} = reflexive (h-subst {k})
+    substₕ-universal H _       {term (inj₁ f) []} = sym (h-hom f [])
+      where open _→ₕ_ H
+    substₕ-universal H h-subst {term f (x ∷ xs)}  = begin
+        h (term f (x ∷ xs))
+      ≈⟨ sym (h-hom f (x ∷ xs)) ⟩
+        ⟦ f ⟧ (map h (x ∷ xs))
+      ≈⟨ ⟦⟧-cong f (subst-args-universal H h-subst) ⟩
+        ⟦ f ⟧ (subst-args (x ∷ xs))
+      ≡⟨⟩
+        subst (term f (x ∷ xs))
+      ∎
+      where open _→ₕ_ H
 
 _⊨⟨_⟩_ : ∀ {n Σ}
          → (S : Algebra Σ {a} {ℓ})
