@@ -10,10 +10,8 @@ open import Data.List using (List; []; _∷_)
 
 module _ where
 
-  private
-
-    data MagmaOp : ℕ → Set where
-      • : MagmaOp 2
+  data MagmaOp : ℕ → Set where
+    • : MagmaOp 2
 
   Σ-magma : Signature
   Σ-magma = record { ops = MagmaOp }
@@ -33,11 +31,9 @@ module _ where
 
 module _ where
 
-  private
-
-    data MonoidOp : ℕ → Set where
-      e : MonoidOp 0
-      • : MonoidOp 2
+  data MonoidOp : ℕ → Set where
+    e : MonoidOp 0
+    • : MonoidOp 2
 
   Σ-monoid : Signature
   Σ-monoid = record { ops = MonoidOp }
@@ -55,12 +51,10 @@ module _ where
 
 module _ where
 
-  private
-
-    data GroupOp : ℕ → Set where
-      e : GroupOp 0
-      ~ : GroupOp 1
-      • : GroupOp 2
+  data GroupOp : ℕ → Set where
+    e : GroupOp 0
+    ~ : GroupOp 1
+    • : GroupOp 2
 
   Σ-group : Signature
   Σ-group = record { ops = GroupOp }
