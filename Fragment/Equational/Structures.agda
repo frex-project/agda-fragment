@@ -50,7 +50,7 @@ module _ (S : Setoid a ℓ) where
                            }
 
     magma→models : Models Θ-magma magma→algebra
-    magma→models {_} = []
+    magma→models ()
 
     magma→isModel : IsModel Θ-magma S
     magma→isModel = record { isAlgebra = magma→isAlgebra
@@ -81,13 +81,9 @@ module _ (S : Setoid a ℓ) where
 
     open IsSemigroup M
 
-    semigroup⊨assoc : (magma→algebra isMagma) ⊨ (L.assoc Σ-magma MagmaOp.•)
-    semigroup⊨assoc {θ} = assoc (θ (# 0)) (θ (# 1)) (θ (# 2))
-
     semigroup→models : Models Θ-semigroup (magma→algebra isMagma)
-    semigroup→models {3} =
-      (λ {θ} → semigroup⊨assoc {θ}) ∷ (magma→models isMagma {3})
-    semigroup→models {n} = ?
+    semigroup→models assoc {θ} =
+      (IsSemigroup.assoc M) (θ (# 0)) (θ (# 1)) (θ (# 2))
 
     semigroup→isModel : IsModel Θ-semigroup S
     semigroup→isModel = record { isAlgebra = magma→isAlgebra isMagma
@@ -107,14 +103,11 @@ module _ (S : Setoid a ℓ) where
 
       M→isModel : IsModel Θ-magma S
       M→isModel = record { isAlgebra = isAlgebra
-                         ; models    = λ {_} → []
+                         ; models    = λ ()
                          }
 
-      M⊨assoc : (algebra S isAlgebra) ⊨ L.assoc Σ-magma MagmaOp.•
-      M⊨assoc {θ} = head (models {3}) {θ}
-
     isModel→assoc : Associative (isModel→∙ M→isModel)
-    isModel→assoc x y z = M⊨assoc {θ}
+    isModel→assoc x y z = models assoc {θ}
       where θ : Fin 3 → A
             θ zero             = x
             θ (suc zero)       = y

@@ -16,8 +16,9 @@ Eq Σ n = Expr × Expr
 
 record Theory : Set₁ where
   field
-    Σ   : Signature
-    eqs : (arity : ℕ) → List (Eq Σ arity)
+    Σ     : Signature
+    eqs   : ℕ → Set
+    _⟦_⟧ₑ : ∀ {arity : ℕ} → (eqs arity) → Eq Σ arity
 
   open Signature Σ
 

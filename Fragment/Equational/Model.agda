@@ -32,7 +32,7 @@ _⊨_ : ∀ {Σ n}
 _⊨_ S eq = ∀ {θ} → S ⊨⟨ θ ⟩ eq
 
 Models : (Θ : Theory) → Algebra (Σ Θ) {a} {ℓ} → Set (a ⊔ ℓ)
-Models Θ S = ∀ {n} → All (S ⊨_) (eqs Θ n)
+Models Θ S = ∀ {n} → (eq : eqs Θ n) → S ⊨ (Θ ⟦ eq ⟧ₑ)
 
 module _ (Θ : Theory) (S : Setoid a ℓ) where
 

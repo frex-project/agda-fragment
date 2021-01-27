@@ -16,18 +16,26 @@ module _ where
   Σ-magma : Signature
   Σ-magma = record { ops = MagmaOp }
 
-  open import Fragment.Equational.Laws Σ-magma
+  import Fragment.Equational.Laws Σ-magma as L
 
-  magma-eqs : (arity : ℕ) → List (Eq Σ-magma arity)
-  magma-eqs _ = []
+  data MagmaEq : ℕ → Set where
 
-  semigroup-eqs : (arity : ℕ) → List (Eq Σ-magma arity)
-  semigroup-eqs 3 = (assoc •) ∷ magma-eqs 3
-  semigroup-eqs n = magma-eqs n
+  magma-eqs : ∀ {n} → MagmaEq n → Eq Σ-magma n
+  magma-eqs ()
 
-  csemigroup-eqs : (arity : ℕ) → List (Eq Σ-magma arity)
-  csemigroup-eqs 2 = (comm •) ∷ semigroup-eqs 2
-  csemigroup-eqs n = semigroup-eqs n
+  data SemigroupEq : ℕ → Set where
+    assoc : SemigroupEq 3
+
+  semigroup-eqs : ∀ {n} → SemigroupEq n → Eq Σ-magma n
+  semigroup-eqs assoc = L.assoc •
+
+  data CSemigroupEq : ℕ → Set where
+    comm  : CSemigroupEq 2
+    assoc : CSemigroupEq 3
+
+  csemigroup-eqs : ∀ {n} → CSemigroupEq n → Eq Σ-magma n
+  csemigroup-eqs comm  = L.comm •
+  csemigroup-eqs assoc = L.assoc •
 
 module _ where
 
@@ -38,16 +46,29 @@ module _ where
   Σ-monoid : Signature
   Σ-monoid = record { ops = MonoidOp }
 
-  open import Fragment.Equational.Laws Σ-monoid
+  import Fragment.Equational.Laws Σ-monoid as L
 
-  monoid-eqs : (arity : ℕ) → List (Eq Σ-monoid arity)
-  monoid-eqs 1 = (idₗ e •) ∷ (idᵣ e •) ∷ []
-  monoid-eqs 3 = (assoc •) ∷ []
-  monoid-eqs _ = []
+  data MonoidEq : ℕ → Set where
+    idₗ   : MonoidEq 1
+    idᵣ   : MonoidEq 1
+    assoc : MonoidEq 3
 
-  cmonoid-eqs : (arity : ℕ) → List (Eq Σ-monoid arity)
-  cmonoid-eqs 2 = (comm •) ∷ monoid-eqs 2
-  cmonoid-eqs n = monoid-eqs n
+  monoid-eqs : ∀ {n} → MonoidEq n → Eq Σ-monoid n
+  monoid-eqs idₗ   = L.idₗ e •
+  monoid-eqs idᵣ   = L.idᵣ e •
+  monoid-eqs assoc = L.assoc •
+
+  data CMonoidEq : ℕ → Set where
+    idₗ   : CMonoidEq 1
+    idᵣ   : CMonoidEq 1
+    comm  : CMonoidEq 2
+    assoc : CMonoidEq 3
+
+  cmonoid-eqs : ∀ {n} → CMonoidEq n → Eq Σ-monoid n
+  cmonoid-eqs idₗ   = L.idₗ e •
+  cmonoid-eqs idᵣ   = L.idᵣ e •
+  cmonoid-eqs comm  = L.comm •
+  cmonoid-eqs assoc = L.assoc •
 
 module _ where
 
@@ -59,48 +80,76 @@ module _ where
   Σ-group : Signature
   Σ-group = record { ops = GroupOp }
 
-  open import Fragment.Equational.Laws Σ-group
+  import Fragment.Equational.Laws Σ-group as L
 
-  group-eqs : (arity : ℕ) → List (Eq Σ-group arity)
-  group-eqs 1 = (idₗ e •) ∷ (idᵣ e •) ∷ (invₗ e ~ •) ∷ (invᵣ e ~ •) ∷ []
-  group-eqs 3 = (assoc •) ∷ []
-  group-eqs _ = []
+  data GroupEq : ℕ → Set where
+    idₗ   : GroupEq 1
+    idᵣ   : GroupEq 1
+    invₗ  : GroupEq 1
+    invᵣ  : GroupEq 1
+    assoc : GroupEq 3
 
-  abelian-group-eqs : (arity : ℕ) → List (Eq Σ-group arity)
-  abelian-group-eqs 2 = (comm •) ∷ group-eqs 2
-  abelian-group-eqs n = group-eqs n
+  group-eqs : ∀ {n} → GroupEq n → Eq Σ-group n
+  group-eqs idₗ   = L.idₗ e •
+  group-eqs idᵣ   = L.idᵣ e •
+  group-eqs invₗ  = L.invₗ e ~ •
+  group-eqs invᵣ  = L.invᵣ e ~ •
+  group-eqs assoc = L.assoc •
+
+  data AbelianGroupEq : ℕ → Set where
+    idₗ   : AbelianGroupEq 1
+    idᵣ   : AbelianGroupEq 1
+    invₗ  : AbelianGroupEq 1
+    invᵣ  : AbelianGroupEq 1
+    comm  : AbelianGroupEq 2
+    assoc : AbelianGroupEq 3
+
+  abelian-group-eqs : ∀ {n} → AbelianGroupEq n → Eq Σ-group n
+  abelian-group-eqs idₗ   = L.idₗ e •
+  abelian-group-eqs idᵣ   = L.idᵣ e •
+  abelian-group-eqs invₗ  = L.invₗ e ~ •
+  abelian-group-eqs invᵣ  = L.invᵣ e ~ •
+  abelian-group-eqs comm  = L.comm •
+  abelian-group-eqs assoc = L.assoc •
 
 Θ-magma : Theory
-Θ-magma = record { Σ   = Σ-magma
-                 ; eqs = magma-eqs
+Θ-magma = record { Σ     = Σ-magma
+                 ; eqs   = MagmaEq
+                 ; _⟦_⟧ₑ = magma-eqs
                  }
 
 Θ-semigroup : Theory
-Θ-semigroup = record { Σ   = Σ-magma
-                     ; eqs = semigroup-eqs
+Θ-semigroup = record { Σ     = Σ-magma
+                     ; eqs   = SemigroupEq
+                     ; _⟦_⟧ₑ = semigroup-eqs
                      }
 
 Θ-csemigroup : Theory
-Θ-csemigroup = record { Σ   = Σ-magma
-                      ; eqs = csemigroup-eqs
+Θ-csemigroup = record { Σ     = Σ-magma
+                      ; eqs   = CSemigroupEq
+                      ; _⟦_⟧ₑ = csemigroup-eqs
                       }
 
 Θ-monoid : Theory
-Θ-monoid = record { Σ   = Σ-monoid
-                  ; eqs = monoid-eqs
+Θ-monoid = record { Σ     = Σ-monoid
+                  ; eqs   = MonoidEq
+                  ; _⟦_⟧ₑ = monoid-eqs
                   }
 
 Θ-cmonoid : Theory
-Θ-cmonoid = record { Σ   = Σ-monoid
-                   ; eqs = cmonoid-eqs
+Θ-cmonoid = record { Σ     = Σ-monoid
+                   ; eqs   = CMonoidEq
+                   ; _⟦_⟧ₑ = cmonoid-eqs
                    }
 
 Θ-group : Theory
-Θ-group = record { Σ   = Σ-group
-                 ; eqs = group-eqs
+Θ-group = record { Σ     = Σ-group
+                 ; eqs   = GroupEq
+                 ; _⟦_⟧ₑ = group-eqs
                  }
 
 Θ-abelian-group : Theory
-Θ-abelian-group = record { Σ   = Σ-group
-                         ; eqs = abelian-group-eqs
+Θ-abelian-group = record { Σ     = Σ-group
+                         ; eqs   = AbelianGroupEq
+                         ; _⟦_⟧ₑ = abelian-group-eqs
                          }
