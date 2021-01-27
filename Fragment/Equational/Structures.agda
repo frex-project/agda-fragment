@@ -35,6 +35,12 @@ module _ (S : Setoid a ℓ) where
                   → Congruence Σ-magma S (magma→⟦⟧ ∙)
   magma→⟦⟧-cong cong MagmaOp.• (x₁≈x₂ ∷ y₁≈y₂ ∷ []) = cong x₁≈x₂ y₁≈y₂
 
+  isAlgebra→isModel : IsAlgebra Σ-magma S → IsModel Θ-magma S
+  isAlgebra→isModel isAlgebra =
+    record { isAlgebra = isAlgebra
+           ; models    = λ ()
+           }
+
   module _ {∙ : Op₂ A} (M : IsMagma ∙) where
 
     open IsMagma M
@@ -99,21 +105,60 @@ module _ (S : Setoid a ℓ) where
 
     open IsModel M
 
-    private
-
-      M→isModel : IsModel Θ-magma S
-      M→isModel = record { isAlgebra = isAlgebra
-                         ; models    = λ ()
-                         }
-
-    isModel→assoc : Associative (isModel→∙ M→isModel)
+    isModel→assoc : Associative (isModel→∙ (isAlgebra→isModel isAlgebra))
     isModel→assoc x y z = models assoc {θ}
       where θ : Fin 3 → A
             θ zero             = x
             θ (suc zero)       = y
             θ (suc (suc zero)) = z
 
-    isModel→semigroup : IsSemigroup (isModel→∙ M→isModel)
-    isModel→semigroup = record { isMagma = isModel→magma M→isModel
-                               ; assoc   = isModel→assoc
-                               }
+    isModel→semigroup : IsSemigroup (isModel→∙ (isAlgebra→isModel isAlgebra))
+    isModel→semigroup =
+      record { isMagma = isModel→magma (isAlgebra→isModel isAlgebra)
+             ; assoc   = isModel→assoc
+             }
+
+  module _ {∙ : Op₂ A} (M : IsCommutativeSemigroup ∙) where
+
+    open IsCommutativeSemigroup M
+
+    csemigroup→models : Models Θ-csemigroup (magma→algebra isMagma)
+    csemigroup→models comm {θ} =
+      (IsCommutativeSemigroup.comm M) (θ (# 0)) (θ (# 1))
+    csemigroup→models assoc {θ} =
+      (IsCommutativeSemigroup.assoc M) (θ (# 0)) (θ (# 1)) (θ (# 2))
+
+    csemigroup→isModel : IsModel Θ-csemigroup S
+    csemigroup→isModel = record { isAlgebra = magma→isAlgebra isMagma
+                                ; models    = csemigroup→models
+                                }
+
+    csemigroup→model : Model Θ-csemigroup
+    csemigroup→model = record { Carrierₛ = S
+                              ; isModel  = csemigroup→isModel
+                              }
+
+  module _ (M : IsModel Θ-csemigroup S) where
+
+    open IsModel M
+
+    isModel→models-semigroup : Models Θ-semigroup (algebra S isAlgebra)
+    isModel→models-semigroup assoc {θ} = models assoc {θ}
+
+    isModel→isModel-semigroup : IsModel Θ-semigroup S
+    isModel→isModel-semigroup = record { isAlgebra = isAlgebra
+                                       ; models    = isModel→models-semigroup
+                                       }
+
+    isModel→comm : Commutative (isModel→∙ (isAlgebra→isModel isAlgebra))
+    isModel→comm x y = models comm {θ}
+      where θ : Fin 2 → A
+            θ zero       = x
+            θ (suc zero) = y
+
+    isModel→csemigroup : IsCommutativeSemigroup
+                           (isModel→∙ (isAlgebra→isModel isAlgebra))
+    isModel→csemigroup =
+      record { isSemigroup = isModel→semigroup isModel→isModel-semigroup
+             ; comm        = isModel→comm
+             }
