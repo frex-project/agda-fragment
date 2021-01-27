@@ -9,10 +9,10 @@ open import Fragment.Equational.Model
 open import Fragment.Algebra.Algebra
 
 open import Level using (Level)
-open import Data.Fin using (#_)
+open import Data.Fin using (Fin; #_; suc; zero)
 open import Data.Vec using ([]; _∷_)
 open import Data.Vec.Relation.Binary.Pointwise.Inductive using ([]; _∷_)
-open import Data.List.Relation.Unary.All using (All; []; _∷_)
+open import Data.List.Relation.Unary.All using (All; []; _∷_; head)
 open import Relation.Binary using (Setoid)
 
 open import Algebra.Core
@@ -62,6 +62,21 @@ module _ (S : Setoid a ℓ) where
                          ; isModel  = magma→isModel
                          }
 
+  module _ (M : IsModel Θ-magma S) where
+
+    open IsModel M
+
+    isModel→∙ : Op₂ A
+    isModel→∙ x y = ⟦ MagmaOp.• ⟧ (x ∷ y ∷ [])
+
+    isModel→∙-cong : Congruent₂ isModel→∙
+    isModel→∙-cong x₁≈x₂ y₁≈y₂ = ⟦⟧-cong MagmaOp.• (x₁≈x₂ ∷ y₁≈y₂ ∷ [])
+
+    isModel→magma : IsMagma isModel→∙
+    isModel→magma = record { isEquivalence = isEquivalence
+                           ; ∙-cong        = isModel→∙-cong
+                           }
+
   module _ {∙ : Op₂ A} (M : IsSemigroup ∙) where
 
     open IsSemigroup M
@@ -83,3 +98,29 @@ module _ (S : Setoid a ℓ) where
     semigroup→model = record { Carrierₛ = S
                              ; isModel  = semigroup→isModel
                              }
+
+  module _ (M : IsModel Θ-semigroup S) where
+
+    open IsModel M
+
+    private
+
+      M→isModel : IsModel Θ-magma S
+      M→isModel = record { isAlgebra = isAlgebra
+                         ; models    = λ {_} → []
+                         }
+
+      M⊨assoc : (algebra S isAlgebra) ⊨ L.assoc Σ-magma MagmaOp.•
+      M⊨assoc {θ} = head (models {3}) {θ}
+
+    isModel→assoc : Associative (isModel→∙ M→isModel)
+    isModel→assoc x y z = M⊨assoc {θ}
+      where θ : Fin 3 → A
+            θ zero             = x
+            θ (suc zero)       = y
+            θ (suc (suc zero)) = z
+
+    isModel→semigroup : IsSemigroup (isModel→∙ M→isModel)
+    isModel→semigroup = record { isMagma = isModel→magma M→isModel
+                               ; assoc   = isModel→assoc
+                               }
