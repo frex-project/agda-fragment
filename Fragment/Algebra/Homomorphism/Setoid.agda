@@ -5,8 +5,12 @@ open import Fragment.Algebra.Signature
 module Fragment.Algebra.Homomorphism.Setoid (Σ : Signature) where
 
 open import Fragment.Algebra.Algebra
+open import Fragment.Algebra.Homomorphism.Base Σ
 
 open import Level using (Level; _⊔_)
+open import Relation.Binary using (Rel; Setoid; IsEquivalence)
+open import Relation.Binary.Definitions
+  using (Reflexive; Transitive; Symmetric)
 
 private
   variable
@@ -17,19 +21,12 @@ module _
   {T : Algebra Σ {b} {ℓ₂}}
   where
 
-  open import Fragment.Algebra.Homomorphism.Base Σ
-
-  open import Relation.Binary using (Rel; Setoid; IsEquivalence)
-  open import Relation.Binary.Definitions
-    using (Reflexive; Transitive; Symmetric)
-
   open Algebra T
 
   infix 4 _≡ₕ_
 
   _≡ₕ_ : Rel (S →ₕ T) (a ⊔ ℓ₂)
   F ≡ₕ G = ∀ {x} → applyₕ F x ≈ applyₕ G x
-
 
   ≡ₕ-refl : Reflexive _≡ₕ_
   ≡ₕ-refl = refl
@@ -46,8 +43,10 @@ module _
                             ; trans = λ {F G H} → ≡ₕ-trans {F} {G} {H}
                             }
 
-  ≡ₕ-setoid : Setoid _ _
-  ≡ₕ-setoid = record { Carrier       = S →ₕ T
-                     ; _≈_           = _≡ₕ_
-                     ; isEquivalence = ≡ₕ-isEquivalence
-                     }
+≡ₕ-setoid : (S : Algebra Σ {a} {ℓ₁})
+            → (T : Algebra Σ {b} {ℓ₂})
+            → Setoid _ _
+≡ₕ-setoid S T = record { Carrier       = S →ₕ T
+                       ; _≈_           = _≡ₕ_
+                       ; isEquivalence = ≡ₕ-isEquivalence
+                       }
