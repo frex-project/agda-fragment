@@ -5,6 +5,7 @@ with pkgs;
     name = "agda-fragment";
 
     nativeBuildInputs = [
+      git
       (agda.withPackages (p: [
         p.standard-library
       ]))
