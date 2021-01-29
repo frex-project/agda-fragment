@@ -1,6 +1,7 @@
 *.agdai
 MAlonzo/**
 _build/
+html/
 
 *.swp
 *.swo
