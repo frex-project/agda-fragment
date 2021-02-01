@@ -11,6 +11,7 @@ import Fragment.Algebra.Homomorphism.Equivalence
 import Fragment.Algebra.Homomorphism.Properties
 import Fragment.Algebra.Homomorphism.Setoid
 import Fragment.Algebra.Initial
+import Fragment.Algebra.Quotient
 import Fragment.Algebra.Signature
 import Fragment.Algebra.TermAlgebra
 import Fragment.Algebra.TermAlgebra.Base
@@ -20,4 +21,5 @@ import Fragment.Equational.Bundles
 import Fragment.Equational.Laws
 import Fragment.Equational.Model
 import Fragment.Equational.Structures
+import Fragment.Equational.TermModel
 import Fragment.Equational.Theory
