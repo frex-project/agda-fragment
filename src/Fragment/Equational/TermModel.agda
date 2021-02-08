@@ -19,14 +19,14 @@ open import Data.Product using (proj₁; proj₂)
 open import Data.Vec.Relation.Binary.Pointwise.Inductive using (Pointwise)
 
 data _≈ₘ_ : Expr → Expr → Set where
-  refl  : ∀ {x} → x ≈ₘ x
-  sym   : ∀ {x y} → x ≈ₘ y → y ≈ₘ x
-  trans : ∀ {x y z} → x ≈ₘ y → y ≈ₘ z → x ≈ₘ z
-  cong  : ∀ {arity} → (f : ops (Σ Θ) arity)
-          → ∀ {xs ys} → Pointwise _≈ₘ_ xs ys
-          → term f xs ≈ₘ term f ys
-  model : ∀ {n} → (eq : eqs Θ n) → (θ : Environment n |T|)
-          → subst |T| θ (proj₁ (Θ ⟦ eq ⟧ₑ)) ≈ₘ subst |T| θ (proj₂ (Θ ⟦ eq ⟧ₑ))
+    refl  : ∀ {x} → x ≈ₘ x
+    sym   : ∀ {x y} → x ≈ₘ y → y ≈ₘ x
+    trans : ∀ {x y z} → x ≈ₘ y → y ≈ₘ z → x ≈ₘ z
+    cong  : ∀ {arity} → (f : ops (Σ Θ) arity)
+            → ∀ {xs ys} → Pointwise _≈ₘ_ xs ys
+            → term f xs ≈ₘ term f ys
+    model : ∀ {n} → (eq : eqs Θ n) → (θ : Environment n |T|)
+            → subst |T| θ (proj₁ (Θ ⟦ eq ⟧ₑ)) ≈ₘ subst |T| θ (proj₂ (Θ ⟦ eq ⟧ₑ))
 
 ≈ₘ-isEquivalence : IsEquivalence _≈ₘ_
 ≈ₘ-isEquivalence = record { refl  = refl
@@ -36,21 +36,41 @@ data _≈ₘ_ : Expr → Expr → Set where
 
 Herbrandₘ : Setoid _ _
 Herbrandₘ = record { Carrier       = Expr
-                   ; _≈_           = _≈ₘ_
-                   ; isEquivalence = ≈ₘ-isEquivalence
-                   }
-
-≈ₘ-cong : Congruence (Σ Θ) Herbrandₘ term
-≈ₘ-cong = cong
+                    ; _≈_           = _≈ₘ_
+                    ; isEquivalence = ≈ₘ-isEquivalence
+                    }
 
 ≈ₘ : CompatibleEquivalence |T|
 ≈ₘ = record { _▲_           = _≈ₘ_
             ; isEquivalence = ≈ₘ-isEquivalence
-            ; compatible    = ≈ₘ-cong
+            ; compatible    = cong
             }
 
-|T|ₘ : Algebra (Σ Θ)
-|T|ₘ = |T| / ≈ₘ
+≡⊂≈ₘ : underlyingEquivalence |T| ⊂ ≈ₘ
+≡⊂≈ₘ x≡y = (IsEquivalence.reflexive ≈ₘ-isEquivalence) x≡y
 
--- |T|ₘ-models : Models Θ |T|ₘ
--- |T|ₘ-models eq {θ} = model eq θ
+|T|/≈ₘ : Algebra (Σ Θ)
+|T|/≈ₘ = |T| / ≈ₘ
+
+open import Relation.Binary.Reasoning.Setoid Herbrandₘ
+
+|T|/≈ₘ-models : Models Θ |T|/≈ₘ
+|T|/≈ₘ-models eq {θ} = begin
+    subst |T|/≈ₘ θ (proj₁ (Θ ⟦ eq ⟧ₑ))
+  ≈⟨ IsEquivalence.reflexive ≈ₘ-isEquivalence (quotient-subst ( proj₁ (Θ ⟦ eq ⟧ₑ))) ⟩
+    subst |T| θ (proj₁ (Θ ⟦ eq ⟧ₑ))
+  ≈⟨ model eq θ ⟩
+    subst |T| θ (proj₂ (Θ ⟦ eq ⟧ₑ))
+  ≈⟨ IsEquivalence.reflexive ≈ₘ-isEquivalence (quotient-subst ( proj₂ (Θ ⟦ eq ⟧ₑ))) ⟩
+    subst |T|/≈ₘ θ (proj₂ (Θ ⟦ eq ⟧ₑ))
+  ∎
+
+|T|/≈ₘ-isModel : IsModel Θ Herbrandₘ
+|T|/≈ₘ-isModel = record { isAlgebra = |T| / ≈ₘ -isAlgebra
+                        ; models    = |T|/≈ₘ-models
+                        }
+
+|T|ₘ : Model Θ
+|T|ₘ = record { Carrierₛ = Herbrandₘ
+              ; isModel  = |T|/≈ₘ-isModel
+              }
