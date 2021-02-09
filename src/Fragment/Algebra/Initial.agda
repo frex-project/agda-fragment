@@ -24,6 +24,6 @@ module _
 
       []_ : ∀ {b ℓ₂} (W : Algebra Σ {b} {ℓ₂}) → (S →ₕ W)
 
-      .universal : ∀ {b ℓ₂} {W : Algebra Σ {b} {ℓ₂}}
-                   → (F : S →ₕ W)
-                   → F ≡ₕ [] W
+      universal : ∀ {b ℓ₂} {W : Algebra Σ {b} {ℓ₂}}
+                  → (F : S →ₕ W)
+                  → F ≡ₕ [] W

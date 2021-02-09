@@ -110,3 +110,35 @@ module _ {Σ n}
         subst (term f (x ∷ xs))
       ∎
       where open _→ₕ_ H
+
+module _ {Σ n}
+  {S : Algebra Σ {a} {ℓ}}
+  where
+
+  open Algebra S renaming (Carrier to A)
+
+  open import Function using (_∘_)
+
+  open import Fragment.Algebra.Homomorphism Σ
+  open import Fragment.Algebra.Homomorphism.Setoid Σ
+  open import Fragment.Algebra.TermAlgebra Σ hiding (Expr)
+  open import Fragment.Algebra.TermAlgebra (Σ ⦉ n ⦊) using (Expr)
+
+  open import Relation.Binary.Reasoning.Setoid Carrierₛ
+  open import Data.Vec.Relation.Binary.Equality.Setoid Carrierₛ using (_≋_)
+  open import Data.Vec.Relation.Binary.Pointwise.Inductive as PW using ([]; _∷_)
+
+  mutual
+
+    subst-eval-args : ∀ {arity}
+                      → {θ : Environment n |T|}
+                      → {xs : Vec Expr arity}
+                      → eval-args S (subst-args |T| θ xs) ≋ subst-args S (eval S ∘ θ) xs
+    subst-eval-args {θ = θ} {xs = []}     = []
+    subst-eval-args {θ = θ} {xs = x ∷ xs} = (subst-eval {θ} {x}) ∷ subst-eval-args
+
+    subst-eval : ∀ {θ : Environment n |T|}
+                 → evalₕ S ∘ₕ (substₕ |T| θ) ≡ₕ substₕ S (eval S ∘ θ)
+    subst-eval {θ} {term (inj₂ k) []} = refl
+    subst-eval {θ} {term (inj₁ f) []} = refl
+    subst-eval {θ} {term f (x ∷ xs)}  = ⟦⟧-cong f (subst-eval-args {xs = x ∷ xs})

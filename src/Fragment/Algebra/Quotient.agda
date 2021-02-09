@@ -4,8 +4,9 @@ open import Fragment.Algebra.Signature
 
 module Fragment.Algebra.Quotient {Σ : Signature} where
 
-open import Fragment.Algebra.Algebra
+open import Fragment.Algebra.Algebra Σ
 open import Fragment.Algebra.FreeAlgebra
+open import Fragment.Algebra.Homomorphism Σ
 
 open import Level using (Level; _⊔_; suc)
 open import Relation.Binary using (Rel; Setoid; IsEquivalence; _⇒_)
@@ -13,9 +14,9 @@ open import Relation.Binary.PropositionalEquality as PE using (_≡_)
 
 private
   variable
-    a ℓ₁ ℓ₂ ℓ₃ : Level
+    a b ℓ₁ ℓ₂ ℓ₃ : Level
 
-module _ (S : Algebra Σ {a} {ℓ₁}) where
+module _ (S : Algebra {a} {ℓ₁}) where
 
   open Algebra S using (⟦_⟧; ⟦⟧-cong; _≈_) renaming (Carrier to A)
 
@@ -30,7 +31,7 @@ module _ (S : Algebra Σ {a} {ℓ₁}) where
     field
       _▲_           : Rel A ℓ₂
       isEquivalence : IsEquivalence _▲_
-      compatible    : Congruence Σ (setoid _▲_ isEquivalence) ⟦_⟧
+      compatible    : Congruence (setoid _▲_ isEquivalence) ⟦_⟧
 
     open IsEquivalence isEquivalence public
 
@@ -42,31 +43,31 @@ module _ (S : Algebra Σ {a} {ℓ₁}) where
                                  ; compatible    = ⟦⟧-cong
                                  }
 
-_/_-isAlgebra : (S : Algebra Σ {a} {ℓ₁})
+_/_-isAlgebra : (S : Algebra {a} {ℓ₁})
                 → (▲ : CompatibleEquivalence S {ℓ₂})
-                → IsAlgebra Σ (CompatibleEquivalence.▲-setoid ▲)
+                → IsAlgebra (CompatibleEquivalence.▲-setoid ▲)
 S / ▲ -isAlgebra = record { ⟦_⟧     = ⟦_⟧
                           ; ⟦⟧-cong = compatible
                           }
   where open Algebra S
         open CompatibleEquivalence ▲
 
-_/_ : (S : Algebra Σ {a} {ℓ₁})
-      → CompatibleEquivalence S
-      → Algebra Σ {a} {ℓ₂}
+_/_ : (S : Algebra {a} {ℓ₁})
+    → CompatibleEquivalence S
+    → Algebra {a} {ℓ₂}
 S / ▲ = record { Carrierₛ  = ▲-setoid
                ; isAlgebra = S / ▲ -isAlgebra
                }
   where open CompatibleEquivalence ▲
 
-_⊂_ : ∀ {S : Algebra Σ {a} {ℓ₁}}
+_⊂_ : ∀ {S : Algebra {a} {ℓ₁}}
       → (≈ : CompatibleEquivalence S {ℓ₂})
       → (▲ : CompatibleEquivalence S {ℓ₃})
       → Set _
 ≈ ⊂ ▲ = (CompatibleEquivalence._▲_ ≈) ⇒ (CompatibleEquivalence._▲_ ▲)
 
 module _ {n}
-  {S : Algebra Σ {a} {ℓ₁}}
+  {S : Algebra {a} {ℓ₁}}
   {θ : Environment n S}
   {▲ : CompatibleEquivalence S {ℓ₂}}
   where
