@@ -12,6 +12,8 @@ private
   variable
     a ℓ₁ : Level
 
+-- FIXME duplicates code in Fragment.Algebra.Initial
+
 module _
   (S : Model Θ {a} {ℓ₁})
   where

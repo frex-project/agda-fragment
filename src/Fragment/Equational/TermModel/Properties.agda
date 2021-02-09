@@ -57,6 +57,7 @@ module _ (M : Model Θ {a} {ℓ}) where
         eval S (subst |T| θ (proj₂ (Θ ⟦ eq ⟧ₑ)))
       ∎
 
+  -- FIXME duplicates code in Fragment.Algebra.TermAlgebra.Properties
   eval-hom : Homomorphic |T|/≈ₘ S (eval S)
   eval-hom f xs = reflexive (PE.cong ⟦ f ⟧ (eval-args≡map S))
 
@@ -66,6 +67,7 @@ module _ (M : Model Θ {a} {ℓ}) where
                  ; h-hom  = eval-hom
                  }
 
+  -- FIXME duplicates code in Fragment.Algebra.TermAlgebra.Properties
   mutual
     eval-args-universal : (H : |T|/≈ₘ →ₕ S)
                           → ∀ {arity} {xs : Vec Expr arity}
