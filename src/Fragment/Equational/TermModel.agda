@@ -19,14 +19,14 @@ open import Data.Product using (proj₁; proj₂)
 open import Data.Vec.Relation.Binary.Pointwise.Inductive using (Pointwise)
 
 data _≈ₘ_ : Expr → Expr → Set where
-    refl  : ∀ {x} → x ≈ₘ x
-    sym   : ∀ {x y} → x ≈ₘ y → y ≈ₘ x
-    trans : ∀ {x y z} → x ≈ₘ y → y ≈ₘ z → x ≈ₘ z
-    cong  : ∀ {arity} → (f : ops (Σ Θ) arity)
-            → ∀ {xs ys} → Pointwise _≈ₘ_ xs ys
-            → term f xs ≈ₘ term f ys
-    model : ∀ {n} → (eq : eqs Θ n) → (θ : Environment n |T|)
-            → subst |T| θ (proj₁ (Θ ⟦ eq ⟧ₑ)) ≈ₘ subst |T| θ (proj₂ (Θ ⟦ eq ⟧ₑ))
+  refl  : ∀ {x} → x ≈ₘ x
+  sym   : ∀ {x y} → x ≈ₘ y → y ≈ₘ x
+  trans : ∀ {x y z} → x ≈ₘ y → y ≈ₘ z → x ≈ₘ z
+  cong  : ∀ {arity} → (f : ops (Σ Θ) arity)
+          → ∀ {xs ys} → Pointwise _≈ₘ_ xs ys
+          → term f xs ≈ₘ term f ys
+  model : ∀ {n} → (eq : eqs Θ n) → (θ : Environment n |T|)
+          → subst |T| θ (proj₁ (Θ ⟦ eq ⟧ₑ)) ≈ₘ subst |T| θ (proj₂ (Θ ⟦ eq ⟧ₑ))
 
 ≈ₘ-isEquivalence : IsEquivalence _≈ₘ_
 ≈ₘ-isEquivalence = record { refl  = refl
