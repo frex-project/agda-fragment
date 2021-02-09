@@ -76,18 +76,17 @@ module _ {n}
   open import Fragment.Algebra.TermAlgebra (Σ ⦉ n ⦊) using (Expr; term)
   open import Data.Vec using (Vec; []; _∷_)
   open import Data.Sum using (inj₁; inj₂)
-  import Data.Vec.Relation.Binary.Pointwise.Inductive as PW
+  open import Data.Vec.Relation.Binary.Pointwise.Inductive as PW using ([]; _∷_)
 
   mutual
     quotient-subst-args : ∀ {arity}
                           → (xs : Vec Expr arity)
                           → PW.Pointwise _≡_ (subst-args S θ xs) (subst-args (S / ▲) θ xs)
-    quotient-subst-args []       = PW.[]
-    quotient-subst-args (x ∷ xs) =
-      PW._∷_ {_∼_ = _≡_} (quotient-subst x) (quotient-subst-args xs)
+    quotient-subst-args []       = []
+    quotient-subst-args (x ∷ xs) = (quotient-subst x) ∷ (quotient-subst-args xs)
 
     quotient-subst : ∀ (x : Expr) → subst S θ x ≡ subst (S / ▲) θ x
     quotient-subst (term (inj₂ k) []) = PE.refl
     quotient-subst (term (inj₁ f) []) = PE.refl
     quotient-subst (term f (x ∷ xs))  =
-      PE.cong ⟦ f ⟧ (PW.Pointwise-≡⇒≡ (quotient-subst-args ( (x ∷ xs))))
+      PE.cong ⟦ f ⟧ (PW.Pointwise-≡⇒≡ (quotient-subst-args (x ∷ xs)))
