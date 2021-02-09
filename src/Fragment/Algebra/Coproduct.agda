@@ -27,18 +27,18 @@ module _
       inr : T →ₕ S+T
 
       [_,_] : ∀ {d ℓ₄} {W : Algebra Σ {d} {ℓ₄}}
-              → (S →ₕ W) → (T →ₕ W) → S+T →ₕ W
+              → S →ₕ W → T →ₕ W → S+T →ₕ W
 
-      .commute₁ : ∀ {d ℓ₄} {W : Algebra Σ {d} {ℓ₄}}
-                  → {F : S →ₕ W} {G : T →ₕ W}
-                  → [ F , G ] ∘ₕ inl ≡ₕ F
+      commute₁ : ∀ {d ℓ₄} {W : Algebra Σ {d} {ℓ₄}}
+                 → {F : S →ₕ W} {G : T →ₕ W}
+                 → [ F , G ] ∘ₕ inl ≡ₕ F
 
-      .commute₂ : ∀ {d ℓ₄} {W : Algebra Σ {d} {ℓ₄}}
-                  → {F : S →ₕ W} {G : T →ₕ W}
-                  → [ F , G ] ∘ₕ inr ≡ₕ G
+      commute₂ : ∀ {d ℓ₄} {W : Algebra Σ {d} {ℓ₄}}
+                 → {F : S →ₕ W} {G : T →ₕ W}
+                 → [ F , G ] ∘ₕ inr ≡ₕ G
 
-      .universal : ∀ {d ℓ₄} {W : Algebra Σ {d} {ℓ₄}}
-                   → {F : S →ₕ W} {G : T →ₕ W} {H : S+T →ₕ W}
-                   → H ∘ₕ inl ≡ₕ F
-                   → H ∘ₕ inr ≡ₕ G
-                   → [ F , G ] ≡ₕ H
+      universal : ∀ {d ℓ₄} {W : Algebra Σ {d} {ℓ₄}}
+                  → {F : S →ₕ W} {G : T →ₕ W} {H : S+T →ₕ W}
+                  → H ∘ₕ inl ≡ₕ F
+                  → H ∘ₕ inr ≡ₕ G
+                  → [ F , G ] ≡ₕ H

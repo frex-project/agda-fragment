@@ -15,8 +15,10 @@ private
 -- FIXME duplicates code in Fragment.Algebra.Initial
 
 module _
-  (S : Model Θ {a} {ℓ₁})
+  (M : Model Θ {a} {ℓ₁})
   where
+
+  open Model M renaming (Carrierₐ to S)
 
   open import Fragment.Algebra.Homomorphism (Σ Θ)
   open import Fragment.Algebra.Homomorphism.Setoid (Σ Θ) using (_≡ₕ_)
@@ -25,8 +27,8 @@ module _
     field
 
       []_ : ∀ {b ℓ₂} (W : Model Θ {b} {ℓ₂})
-            → (Model.Carrierₐ S →ₕ Model.Carrierₐ W)
+            → S →ₕ Model.Carrierₐ W
 
       universal : ∀ {b ℓ₂} {W : Model Θ {b} {ℓ₂}}
-                  → (F : Model.Carrierₐ S →ₕ Model.Carrierₐ W)
+                  → (F : S →ₕ Model.Carrierₐ W)
                   → F ≡ₕ [] W

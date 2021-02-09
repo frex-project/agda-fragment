@@ -72,9 +72,9 @@ module _ (M : Model Θ {a} {ℓ}) where
     eval-args-universal : (H : |T|/≈ₘ →ₕ S)
                           → ∀ {arity} {xs : Vec Expr arity}
                           → map (_→ₕ_.h H) xs ≋ eval-args S xs
-    eval-args-universal H {_} {[]}     = PW.[]
+    eval-args-universal H {_} {[]}     = []
     eval-args-universal H {_} {x ∷ xs} =
-      PW._∷_ (evalₕ-universal H {x}) (eval-args-universal H {_} {xs})
+      (evalₕ-universal H {x}) ∷ (eval-args-universal H {_} {xs})
 
     evalₕ-universal : (H : |T|/≈ₘ →ₕ S) → H ≡ₕ evalₕ
     evalₕ-universal H {term f xs} = begin

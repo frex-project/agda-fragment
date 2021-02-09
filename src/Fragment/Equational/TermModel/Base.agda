@@ -57,14 +57,16 @@ open import Relation.Binary.Reasoning.Setoid Herbrandₘ
 
 |T|/≈ₘ-models : Models Θ |T|/≈ₘ
 |T|/≈ₘ-models eq {θ} = begin
-    subst |T|/≈ₘ θ (proj₁ (Θ ⟦ eq ⟧ₑ))
-  ≈⟨ IsEquivalence.reflexive ≈ₘ-isEquivalence (quotient-subst ( proj₁ (Θ ⟦ eq ⟧ₑ))) ⟩
-    subst |T| θ (proj₁ (Θ ⟦ eq ⟧ₑ))
+    subst |T|/≈ₘ θ lhs
+  ≈⟨ IsEquivalence.reflexive ≈ₘ-isEquivalence (quotient-subst lhs) ⟩
+    subst |T| θ lhs
   ≈⟨ model eq θ ⟩
-    subst |T| θ (proj₂ (Θ ⟦ eq ⟧ₑ))
-  ≈⟨ IsEquivalence.reflexive ≈ₘ-isEquivalence (quotient-subst ( proj₂ (Θ ⟦ eq ⟧ₑ))) ⟩
-    subst |T|/≈ₘ θ (proj₂ (Θ ⟦ eq ⟧ₑ))
+    subst |T| θ rhs
+  ≈⟨ IsEquivalence.reflexive ≈ₘ-isEquivalence (quotient-subst rhs) ⟩
+    subst |T|/≈ₘ θ rhs
   ∎
+  where lhs = proj₁ (Θ ⟦ eq ⟧ₑ)
+        rhs = proj₂ (Θ ⟦ eq ⟧ₑ)
 
 |T|/≈ₘ-isModel : IsModel Θ Herbrandₘ
 |T|/≈ₘ-isModel = record { isAlgebra = |T| / ≈ₘ -isAlgebra

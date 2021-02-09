@@ -16,7 +16,7 @@ open import Level using (Level)
 open import Relation.Binary using (IsEquivalence)
 open import Relation.Binary.PropositionalEquality as PE using (_≡_)
 
-import Data.Vec.Relation.Binary.Pointwise.Inductive as PW
+open import Data.Vec.Relation.Binary.Pointwise.Inductive as PW using ([]; _∷_)
 open import Data.Vec using (Vec; []; _∷_; map)
 
 private
@@ -26,7 +26,7 @@ private
 module _ (S : Algebra Σ {a} {ℓ}) where
 
   open Algebra S renaming (Carrier to A)
-  
+
   open import Relation.Binary.Reasoning.Setoid Carrierₛ
   open import Data.Vec.Relation.Binary.Equality.Setoid Carrierₛ using (_≋_)
 
@@ -59,9 +59,9 @@ module _ (S : Algebra Σ {a} {ℓ}) where
     eval-args-universal : (H : |T| →ₕ S)
                           → ∀ {arity} {xs : Vec Expr arity}
                           → map (_→ₕ_.h H) xs ≋ eval-args xs
-    eval-args-universal H {_} {[]}     = PW.[]
+    eval-args-universal H {_} {[]}     = []
     eval-args-universal H {_} {x ∷ xs} =
-      PW._∷_ (evalₕ-universal H {x}) (eval-args-universal H {_} {xs})
+      (evalₕ-universal H {x}) ∷ (eval-args-universal H {_} {xs})
 
     evalₕ-universal : (H : |T| →ₕ S) → H ≡ₕ evalₕ
     evalₕ-universal H {term f xs} = begin

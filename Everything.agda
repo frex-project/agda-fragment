@@ -18,8 +18,12 @@ import Fragment.Algebra.TermAlgebra.Base
 import Fragment.Algebra.TermAlgebra.Properties
 import Fragment.Algebra.TermAlgebra.Syntax
 import Fragment.Equational.Bundles
+import Fragment.Equational.Coproduct
+import Fragment.Equational.Initial
 import Fragment.Equational.Laws
 import Fragment.Equational.Model
 import Fragment.Equational.Structures
 import Fragment.Equational.TermModel
+import Fragment.Equational.TermModel.Base
+import Fragment.Equational.TermModel.Properties
 import Fragment.Equational.Theory
