@@ -12,9 +12,9 @@ record Signature : Set₁ where
 
 open Signature public
 
-frex : Signature → ℕ → ℕ → Set
-frex Σ n 0 = (ops Σ 0) ⊎ Fin n
-frex Σ _ n = ops Σ n
+frex-ops : Signature → ℕ → ℕ → Set
+frex-ops Σ n 0 = (ops Σ 0) ⊎ Fin n
+frex-ops Σ _ n = ops Σ n
 
 _⦉_⦊ : (Σ : Signature) → ℕ → Signature
-Σ ⦉ n ⦊ = record { ops = frex Σ n }
+Σ ⦉ n ⦊ = record { ops = frex-ops Σ n }

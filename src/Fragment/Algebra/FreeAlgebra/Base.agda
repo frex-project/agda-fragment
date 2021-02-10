@@ -17,10 +17,6 @@ open import Data.Sum using (inj₁)
 open import Data.Vec using ([]; _∷_)
 open import Data.Vec.Relation.Binary.Equality.Propositional using (≋⇒≡)
 
-private
-  variable
-    a ℓ : Level
-
 |T|_⦉_⦊-⟦_⟧ : Interpretation Σ Herbrand
 |T|_⦉_⦊-⟦_⟧ f []       = term (inj₁ f) []
 |T|_⦉_⦊-⟦_⟧ f (x ∷ xs) = term f (x ∷ xs)
