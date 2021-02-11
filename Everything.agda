@@ -19,6 +19,9 @@ import Fragment.Algebra.TermAlgebra.Properties
 import Fragment.Algebra.TermAlgebra.Syntax
 import Fragment.Equational.Bundles
 import Fragment.Equational.Coproduct
+import Fragment.Equational.FreeModel
+import Fragment.Equational.FreeModel.Base
+import Fragment.Equational.FreeModel.Properties
 import Fragment.Equational.Initial
 import Fragment.Equational.Laws
 import Fragment.Equational.Model
