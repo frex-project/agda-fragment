@@ -2,6 +2,7 @@
 
 module Fragment.Equational.Theory where
 
+open import Fragment.Algebra.Algebra
 open import Fragment.Algebra.Signature
   renaming (_⦉_⦊ to _⦉_⦊ₛ)
 

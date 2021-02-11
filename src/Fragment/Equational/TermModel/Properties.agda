@@ -4,16 +4,16 @@ open import Fragment.Equational.Theory
 
 module Fragment.Equational.TermModel.Properties (Θ : Theory) where
 
-open import Fragment.Equational.Model
-
-open import Fragment.Equational.TermModel.Base Θ
-open import Fragment.Equational.Initial Θ
-
 open import Fragment.Algebra.TermAlgebra (Σ Θ)
   hiding (eval-cong; eval-hom; evalₕ; eval-args-universal; evalₕ-universal)
 open import Fragment.Algebra.FreeAlgebra
 open import Fragment.Algebra.Homomorphism (Σ Θ)
 open import Fragment.Algebra.Homomorphism.Setoid (Σ Θ) using (_≡ₕ_)
+
+open import Fragment.Equational.Model
+open import Fragment.Equational.TermModel.Base Θ
+open import Fragment.Equational.TermModel.ProvableEquivalence Θ |T|
+open import Fragment.Equational.Initial Θ
 
 open import Level using (Level)
 open import Function using (_∘_)
