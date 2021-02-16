@@ -36,7 +36,7 @@ module _ (M : Model Θ {a} {ℓ}) where
   open import Data.Vec.Relation.Binary.Pointwise.Inductive as PW using ([]; _∷_)
 
   mutual
-    eval-args-cong : ∀ {n} {xs ys : Vec Expr n}
+    eval-args-cong : ∀ {arity} {xs ys : Vec Expr arity}
                      → (PW.Pointwise _≈ₘ_) xs ys
                      → (eval-args S xs) ≋ (eval-args S ys)
     eval-args-cong [] = []

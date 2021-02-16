@@ -5,7 +5,7 @@ module Fragment.Algebra.FreeAlgebra.Properties where
 open import Fragment.Algebra.FreeAlgebra.Base
 open import Fragment.Algebra.FreeAlgebra.Definitions
 open import Fragment.Algebra.Algebra
-open import Fragment.Algebra.Signature
+open import Fragment.Algebra.Signature renaming (_⦉_⦊ to _⦉_⦊ₜ)
 
 open import Level using (Level; _⊔_)
 open import Function using (_$_)
@@ -22,10 +22,10 @@ open import Data.Vec using (Vec; []; _∷_; map)
 
 private
   variable
-    a ℓ : Level
+    a b ℓ₁ ℓ₂ : Level
 
 module _ {Σ n}
-  (S : Algebra Σ {a} {ℓ})
+  (S : Algebra Σ {a} {ℓ₁})
   (θ : Environment n S)
   where
 
@@ -33,7 +33,7 @@ module _ {Σ n}
 
   open import Fragment.Algebra.Homomorphism Σ
   open import Fragment.Algebra.Homomorphism.Setoid Σ using (_≡ₕ_)
-  open import Fragment.Algebra.TermAlgebra (Σ ⦉ n ⦊) using (Expr; term)
+  open import Fragment.Algebra.TermAlgebra (Σ ⦉ n ⦊ₜ) using (Expr; term)
 
   open import Relation.Binary.Reasoning.Setoid Carrierₛ
   open import Data.Vec.Relation.Binary.Equality.Setoid Carrierₛ
@@ -77,11 +77,11 @@ module _ {Σ n}
                   ; h-hom  = subst-hom
                   }
 
-  subst-subst : Substitution subst
-  subst-subst = PE.refl
+  substitution-subst : Substitution subst
+  substitution-subst = PE.refl
 
-  substₕ-subst : Substitutionₕ substₕ
-  substₕ-subst = subst-subst
+  substitutionₕ-substₕ : Substitutionₕ substₕ
+  substitutionₕ-substₕ = substitution-subst
 
   mutual
     subst-args-universal : (H : (|T| Σ ⦉ n ⦊) →ₕ S)
@@ -112,7 +112,7 @@ module _ {Σ n}
       where open _→ₕ_ H
 
 module _ {Σ n}
-  {S : Algebra Σ {a} {ℓ}}
+  {S : Algebra Σ {a} {ℓ₁}}
   where
 
   open Algebra S renaming (Carrier to A)
@@ -122,23 +122,41 @@ module _ {Σ n}
   open import Fragment.Algebra.Homomorphism Σ
   open import Fragment.Algebra.Homomorphism.Setoid Σ
   open import Fragment.Algebra.TermAlgebra Σ hiding (Expr)
-  open import Fragment.Algebra.TermAlgebra (Σ ⦉ n ⦊) using (Expr)
+  open import Fragment.Algebra.TermAlgebra (Σ ⦉ n ⦊ₜ) using (Expr)
 
   open import Relation.Binary.Reasoning.Setoid Carrierₛ
   open import Data.Vec.Relation.Binary.Equality.Setoid Carrierₛ using (_≋_)
   open import Data.Vec.Relation.Binary.Pointwise.Inductive as PW using ([]; _∷_)
 
   mutual
-
     subst-eval-args : ∀ {arity}
                       → {θ : Environment n |T|}
                       → {xs : Vec Expr arity}
-                      → eval-args S (subst-args |T| θ xs) ≋ subst-args S (eval S ∘ θ) xs
-    subst-eval-args {θ = θ} {xs = []}     = []
+                      → eval-args S (subst-args |T| θ xs)
+                        ≋ subst-args S (eval S ∘ θ) xs
+    subst-eval-args {θ = _} {xs = []}     = []
     subst-eval-args {θ = θ} {xs = x ∷ xs} = (subst-eval {θ} {x}) ∷ subst-eval-args
 
     subst-eval : ∀ {θ : Environment n |T|}
                  → evalₕ S ∘ₕ (substₕ |T| θ) ≡ₕ substₕ S (eval S ∘ θ)
-    subst-eval {θ} {term (inj₂ k) []} = refl
-    subst-eval {θ} {term (inj₁ f) []} = refl
-    subst-eval {θ} {term f (x ∷ xs)}  = ⟦⟧-cong f (subst-eval-args {xs = x ∷ xs})
+    subst-eval {x = term (inj₂ k) []} = refl
+    subst-eval {x = term (inj₁ f) []} = refl
+    subst-eval {x = term f (x ∷ xs)}  = ⟦⟧-cong f (subst-eval-args {xs = x ∷ xs})
+
+  mutual
+    subst-subst-args : ∀ {m arity}
+                       → {θ : Environment m S}
+                       → {θ' : Environment n |T| Σ ⦉ m ⦊}
+                       → {xs : Vec Expr arity}
+                       → subst-args S θ (subst-args |T| Σ ⦉ m ⦊ θ' xs)
+                         ≋  subst-args S ((subst S θ) ∘ θ') xs
+    subst-subst-args {xs = []} = []
+    subst-subst-args {xs = x ∷ xs} = subst-subst {x = x} ∷ subst-subst-args
+
+    subst-subst : ∀ {m}
+                  → {θ : Environment m S}
+                  → {θ' : Environment n |T| Σ ⦉ m ⦊}
+                  → (substₕ S θ) ∘ₕ (substₕ |T| Σ ⦉ m ⦊ θ') ≡ₕ substₕ S ((subst S θ) ∘ θ')
+    subst-subst {x = term (inj₂ k) []} = refl
+    subst-subst {x = term (inj₁ f) []} = refl
+    subst-subst {x = term f (x ∷ xs)} = ⟦⟧-cong f (subst-subst-args {xs = x ∷ xs})

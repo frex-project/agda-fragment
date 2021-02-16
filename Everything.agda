@@ -29,4 +29,5 @@ import Fragment.Equational.Structures
 import Fragment.Equational.TermModel
 import Fragment.Equational.TermModel.Base
 import Fragment.Equational.TermModel.Properties
+import Fragment.Equational.TermModel.ProvableEquivalence
 import Fragment.Equational.Theory
