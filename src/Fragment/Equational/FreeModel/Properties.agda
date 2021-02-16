@@ -4,7 +4,14 @@ module Fragment.Equational.FreeModel.Properties where
 
 open import Fragment.Algebra.Signature renaming (_⦉_⦊ to _⦉_⦊ₜ)
 open import Fragment.Algebra.FreeAlgebra
-  hiding (subst-cong; subst-hom; substₕ; substₕ-universal)
+  using ( subst
+        ; subst-subst
+        ; subst-args
+        ; subst-args≡map
+        ; Environment
+        ; |T|_⦉_⦊
+        ; |T|_⦉_⦊-⟦_⟧
+        )
 
 open import Fragment.Equational.Theory
 open import Fragment.Equational.Model
@@ -13,10 +20,12 @@ open import Fragment.Equational.FreeModel.Base
 open import Level using (Level; _⊔_)
 open import Function using (_∘_; _$_)
 
+open import Data.Fin using (Fin)
 open import Data.Vec using (Vec; []; _∷_; map)
 open import Data.Product using (proj₁; proj₂)
+open import Data.Sum using (inj₁; inj₂)
 open import Relation.Binary using (IsEquivalence)
-import Relation.Binary.PropositionalEquality as PE
+open import Relation.Binary.PropositionalEquality as PE using (_≡_)
 
 private
   variable
@@ -27,7 +36,7 @@ module _ {Θ n}
   (θ : Environment n (Model.Carrierₐ M))
   where
 
-  open Model M renaming (Carrierₐ to S)
+  open Model M renaming (Carrierₐ to S; Carrier to A)
 
   open import Fragment.Algebra.Homomorphism (Σ Θ)
   open import Fragment.Algebra.Homomorphism.Setoid (Σ Θ) using (_≡ₕ_)
@@ -39,6 +48,14 @@ module _ {Θ n}
   open import Data.Vec.Relation.Binary.Pointwise.Inductive as PW using ([]; _∷_)
 
   open import Fragment.Algebra.TermAlgebra ((Σ Θ) ⦉ n ⦊ₜ)
+
+  -- FIXME this definition is duplicated from Fragment.Algebra.FreeAlgebra.Properties
+  Substitution : (Expr → A) → Set a
+  Substitution f = ∀ {k : Fin n}
+                   → f (term (inj₂ k) []) ≡ θ k
+
+  Substitutionₕ : (|T| Θ ⦉ n ⦊/≈ₘ) →ₕ S → Set a
+  Substitutionₕ H = Substitution (_→ₕ_.h H)
 
   subst-hom : Homomorphic |T| Θ ⦉ n ⦊/≈ₘ S (subst S θ)
   subst-hom {_} f []       = Model.refl M
@@ -87,3 +104,37 @@ module _ {Θ n}
                   ; h-cong = subst-cong
                   ; h-hom  = subst-hom
                   }
+
+  substitution-subst : Substitution (subst S θ)
+  substitution-subst = PE.refl
+
+  substitutionₕ-substₕ : Substitutionₕ substₕ
+  substitutionₕ-substₕ = substitution-subst
+
+  mutual
+    subst-args-universal : (H : (|T| Θ ⦉ n ⦊/≈ₘ) →ₕ S)
+                           → Substitutionₕ H
+                           → ∀ {arity} {xs : Vec Expr arity}
+                           → map (_→ₕ_.h H) xs ≋ subst-args S θ xs
+    subst-args-universal H _       {_} {[]}     = PW.[]
+    subst-args-universal H h-subst {_} {x ∷ xs} =
+      PW._∷_
+        (substₕ-universal H h-subst {x})
+        (subst-args-universal H h-subst {_} {xs})
+
+    substₕ-universal : (H : (|T| Θ ⦉ n ⦊/≈ₘ) →ₕ S)
+                       → Substitutionₕ H
+                       → H ≡ₕ substₕ
+    substₕ-universal H h-subst {term (inj₂ k) []} = reflexive (h-subst {k})
+    substₕ-universal H h-subst {term (inj₁ f) []} = Model.sym M (h-hom f [])
+      where open _→ₕ_ H
+    substₕ-universal H h-subst {term f (x ∷ xs)}  = begin
+        h (term f (x ∷ xs))
+      ≈⟨ Model.sym M (h-hom f (x ∷ xs)) ⟩
+        ⟦ f ⟧ (map h (x ∷ xs))
+      ≈⟨ ⟦⟧-cong f (subst-args-universal H h-subst) ⟩
+        ⟦ f ⟧ (subst-args S θ (x ∷ xs))
+      ≡⟨⟩
+        subst S θ (term f (x ∷ xs))
+      ∎
+      where open _→ₕ_ H
