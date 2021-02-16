@@ -2,7 +2,7 @@
 
 open import Fragment.Equational.Theory
 
-module Fragment.Equational.Coproduct (Θ : Theory) where
+module Fragment.Equational.Coproduct {Θ : Theory} where
 
 open import Fragment.Equational.Model
 
