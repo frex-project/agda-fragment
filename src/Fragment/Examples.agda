@@ -2,7 +2,6 @@
 
 module Fragment.Examples where
 
-{-
 open import Fragment.Equational.Bundles using (Θ-semigroup)
 open import Fragment.Equational.Model
 open import Fragment.Equational.FreeExtension Θ-semigroup
@@ -16,13 +15,14 @@ open import Relation.Binary.PropositionalEquality as PE using (_≡_)
 +-isModel : IsModel Θ-semigroup (PE.setoid ℕ)
 +-isModel = (semigroup→isModel (PE.setoid ℕ) +-isSemigroup)
 
-open import Fragment.Extensions.Semigroup +-isModel
+{-
+open import Fragment.Extensions.Semigroup +-isModel 2
 
 simple : ∀ {m n} → (m + 2) + (3 + n) ≡ (m + 5) + n
-simple {m = m} {n = n} = fundamental (++-isFrex {n = 2}) p θ
+simple {m = m} {n = n} = fundamental ++-isFrex p θ
     where θ : Fin 2 → ℕ
           θ zero       = m
           θ (suc zero) = n
-          term = normalise (consD (# 0) (consS 2 (leaf (inj₂ (# 1)))))
+          term = normalise (consD (# 0) (consS 5 (leaf (inj₂ (# 1)))))
           p = PE.refl {x = term , normalise-reduction {x = term}}
 -}
