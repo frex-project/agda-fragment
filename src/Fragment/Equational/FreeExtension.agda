@@ -2,11 +2,11 @@
 
 open import Fragment.Equational.Theory
 
-module Fragment.Equational.FreeExtension {Θ : Theory} where
+module Fragment.Equational.FreeExtension (Θ : Theory) where
 
 open import Fragment.Equational.Model
 open import Fragment.Equational.FreeModel
-open import Fragment.Equational.Coproduct
+open import Fragment.Equational.Coproduct Θ
 
 open import Fragment.Algebra.FreeAlgebra using (Environment)
 open import Fragment.Algebra.Homomorphism (Σ Θ)
