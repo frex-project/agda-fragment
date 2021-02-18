@@ -241,7 +241,7 @@ module _ {b ℓ} {W : Model Θ-semigroup {b} {ℓ}} where
   ++-[_,_]-hom {f = f} {g = g} f-hom g-hom MagmaOp.•
     ((leaf (inj₁ x) , leaf) ∷ (leaf (inj₂ y) , leaf) ∷ []) = Model.refl W
   ++-[_,_]-hom {f = f} {g = g} f-hom g-hom MagmaOp.•
-    ((leaf (inj₁ x) , leaf) ∷ (cons (inj₁ y) (leaf (inj₂ z)) , cons₁) ∷ []) = begin
+    ((leaf (inj₁ x) , leaf) ∷ (cons (inj₁ y) (leaf (inj₂ z)) , cons₁) ∷ [])     = begin
       f x ⊕ (f y ⊕ g (term (inj₂ z) []))
     ≈⟨ Model.sym W (⊕-assoc (f x) (f y) (g (term (inj₂ z) []))) ⟩
       (f x ⊕ f y) ⊕ g (term (inj₂ z) [])
@@ -253,13 +253,29 @@ module _ {b ℓ} {W : Model Θ-semigroup {b} {ℓ}} where
       ++-[ f , g ] ((leaf (inj₁ (x • y)) , leaf) ++ (leaf (inj₂ z) , leaf))
     ∎
   ++-[_,_]-hom {f = f} {g = g} f-hom g-hom MagmaOp.•
-    ((leaf (inj₁ x) , leaf) ∷ (cons (inj₁ y) ys , cons₃ p) ∷ []) = {!!}
+    ((leaf (inj₁ x) , leaf) ∷ (cons (inj₁ y) (cons (inj₂ z) w) , cons₃ p) ∷ []) = begin
+      f x ⊕ (f y ⊕ (g (term (inj₂ z) []) ⊕ ++-[ f , g ] (w , p)))
+    ≈⟨ Model.sym W (⊕-assoc (f x) (f y) ((g (term (inj₂ z) []) ⊕ ++-[ f , g ] (w , p)))) ⟩
+      (f x ⊕ f y) ⊕ (g (term (inj₂ z) []) ⊕ ++-[ f , g ] (w , p))
+    ≈⟨ ⊕-cong (f-hom MagmaOp.• (x ∷ y ∷ [])) (Model.refl W) ⟩
+      f (x • y) ⊕ ++-[ f , g ] ((leaf (inj₂ z) , leaf) ++ (w , p))
+    ≡⟨⟩
+      ++-[ f , g ] ((cons (inj₁ (x • y)) (leaf (inj₂ z)) , cons₁) ++ (w , p))
+    ∎
   ++-[_,_]-hom {f = f} {g = g} f-hom g-hom MagmaOp.•
-    ((leaf (inj₁ x) , leaf) ∷ (cons (inj₂ y) ys , cons₂ p) ∷ []) = {!!}
+    ((leaf (inj₁ x) , leaf) ∷ (cons (inj₂ y) z , cons₂ p) ∷ [])                 = begin
+      f x ⊕ (g (term (inj₂ y) []) ⊕ ++-[ f , g ] (z , p))
+    ≈⟨ ⊕-cong (Model.refl W) (++-[ f-hom , g-hom ]-hom MagmaOp.• ((leaf (inj₂ y) , leaf) ∷ (z , p) ∷ [])) ⟩
+      f x ⊕ ++-[ f , g ] (cons (inj₂ y) z , cons₂ p)
+    ≡⟨⟩
+      ++-[ f , g ] (cons (inj₁ x) (cons (inj₂ y) z) , cons₃ p)
+    ≡⟨⟩
+      ++-[ f , g ] ((leaf (inj₁ x) , leaf) ++ (cons (inj₂ y) z , cons₂ p))
+    ∎
   ++-[_,_]-hom {f = f} {g = g} f-hom g-hom MagmaOp.•
-    ((leaf (inj₂ x) , leaf) ∷ (y , p) ∷ [])                      = Model.refl W
+    ((leaf (inj₂ x) , leaf) ∷ (y , p) ∷ [])                                     = Model.refl W
   ++-[_,_]-hom {f = f} {g = g} f-hom g-hom MagmaOp.•
-    ((cons (inj₁ x) (leaf (inj₂ y)) , cons₁) ∷ (z , q) ∷ [])     = begin
+    ((cons (inj₁ x) (leaf (inj₂ y)) , cons₁) ∷ (z , q) ∷ [])                    = begin
       (f x ⊕ g (term (inj₂ y) [])) ⊕ ++-[ f , g ] (z , q)
     ≈⟨ ⊕-assoc (f x) (g (term (inj₂ y) [])) (++-[ f , g ] (z , q)) ⟩
       f x ⊕ (g (term (inj₂ y) []) ⊕ ++-[ f , g ] (z , q))
@@ -271,7 +287,7 @@ module _ {b ℓ} {W : Model Θ-semigroup {b} {ℓ}} where
       ++-[ f , g ] ((cons (inj₁ x) (leaf (inj₂ y)) , cons₁) ++ (z , q))
     ∎
   ++-[_,_]-hom {f = f} {g = g} f-hom g-hom MagmaOp.•
-    ((cons (inj₁ x) (cons (inj₂ y) z) , cons₃ p) ∷ (w , q) ∷ []) = begin
+    ((cons (inj₁ x) (cons (inj₂ y) z) , cons₃ p) ∷ (w , q) ∷ [])                = begin
       (f x ⊕ (g (term (inj₂ y) []) ⊕ ++-[ f , g ] (z , p))) ⊕ ++-[ f , g ] (w , q)
     ≈⟨ ⊕-assoc (f x) (g (term (inj₂ y) []) ⊕ ++-[ f , g ] (z , p)) (++-[ f , g ] (w , q)) ⟩
       f x ⊕ ((g (term (inj₂ y) []) ⊕ ++-[ f , g ] (z , p)) ⊕ ++-[ f , g ] (w , q))
@@ -291,7 +307,7 @@ module _ {b ℓ} {W : Model Θ-semigroup {b} {ℓ}} where
       ++-[ f , g ] ((cons (inj₁ x) (cons (inj₂ y) z) , cons₃ p) ++ (w , q))
     ∎
   ++-[_,_]-hom {f = f} {g = g} f-hom g-hom MagmaOp.•
-    ((cons (inj₂ x) xs , cons₂ p) ∷ (y , q) ∷ [])                = begin
+    ((cons (inj₂ x) xs , cons₂ p) ∷ (y , q) ∷ [])                               = begin
       (g (term (inj₂ x) []) ⊕ ++-[ f ,  g ] (xs , p)) ⊕ ++-[ f , g ] (y , q)
     ≈⟨ ⊕-assoc (g (term (inj₂ x) [])) (++-[ f , g ] (xs , p)) (++-[ f , g ] (y , q)) ⟩
       g (term (inj₂ x) []) ⊕ (++-[ f ,  g ] (xs , p) ⊕ ++-[ f , g ] (y , q))
