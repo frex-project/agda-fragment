@@ -71,6 +71,14 @@ data Normal : Semigroup → Set a where
   cons₂ : ∀ {x xs} → Normal xs → Normal (cons (inj₂ x) xs)
   cons₃ : ∀ {x y ys} → Normal ys → Normal (cons (inj₁ x) (cons (inj₂ y) ys))
 
+canonicity : ∀ {x : Semigroup} → (p : Normal x) → (q : Normal x) → p ≡ q
+canonicity {x = leaf _} leaf leaf                                     = PE.refl
+canonicity {x = cons (inj₁ x) (leaf (inj₂ _))} cons₁ cons₁            = PE.refl
+canonicity {x = cons (inj₁ x) (cons (inj₂ y) ys)} (cons₃ p) (cons₃ q) =
+  PE.cong cons₃ (canonicity p q)
+canonicity {x = cons (inj₂ x) xs} (cons₂ p) (cons₂ q)                 =
+  PE.cong cons₂ (canonicity p q)
+
 consS-preserves : ∀ {x xs} → Normal xs → Normal (consS x xs)
 consS-preserves (leaf {x = inj₁ y}) = leaf
 consS-preserves (leaf {x = inj₂ y}) = cons₁
@@ -150,7 +158,12 @@ _++_ : NormalSemigroup → NormalSemigroup → NormalSemigroup
 
 ++-assoc : ∀ (x y z : NormalSemigroup)
            → (x ++ y) ++ z ≡ x ++ (y ++ z)
-++-assoc x y z = {!!}
+++-assoc (x , p) (y , q) (z , r) =
+  Inverse.f Σ-≡,≡↔≡
+    (++-raw-assoc x y z ,
+      canonicity
+        (PE.subst Normal (++-raw-assoc x y z) ((p ++ₙ q) ++ₙ r))
+        (p ++ₙ (q ++ₙ r)))
 
 ++-⟦_⟧ : Interpretation Σ-magma (PE.setoid (NormalSemigroup))
 ++-⟦_⟧ MagmaOp.• (x ∷ y ∷ []) = _++_ x y
