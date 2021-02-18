@@ -21,11 +21,12 @@ open import Fragment.Algebra.Algebra
 open import Fragment.Algebra.Signature renaming (_⦉_⦊ to _⦉_⦊ₜ)
 open import Fragment.Algebra.TermAlgebra (Σ-magma ⦉ n ⦊ₜ)
 open import Fragment.Algebra.Homomorphism (Σ-magma)
+open import Fragment.Algebra.Homomorphism.Setoid (Σ-magma)
+open import Fragment.Algebra.FreeAlgebra using (subst)
 
 open import Function.Bundles using (Inverse)
 open import Algebra.Structures using (IsSemigroup)
 
-open import Data.Empty using (⊥; ⊥-elim)
 open import Data.Sum using (_⊎_; inj₁; inj₂)
 open import Data.Product using (Σ-syntax; _,_; proj₁; proj₂)
 open import Data.Product.Properties using (Σ-≡,≡↔≡)
@@ -204,6 +205,12 @@ _++_ : NormalSemigroup → NormalSemigroup → NormalSemigroup
                  ; h-hom  = ++-inl-hom
                  }
 
+++-inr-θ : Fin n → NormalSemigroup
+++-inr-θ k = leaf (inj₂ k) , leaf
+
+++-inrₕ : |T| Θ-semigroup ⦉ n ⦊/≈ₘ →ₕ ++-algebra
+++-inrₕ = substₕ ++-model ++-inr-θ
+
 module _ {b ℓ} {W : Model Θ-semigroup {b} {ℓ}} where
 
   open Model W renaming (Carrierₐ to Wₐ; Carrier to U; ⟦_⟧ to W⟦_⟧; ⟦⟧-cong to W⟦⟧-cong)
@@ -263,15 +270,8 @@ module _ {b ℓ} {W : Model Θ-semigroup {b} {ℓ}} where
       ++-[ f , g ] ((cons (inj₁ (x • y)) (leaf (inj₂ z)) , cons₁) ++ (w , p))
     ∎
   ++-[_,_]-hom {f = f} {g = g} f-hom g-hom MagmaOp.•
-    ((leaf (inj₁ x) , leaf) ∷ (cons (inj₂ y) z , cons₂ p) ∷ [])                 = begin
-      f x ⊕ (g (term (inj₂ y) []) ⊕ ++-[ f , g ] (z , p))
-    ≈⟨ ⊕-cong (Model.refl W) (++-[ f-hom , g-hom ]-hom MagmaOp.• ((leaf (inj₂ y) , leaf) ∷ (z , p) ∷ [])) ⟩
-      f x ⊕ ++-[ f , g ] (cons (inj₂ y) z , cons₂ p)
-    ≡⟨⟩
-      ++-[ f , g ] (cons (inj₁ x) (cons (inj₂ y) z) , cons₃ p)
-    ≡⟨⟩
-      ++-[ f , g ] ((leaf (inj₁ x) , leaf) ++ (cons (inj₂ y) z , cons₂ p))
-    ∎
+    ((leaf (inj₁ x) , leaf) ∷ (cons (inj₂ y) z , cons₂ p) ∷ [])                 =
+    ⊕-cong (Model.refl W) (Model.refl W)
   ++-[_,_]-hom {f = f} {g = g} f-hom g-hom MagmaOp.•
     ((leaf (inj₂ x) , leaf) ∷ (y , p) ∷ [])                                     = Model.refl W
   ++-[_,_]-hom {f = f} {g = g} f-hom g-hom MagmaOp.•
@@ -320,16 +320,48 @@ module _ {b ℓ} {W : Model Θ-semigroup {b} {ℓ}} where
     ∎
 
   ++-[_,_]ₕ : S →ₕ Wₐ → |T| Θ-semigroup ⦉ n ⦊/≈ₘ →ₕ Wₐ → ++-algebra →ₕ Wₐ
-  ++-[_,_]ₕ F G = record { h      = ++-[ _→ₕ_.h F , _→ₕ_.h G ]
-                         ; h-cong = ++-[ _→ₕ_.h F , _→ₕ_.h G ]-cong
-                         ; h-hom  = ++-[ _→ₕ_.h-hom F , _→ₕ_.h-hom G ]-hom
+  ++-[_,_]ₕ F G = record { h      = ++-[ f , g ]
+                         ; h-cong = ++-[ f , g ]-cong
+                         ; h-hom  = ++-[ f-hom , g-hom ]-hom
                          }
+    where open _→ₕ_ F renaming (h to f; h-hom to f-hom)
+          open _→ₕ_ G renaming (h to g; h-hom to g-hom)
+
+  ++-[_,_]-commute₁ : ∀ {F : S →ₕ Wₐ}
+                      → {G : |T| Θ-semigroup ⦉ n ⦊/≈ₘ →ₕ Wₐ}
+                      → ++-[ F , G ]ₕ ∘ₕ ++-inlₕ ≡ₕ F
+  ++-[_,_]-commute₁ = Model.refl W
+
+  ++-[_,_]-commute₂ : ∀ {F : S →ₕ Wₐ}
+                      → {G : |T| Θ-semigroup ⦉ n ⦊/≈ₘ →ₕ Wₐ}
+                      → ++-[ F , G ]ₕ ∘ₕ ++-inrₕ ≡ₕ G
+  ++-[_,_]-commute₂ {F = F} {G = G} {x = term {0} (inj₂ k) []} =
+    ++-[ f , g ]-cong (PE.refl {x = ++-inr-θ k})
+    where open _→ₕ_ F renaming (h to f)
+          open _→ₕ_ G renaming (h to g)
+  ++-[_,_]-commute₂ {F = F} {G = G} {x = term {2} (MagmaOp.•) (x ∷ y ∷ [])} = begin
+      ++-[ f , g ] (subst ++-algebra ++-inr-θ (term MagmaOp.• (x ∷ y ∷ [])))
+    ≈⟨ ++-[ f , g ]-cong (subst-hom ++-model ++-inr-θ MagmaOp.• (x ∷ y ∷ [])) ⟩
+      ++-[ f , g ] ((subst ++-algebra ++-inr-θ x) ++ (subst ++-algebra ++-inr-θ y))
+    ≈⟨
+       Model.sym W (++-[ f-hom , g-hom ]-hom MagmaOp.•
+         ((subst ++-algebra ++-inr-θ x) ∷ (subst ++-algebra ++-inr-θ y) ∷ []))
+     ⟩
+      (++-[ f , g ] (subst ++-algebra ++-inr-θ x)) ⊕ (++-[ f , g ] (subst ++-algebra ++-inr-θ y))
+    ≈⟨ ⊕-cong (++-[_,_]-commute₂ {F = F} {G = G}) (++-[_,_]-commute₂ {F = F} {G = G}) ⟩
+      g x ⊕ g y
+    ≈⟨ g-hom MagmaOp.• (x ∷ y ∷ []) ⟩
+      g (term MagmaOp.• (x ∷ y ∷ []))
+    ∎
+    where open _→ₕ_ F renaming (h to f; h-hom to f-hom)
+          open _→ₕ_ G renaming (h to g; h-hom to g-hom; h-cong to g-cong)
 
 ++-isFrex : IsFreeExtension M n ++-model
-++-isFrex = record { inl       = ++-inlₕ
-                   ; inr       = substₕ ++-model (λ k → leaf (inj₂ k) , leaf)
-                   ; [_,_]     = λ {_} {_} {W} → ++-[_,_]ₕ {W = W}
-                   ; commute₁  = {!!}
-                   ; commute₂  = {!!}
-                   ; universal = {!!}
-                   }
+++-isFrex =
+  record { inl       = ++-inlₕ
+         ; inr       = ++-inrₕ
+         ; [_,_]     = λ {_} {_} {W} → ++-[_,_]ₕ {W = W}
+         ; commute₁  = λ {_} {_} {W} {F} {G} → ++-[_,_]-commute₁ {W = W} {F = F} {G = G}
+         ; commute₂  = λ {_} {_} {W} {F} {G} → ++-[_,_]-commute₂ {W = W} {F = F} {G = G}
+         ; universal = {!!}
+         }
