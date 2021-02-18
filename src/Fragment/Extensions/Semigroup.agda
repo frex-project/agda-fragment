@@ -30,7 +30,7 @@ open import Data.Sum using (_⊎_; inj₁; inj₂)
 open import Data.Product using (Σ-syntax; _,_; proj₁; proj₂)
 open import Data.Product.Properties using (Σ-≡,≡↔≡)
 open import Data.Fin using (Fin; #_)
-open import Data.Vec using (Vec; _∷_; [])
+open import Data.Vec using (Vec; _∷_; []; map)
 open import Data.Vec.Relation.Binary.Equality.Propositional using (≋⇒≡)
 
 open IsModel isModel
@@ -97,8 +97,6 @@ leaf (inj₂ x)    ++-raw y = consD x y
 cons (inj₁ x) xs ++-raw y = consS x (xs ++-raw y)
 cons (inj₂ x) xs ++-raw y = consD x (xs ++-raw y)
 
-open PE.≡-Reasoning
-
 consS-• : ∀ {a b} → (x : Semigroup) → consS (a • b) x ≡ consS a (consS b x)
 consS-• {a = a} {b = b} (leaf (inj₁ x))    = PE.cong (λ x → leaf (inj₁ x)) (assoc a b x)
 consS-• {a = a} {b = b} (cons (inj₁ x) xs) = PE.cong (λ x → cons (inj₁ x) xs) (assoc a b x)
@@ -122,6 +120,7 @@ consS-++ {a = a} (cons (inj₁ x) xs) y = begin
   ≡⟨ consS-• (xs ++-raw y) ⟩
     consS a ((cons (inj₁ x) xs) ++-raw y)
   ∎
+  where open PE.≡-Reasoning
 
 ++-raw-assoc : ∀ (x y z : Semigroup)
                → (x ++-raw y) ++-raw z ≡ x ++-raw (y ++-raw z)
@@ -142,6 +141,7 @@ consS-++ {a = a} (cons (inj₁ x) xs) y = begin
   ≡⟨⟩
     ((cons (inj₁ x) xs) ++-raw (y ++-raw z))
   ∎
+  where open PE.≡-Reasoning
 
 _++ₙ_ : ∀ {x y} →  Normal x → Normal y → Normal (x ++-raw y)
 _++ₙ_ {x = leaf (inj₁ x)} {y = y} leaf q                = consS-preserves q
@@ -204,35 +204,40 @@ _++_ : NormalSemigroup → NormalSemigroup → NormalSemigroup
                  ; h-hom  = ++-inl-hom
                  }
 
-{-
-++-[_,_] : ∀ {b ℓ} {W : Model Θ-semigroup {b} {ℓ}}
-           → (A → Model.Carrier W)
-           → (Expr → Model.Carrier W)
-           → NormalSemigroup → Model.Carrier W
-++-[_,_] {W = W} f g (leaf (inj₁ x) , _) =  f x
-++-[_,_] {W = W} f g (leaf (inj₂ x) , _) =  g (term (inj₂ x) [])
-++-[_,_] {W = W} f g (cons (inj₁ x) (leaf (inj₂ y)) , cons₁) =
-  Model.⟦_⟧ W MagmaOp.• (f x ∷ g (term (inj₂ y) []) ∷ [])
-++-[_,_] {W = W} f g (cons (inj₁ x) (cons (inj₂ y) ys) , cons₃ p) =
-  Model.⟦_⟧ W MagmaOp.• (f x ∷ ++-[ f , g ] (cons (inj₂ y) ys , cons₂ p) ∷ [])
-++-[_,_] {W = W} f g (cons (inj₂ x) xs , cons₂ p) =
-  Model.⟦_⟧ W MagmaOp.• (g (term (inj₂ x) []) ∷ ++-[ f , g ] (xs , p) ∷ [])
+module _ {b ℓ} {W : Model Θ-semigroup {b} {ℓ}} where
 
-++-[_,_]ₕ : ∀ {b ℓ} {W : Model Θ-semigroup {b} {ℓ}}
-            → S →ₕ Model.Carrierₐ W
-            → |T| Θ-semigroup ⦉ n ⦊/≈ₘ →ₕ Model.Carrierₐ W
-            → ++-algebra →ₕ Model.Carrierₐ W
-++-[_,_]ₕ {W = W} F G = record { h      = ++-[ _→ₕ_.h F , _→ₕ_.h G ]
-                               ; h-cong = {!!}
-                               ; h-hom  = {!!}
-                               }
+  open Model W renaming (Carrierₐ to Wₐ; Carrier to U; ⟦_⟧ to W⟦_⟧)
+
+  ++-[_,_] : (A → U) → (Expr → U) → NormalSemigroup → U
+  ++-[ f , g ] (leaf (inj₁ x) , _) =  f x
+  ++-[ f , g ] (leaf (inj₂ x) , _) =  g (term (inj₂ x) [])
+  ++-[ f , g ] (cons (inj₁ x) (leaf (inj₂ y)) , cons₁) =
+    W⟦ MagmaOp.• ⟧ (f x ∷ g (term (inj₂ y) []) ∷ [])
+  ++-[ f , g ] (cons (inj₁ x) (cons (inj₂ y) ys) , cons₃ p) =
+    W⟦ MagmaOp.• ⟧ (f x ∷ ++-[ f , g ] (cons (inj₂ y) ys , cons₂ p) ∷ [])
+  ++-[ f , g ] (cons (inj₂ x) xs , cons₂ p) =
+    W⟦ MagmaOp.• ⟧ (g (term (inj₂ x) []) ∷ ++-[ f , g ] (xs , p) ∷ [])
+
+  ++-[_,_]-cong : (f : A → U) → (g : Expr → U) → Congruent _≡_ _≈_ (++-[ f , g ])
+  ++-[ f , g ]-cong p = Model.reflexive W (PE.cong ++-[ f , g ] p)
+
+  open import Relation.Binary.Reasoning.Setoid Carrierₛ
+
+  ++-[_,_]-hom : (f : A → U) → (g : Expr → U)
+                 → Homomorphic ++-algebra Wₐ ++-[ f , g ]
+  ++-[ f , g ]-hom MagmaOp.• (x ∷ y ∷ []) = {!!}
+
+  ++-[_,_]ₕ : S →ₕ Wₐ → |T| Θ-semigroup ⦉ n ⦊/≈ₘ →ₕ Wₐ → ++-algebra →ₕ Wₐ
+  ++-[_,_]ₕ F G = record { h      = ++-[ _→ₕ_.h F , _→ₕ_.h G ]
+                         ; h-cong = ++-[ _→ₕ_.h F , _→ₕ_.h G ]-cong
+                         ; h-hom  = ++-[ _→ₕ_.h F , _→ₕ_.h G ]-hom
+                         }
 
 ++-isFrex : IsFreeExtension M n ++-model
 ++-isFrex = record { inl       = ++-inlₕ
                    ; inr       = substₕ ++-model (λ k → leaf (inj₂ k) , leaf)
-                   ; [_,_]     = ++-[_,_]ₕ
+                   ; [_,_]     = λ {_} {_} {W} → ++-[_,_]ₕ {W = W}
                    ; commute₁  = {!!}
                    ; commute₂  = {!!}
                    ; universal = {!!}
                    }
--}
