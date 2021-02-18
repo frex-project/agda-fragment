@@ -206,31 +206,107 @@ _++_ : NormalSemigroup → NormalSemigroup → NormalSemigroup
 
 module _ {b ℓ} {W : Model Θ-semigroup {b} {ℓ}} where
 
-  open Model W renaming (Carrierₐ to Wₐ; Carrier to U; ⟦_⟧ to W⟦_⟧)
+  open Model W renaming (Carrierₐ to Wₐ; Carrier to U; ⟦_⟧ to W⟦_⟧; ⟦⟧-cong to W⟦⟧-cong)
+  open IsSemigroup (isModel→semigroup Carrierₛ (Model.isModel W))
+    renaming (assoc to ⊕-assoc)
+
+  private
+    _⊕_ : U → U → U
+    x ⊕ y = W⟦ MagmaOp.• ⟧ (x ∷ y ∷ [])
+
+    ⊕-cong : ∀ {x y z w : U} → x ≈ y → z ≈ w → x ⊕ z ≈ y ⊕ w
+    ⊕-cong p q = W⟦⟧-cong MagmaOp.• (p ∷ q ∷ [])
+      where open import Data.Vec.Relation.Binary.Pointwise.Inductive using ([]; _∷_)
 
   ++-[_,_] : (A → U) → (Expr → U) → NormalSemigroup → U
-  ++-[ f , g ] (leaf (inj₁ x) , _) =  f x
-  ++-[ f , g ] (leaf (inj₂ x) , _) =  g (term (inj₂ x) [])
-  ++-[ f , g ] (cons (inj₁ x) (leaf (inj₂ y)) , cons₁) =
-    W⟦ MagmaOp.• ⟧ (f x ∷ g (term (inj₂ y) []) ∷ [])
+  ++-[ f , g ] (leaf (inj₁ x) , _)                          = f x
+  ++-[ f , g ] (leaf (inj₂ x) , _)                          = g (term (inj₂ x) [])
+  ++-[ f , g ] (cons (inj₁ x) (leaf (inj₂ y)) , cons₁)      = f x ⊕ g (term (inj₂ y) [])
   ++-[ f , g ] (cons (inj₁ x) (cons (inj₂ y) ys) , cons₃ p) =
-    W⟦ MagmaOp.• ⟧ (f x ∷ ++-[ f , g ] (cons (inj₂ y) ys , cons₂ p) ∷ [])
-  ++-[ f , g ] (cons (inj₂ x) xs , cons₂ p) =
-    W⟦ MagmaOp.• ⟧ (g (term (inj₂ x) []) ∷ ++-[ f , g ] (xs , p) ∷ [])
+    f x ⊕ ++-[ f , g ] (cons (inj₂ y) ys , cons₂ p)
+  ++-[ f , g ] (cons (inj₂ x) xs , cons₂ p)                 =
+    g (term (inj₂ x) []) ⊕ ++-[ f , g ] (xs , p)
 
   ++-[_,_]-cong : (f : A → U) → (g : Expr → U) → Congruent _≡_ _≈_ (++-[ f , g ])
   ++-[ f , g ]-cong p = Model.reflexive W (PE.cong ++-[ f , g ] p)
 
   open import Relation.Binary.Reasoning.Setoid Carrierₛ
 
-  ++-[_,_]-hom : (f : A → U) → (g : Expr → U)
+  ++-[_,_]-hom : ∀ {f : A → U} {g : Expr → U}
+                 → Homomorphic S Wₐ f
+                 → Homomorphic |T| Θ-semigroup ⦉ n ⦊/≈ₘ  Wₐ g
                  → Homomorphic ++-algebra Wₐ ++-[ f , g ]
-  ++-[ f , g ]-hom MagmaOp.• (x ∷ y ∷ []) = {!!}
+  ++-[_,_]-hom {f = f} {g = g} f-hom g-hom MagmaOp.•
+    ((leaf (inj₁ x) , leaf) ∷ (leaf (inj₁ y) , leaf) ∷ []) = f-hom MagmaOp.• (x ∷ y ∷ [])
+  ++-[_,_]-hom {f = f} {g = g} f-hom g-hom MagmaOp.•
+    ((leaf (inj₁ x) , leaf) ∷ (leaf (inj₂ y) , leaf) ∷ []) = Model.refl W
+  ++-[_,_]-hom {f = f} {g = g} f-hom g-hom MagmaOp.•
+    ((leaf (inj₁ x) , leaf) ∷ (cons (inj₁ y) (leaf (inj₂ z)) , cons₁) ∷ []) = begin
+      f x ⊕ (f y ⊕ g (term (inj₂ z) []))
+    ≈⟨ Model.sym W (⊕-assoc (f x) (f y) (g (term (inj₂ z) []))) ⟩
+      (f x ⊕ f y) ⊕ g (term (inj₂ z) [])
+    ≈⟨ ⊕-cong (f-hom MagmaOp.• (x ∷ y ∷ [])) (Model.refl W) ⟩
+      f (x • y) ⊕ g (term (inj₂ z) [])
+    ≡⟨⟩
+      ++-[ f , g ] (cons (inj₁ (x • y)) (leaf (inj₂ z)) , cons₁)
+    ≡⟨⟩
+      ++-[ f , g ] ((leaf (inj₁ (x • y)) , leaf) ++ (leaf (inj₂ z) , leaf))
+    ∎
+  ++-[_,_]-hom {f = f} {g = g} f-hom g-hom MagmaOp.•
+    ((leaf (inj₁ x) , leaf) ∷ (cons (inj₁ y) ys , cons₃ p) ∷ []) = {!!}
+  ++-[_,_]-hom {f = f} {g = g} f-hom g-hom MagmaOp.•
+    ((leaf (inj₁ x) , leaf) ∷ (cons (inj₂ y) ys , cons₂ p) ∷ []) = {!!}
+  ++-[_,_]-hom {f = f} {g = g} f-hom g-hom MagmaOp.•
+    ((leaf (inj₂ x) , leaf) ∷ (y , p) ∷ [])                      = Model.refl W
+  ++-[_,_]-hom {f = f} {g = g} f-hom g-hom MagmaOp.•
+    ((cons (inj₁ x) (leaf (inj₂ y)) , cons₁) ∷ (z , q) ∷ [])     = begin
+      (f x ⊕ g (term (inj₂ y) [])) ⊕ ++-[ f , g ] (z , q)
+    ≈⟨ ⊕-assoc (f x) (g (term (inj₂ y) [])) (++-[ f , g ] (z , q)) ⟩
+      f x ⊕ (g (term (inj₂ y) []) ⊕ ++-[ f , g ] (z , q))
+    ≡⟨⟩
+      f x ⊕ ++-[ f , g ] (cons (inj₂ y) z , cons₂ q)
+    ≡⟨⟩
+      ++-[ f , g ] (cons (inj₁ x) (cons (inj₂ y) z) , cons₃ q)
+    ≡⟨⟩
+      ++-[ f , g ] ((cons (inj₁ x) (leaf (inj₂ y)) , cons₁) ++ (z , q))
+    ∎
+  ++-[_,_]-hom {f = f} {g = g} f-hom g-hom MagmaOp.•
+    ((cons (inj₁ x) (cons (inj₂ y) z) , cons₃ p) ∷ (w , q) ∷ []) = begin
+      (f x ⊕ (g (term (inj₂ y) []) ⊕ ++-[ f , g ] (z , p))) ⊕ ++-[ f , g ] (w , q)
+    ≈⟨ ⊕-assoc (f x) (g (term (inj₂ y) []) ⊕ ++-[ f , g ] (z , p)) (++-[ f , g ] (w , q)) ⟩
+      f x ⊕ ((g (term (inj₂ y) []) ⊕ ++-[ f , g ] (z , p)) ⊕ ++-[ f , g ] (w , q))
+    ≈⟨ ⊕-cong (Model.refl W) (⊕-assoc (g (term (inj₂ y) [])) (++-[ f , g ] (z , p)) (++-[ f , g ] (w , q))) ⟩
+      f x ⊕ (g (term (inj₂ y) []) ⊕ (++-[ f , g ] (z , p) ⊕ ++-[ f , g ] (w , q)))
+    ≈⟨ Model.sym W (⊕-assoc (f x) (g (term (inj₂ y) [])) ((++-[ f , g ] (z , p) ⊕ ++-[ f , g ] (w , q)))) ⟩
+      (f x ⊕ g (term (inj₂ y) [])) ⊕ (++-[ f , g ] (z , p) ⊕ ++-[ f , g ] (w , q))
+    ≈⟨ ⊕-cong (Model.refl W) (++-[ f-hom , g-hom ]-hom MagmaOp.• ((z , p) ∷ (w , q) ∷ [])) ⟩
+      (f x ⊕ g (term (inj₂ y) [])) ⊕ ++-[ f , g ] ((z , p) ++ (w , q))
+    ≈⟨ ⊕-assoc (f x) (g (term (inj₂ y) [])) (++-[ f , g ] ((z ++-raw w) , (p ++ₙ q))) ⟩
+      f x ⊕ (g (term (inj₂ y) []) ⊕ ++-[ f , g ] ((z , p) ++ (w , q)))
+    ≡⟨⟩
+      f x ⊕ ++-[ f , g ] (cons (inj₂ y) (z ++-raw w) , cons₂ (p ++ₙ q))
+    ≡⟨⟩
+      ++-[ f , g ] (cons (inj₁ x) (cons (inj₂ y) (z ++-raw w)) , cons₃ (p ++ₙ q))
+    ≡⟨⟩
+      ++-[ f , g ] ((cons (inj₁ x) (cons (inj₂ y) z) , cons₃ p) ++ (w , q))
+    ∎
+  ++-[_,_]-hom {f = f} {g = g} f-hom g-hom MagmaOp.•
+    ((cons (inj₂ x) xs , cons₂ p) ∷ (y , q) ∷ [])                = begin
+      (g (term (inj₂ x) []) ⊕ ++-[ f ,  g ] (xs , p)) ⊕ ++-[ f , g ] (y , q)
+    ≈⟨ ⊕-assoc (g (term (inj₂ x) [])) (++-[ f , g ] (xs , p)) (++-[ f , g ] (y , q)) ⟩
+      g (term (inj₂ x) []) ⊕ (++-[ f ,  g ] (xs , p) ⊕ ++-[ f , g ] (y , q))
+    ≈⟨ ⊕-cong (Model.refl W) (++-[ f-hom , g-hom ]-hom MagmaOp.• ((xs , p) ∷ (y , q) ∷ [])) ⟩
+      g (term (inj₂ x) []) ⊕ ++-[ f , g ] (xs ++-raw y , p ++ₙ q)
+    ≡⟨⟩
+      ++-[ f , g ] ((cons (inj₂ x) (xs ++-raw y)) , cons₂ (p ++ₙ q))
+    ≡⟨⟩
+      ++-[ f , g ] ((cons (inj₂ x) xs , cons₂ p) ++ (y , q))
+    ∎
 
   ++-[_,_]ₕ : S →ₕ Wₐ → |T| Θ-semigroup ⦉ n ⦊/≈ₘ →ₕ Wₐ → ++-algebra →ₕ Wₐ
   ++-[_,_]ₕ F G = record { h      = ++-[ _→ₕ_.h F , _→ₕ_.h G ]
                          ; h-cong = ++-[ _→ₕ_.h F , _→ₕ_.h G ]-cong
-                         ; h-hom  = ++-[ _→ₕ_.h F , _→ₕ_.h G ]-hom
+                         ; h-hom  = ++-[ _→ₕ_.h-hom F , _→ₕ_.h-hom G ]-hom
                          }
 
 ++-isFrex : IsFreeExtension M n ++-model
