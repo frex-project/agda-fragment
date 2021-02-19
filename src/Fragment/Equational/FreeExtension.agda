@@ -29,7 +29,7 @@ module _
   (F-frex : IsFreeExtension M n F)
   where
 
-  open Model M renaming (Carrierₐ to S; Carrier to A)
+  open Model M renaming (Carrierₐ to S; Carrier to A; trans to M-trans; sym to M-sym)
   open Model F renaming (_≈_ to _≈ₓ_; Carrierₐ to FXₐ; Carrier to FX)
   open IsCoproduct F-frex
 
@@ -39,8 +39,10 @@ module _
   reduce : (θ : Environment n S) → FX → A
   reduce θ x = applyₕ (reduceₕ θ) x
 
-  fundamental : ∀ {x y : FX}
-                → x ≈ₓ y
+  fundamental : ∀ {x y : A} {x' y' : FX}
                 → (θ : Environment n S)
-                → reduce θ x ≈ reduce θ y
-  fundamental x≈ₓy θ = _→ₕ_.h-cong (reduceₕ θ) x≈ₓy
+                → reduce θ x' ≈ x
+                → reduce θ y' ≈ y
+                → x' ≈ₓ y'
+                → x ≈ y
+  fundamental θ p q x'≈ₓy' = M-trans (M-trans (M-sym p) (_→ₕ_.h-cong (reduceₕ θ) x'≈ₓy')) q
