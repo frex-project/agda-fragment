@@ -19,6 +19,7 @@ import Fragment.Algebra.TermAlgebra.Properties
 import Fragment.Algebra.TermAlgebra.Syntax
 import Fragment.Equational.Bundles
 import Fragment.Equational.Coproduct
+import Fragment.Equational.FreeExtension
 import Fragment.Equational.FreeModel
 import Fragment.Equational.FreeModel.Base
 import Fragment.Equational.FreeModel.Properties
@@ -31,3 +32,5 @@ import Fragment.Equational.TermModel.Base
 import Fragment.Equational.TermModel.Properties
 import Fragment.Equational.TermModel.ProvableEquivalence
 import Fragment.Equational.Theory
+import Fragment.Examples
+import Fragment.Extensions.Semigroup

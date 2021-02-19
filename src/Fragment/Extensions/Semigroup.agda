@@ -356,6 +356,57 @@ module _ {b ℓ} {W : Model Θ-semigroup {b} {ℓ}} where
     where open _→ₕ_ F renaming (h to f; h-hom to f-hom)
           open _→ₕ_ G renaming (h to g; h-hom to g-hom; h-cong to g-cong)
 
+  ++-[_,_]-universal : ∀ {F : S →ₕ Wₐ}
+                       → {G : |T| Θ-semigroup ⦉ n ⦊/≈ₘ →ₕ Wₐ}
+                       → {H : ++-algebra →ₕ Wₐ}
+                       → H ∘ₕ ++-inlₕ ≡ₕ F
+                       → H ∘ₕ ++-inrₕ ≡ₕ G
+                       → ++-[ F , G ]ₕ ≡ₕ H
+  ++-[ c₁ , c₂ ]-universal {leaf (inj₁ x) , leaf} = Model.sym W c₁
+  ++-[ c₁ , c₂ ]-universal {leaf (inj₂ x) , leaf} = Model.sym W c₂
+  ++-[_,_]-universal {F} {G} {H} c₁ c₂ {cons (inj₁ x) (leaf (inj₂ y)) , cons₁}     = begin
+      ++-[ f , g ] (cons (inj₁ x) (leaf (inj₂ y)) , cons₁)
+    ≡⟨⟩
+      f x ⊕ g (term (inj₂ y) [])
+    ≈⟨ ⊕-cong (Model.sym W c₁) (Model.sym W c₂) ⟩
+      h (leaf (inj₁ x) , leaf) ⊕ h (leaf (inj₂ y) , leaf)
+    ≈⟨ h-hom MagmaOp.• ((leaf (inj₁ x) , leaf) ∷ (leaf (inj₂ y) , leaf) ∷ []) ⟩
+      h ((leaf (inj₁ x) , leaf) ++ (leaf (inj₂ y) , leaf))
+    ≡⟨⟩
+      h (cons (inj₁ x) (leaf (inj₂ y)) , cons₁)
+    ∎
+    where open _→ₕ_ F renaming (h to f; h-hom to f-hom)
+          open _→ₕ_ G renaming (h to g; h-hom to g-hom)
+          open _→ₕ_ H
+  ++-[_,_]-universal {F} {G} {H} c₁ c₂ {cons (inj₁ x) (cons (inj₂ y) z) , cons₃ p} = begin
+      ++-[ f , g ] (cons (inj₁ x) (cons (inj₂ y) z) , cons₃ p)
+    ≡⟨⟩
+      f x ⊕ (g (term (inj₂ y) []) ⊕ ++-[ f , g ] (z , p))
+    ≈⟨ ⊕-cong (Model.sym W c₁) (⊕-cong (Model.sym W c₂) (++-[_,_]-universal {F} {G} {H} c₁ c₂)) ⟩
+      h (leaf (inj₁ x) , leaf) ⊕ (h (leaf (inj₂ y) , leaf) ⊕ h (z , p))
+    ≈⟨ ⊕-cong (Model.refl W) (h-hom MagmaOp.• ((leaf (inj₂ y) , leaf) ∷ (z , p) ∷ [])) ⟩
+      h (leaf (inj₁ x) , leaf) ⊕ h (cons (inj₂ y) z , cons₂ p)
+    ≈⟨ h-hom MagmaOp.• ((leaf (inj₁ x) , leaf) ∷ (cons (inj₂ y) z , cons₂ p) ∷ []) ⟩
+      h (cons (inj₁ x) (cons (inj₂ y) z) , cons₃ p)
+    ∎
+    where open _→ₕ_ F renaming (h to f; h-hom to f-hom)
+          open _→ₕ_ G renaming (h to g; h-hom to g-hom)
+          open _→ₕ_ H
+  ++-[_,_]-universal {F} {G} {H} c₁ c₂ {cons (inj₂ x) y , cons₂ p}                 = begin
+      ++-[ f , g ] (cons (inj₂ x) y , cons₂ p)
+    ≡⟨⟩
+      g (term (inj₂ x) []) ⊕ ++-[ f , g ] (y , p)
+    ≈⟨ ⊕-cong (Model.sym W c₂) (++-[_,_]-universal {F} {G} {H} c₁ c₂) ⟩
+      h (leaf (inj₂ x) , leaf) ⊕ h (y , p)
+    ≈⟨ h-hom MagmaOp.• ((leaf (inj₂ x) , leaf) ∷ (y , p) ∷ []) ⟩
+      h ((leaf (inj₂ x) , leaf) ++ (y , p))
+    ≡⟨⟩
+      h (cons (inj₂ x) y , cons₂ p)
+    ∎
+    where open _→ₕ_ F renaming (h to f; h-hom to f-hom)
+          open _→ₕ_ G renaming (h to g; h-hom to g-hom)
+          open _→ₕ_ H
+
 ++-isFrex : IsFreeExtension M n ++-model
 ++-isFrex =
   record { inl       = ++-inlₕ
@@ -363,5 +414,5 @@ module _ {b ℓ} {W : Model Θ-semigroup {b} {ℓ}} where
          ; [_,_]     = λ {_} {_} {W} → ++-[_,_]ₕ {W = W}
          ; commute₁  = λ {_} {_} {W} {F} {G} → ++-[_,_]-commute₁ {W = W} {F = F} {G = G}
          ; commute₂  = λ {_} {_} {W} {F} {G} → ++-[_,_]-commute₂ {W = W} {F = F} {G = G}
-         ; universal = {!!}
+         ; universal = λ {_} {_} {W} {F} {G} {H} → ++-[_,_]-universal {W = W} {F = F} {G = G} {H = H}
          }
