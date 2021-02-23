@@ -19,7 +19,7 @@ module _
   where
 
   open import Fragment.Algebra.Homomorphism Σ
-  open import Fragment.Algebra.Homomorphism.Setoid Σ using (_≡ₕ_)
+  open import Fragment.Algebra.Homomorphism.Setoid Σ
 
   record IsCoproduct : Setω where
     field
