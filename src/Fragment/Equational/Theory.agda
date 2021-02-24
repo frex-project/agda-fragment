@@ -10,9 +10,12 @@ import Fragment.Algebra.TermAlgebra as T
 
 open import Function using (_∘_)
 
-open import Data.Nat using (ℕ)
+open import Data.Nat using (ℕ; _≡ᵇ_)
+open import Data.Bool using (true; false)
 open import Data.Fin using (Fin)
 open import Data.Product using (_×_; _,_)
+open import Data.Empty using (⊥)
+open import Data.Unit using (⊤)
 open import Data.Sum using (inj₁; inj₂)
 open import Data.Vec using (Vec; []; _∷_)
 
@@ -54,3 +57,16 @@ _⦉_⦊ : (Θ : Theory) → ℕ → Theory
                  ; eqs   = eqs Θ
                  ; _⟦_⟧ₑ = frex-eq ∘ (Θ ⟦_⟧ₑ)
                  }
+
+{-
+_∥_∥-eqs : (Σ : Signature) → (n : ℕ) → ℕ → Set
+_∥_∥-eqs Σ n m with n ≡ᵇ m
+...              | true  = ⊤
+...              | false = ⊥
+
+_∥_∥ : (Σ : Signature) → {n : ℕ} → Eq Σ n → Theory
+_∥_∥ Σ {n = n} eq = record { Σ     = Σ
+                          ; eqs   = Σ ∥ n ∥-eqs
+                          ; _⟦_⟧ₑ = {!!}
+                          }
+-}
