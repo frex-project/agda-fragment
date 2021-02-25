@@ -57,16 +57,3 @@ _⦉_⦊ : (Θ : Theory) → ℕ → Theory
                  ; eqs   = eqs Θ
                  ; _⟦_⟧ₑ = frex-eq ∘ (Θ ⟦_⟧ₑ)
                  }
-
-{-
-_∥_∥-eqs : (Σ : Signature) → (n : ℕ) → ℕ → Set
-_∥_∥-eqs Σ n m with n ≡ᵇ m
-...              | true  = ⊤
-...              | false = ⊥
-
-_∥_∥ : (Σ : Signature) → {n : ℕ} → Eq Σ n → Theory
-_∥_∥ Σ {n = n} eq = record { Σ     = Σ
-                          ; eqs   = Σ ∥ n ∥-eqs
-                          ; _⟦_⟧ₑ = {!!}
-                          }
--}
