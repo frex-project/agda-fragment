@@ -22,7 +22,7 @@ open import Data.Fin using (Fin; zero; suc; #_)
 open import Relation.Binary.PropositionalEquality as PE using (_≡_)
 open import Function using (_∘_)
 
-open import Fragment.Macros.Base
+open import Fragment.Macros.Fin
 
 open import Algebra.Structures using (IsSemigroup)
 

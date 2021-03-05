@@ -2,16 +2,16 @@
 
 module Fragment.Macros.Base where
 
-open import Reflection hiding (name; Type)
-open import Data.String using (String; _++_)
-open import Data.Unit using (⊤)
-open import Data.Bool using (Bool; true; false)
-open import Data.Fin using (Fin; zero; suc)
-open import Data.Nat using (ℕ; zero; suc; _+_)
+open import Reflection hiding (name; Type; _≟_)
+open import Reflection.Term using (_≟_)
+
+open import Data.Nat using (ℕ; zero; suc)
 open import Data.Nat.Show using (show)
-open import Data.List using (List; []; _∷_; sum)
+open import Data.String using (String) renaming (_++_ to _⟨S⟩_)
+open import Data.List using (List; []; _∷_; _++_; drop; take; reverse)
 open import Data.Vec using (Vec; []; _∷_; map; toList)
-open import Relation.Binary.PropositionalEquality as PE using (_≡_)
+open import Data.Bool using (Bool; true; false)
+open import Relation.Nullary using (yes; no)
 
 vra : ∀ {a} {A : Set a} → A → Arg A
 vra = arg (arg-info visible relevant)
@@ -19,7 +19,7 @@ vra = arg (arg-info visible relevant)
 hra : ∀ {a} {A : Set a} → A → Arg A
 hra = arg (arg-info hidden relevant)
 
-infixr 5 λ⦅_⦆→_
+infixr 5 λ⦅_⦆→_ λ⦃_⦄→_
 
 λ⦅_⦆→_ : String → Term → Term
 λ⦅ x ⦆→ body = lam visible (abs x body)
@@ -31,72 +31,59 @@ constructors : Definition → List Name
 constructors (data-type _ cs) = cs
 constructors _                = []
 
-finPat : ∀ {n : ℕ} → Fin n → Pattern
-finPat zero    = Pattern.con (quote Fin.zero) []
-finPat (suc n) = Pattern.con (quote Fin.suc) (vra (finPat n) ∷ [])
+apply : Term → List (Arg Term) → Term
+apply (var x xs) args      = var x (xs ++ args)
+apply (con x xs) args      = con x (xs ++ args)
+apply (def x xs) args      = def x (xs ++ args)
+apply (meta x xs) args     = meta x (xs ++ args)
+apply (pat-lam cs xs) args = pat-lam cs (xs ++ args)
+apply x _                  = x
 
-finClause : ∀ {n : ℕ} → Fin n → Term → Clause
-finClause n body = Clause.clause (hra (finPat n) ∷ []) body
+prod : ∀ {a} {A : Set a} → ℕ → List A → List A
+prod n xs = reverse (drop n (reverse xs))
 
-allFin : ∀ (n : ℕ) → Vec (Fin n) n
-allFin zero    = []
-allFin (suc n) = zero ∷ map suc (allFin n)
+ekat : ∀ {a} {A : Set a} → ℕ → List A → List A
+ekat n xs = reverse (take n (reverse xs))
 
-macro
-  fin-refl : ∀ {a} {A : Set a}
-             → (n : ℕ) → (Fin n → A) → (Fin n → A)
-             → Term → TC ⊤
-  fin-refl {a} {A} n f g goal
-    = do τ ← quoteTC (∀ {x : Fin n} → f x ≡ g x)
-         η ← freshName "_"
-         declareDef (vra η) τ
-         defineFun η (toList (map (λ (m : Fin n) → finClause m (con (quote PE.refl) [])) (allFin n)))
-         unify goal (def η [])
-
-open import Fragment.Equational.Theory
-open import Fragment.Equational.Model
-open import Fragment.Algebra.Signature
-
-len : Term → TC ℕ
-len (def (quote Vec) (_ ∷ _ ∷ (arg _ n) ∷ [])) = unquoteTC n
-len _ = typeError (strErr "can't get length of type that isn't" ∷ nameErr (quote Vec) ∷ [])
-
-typeArg : Term → TC Term
-typeArg (pi (arg _ x) _) = return x
-typeArg _                = typeError []
-
-interp : Name → Name → Term
-interp m op = def (quote Model.⟦_⟧) (vra (def m []) ∷ (vra (con op [])) ∷ [])
-
-arity : Name → Name → TC ℕ
-arity m op
-  = do τ ← inferType (interp m op)
-       α ← typeArg τ
-       len α
+unapply : Term → ℕ → Term
+unapply (var x args) n      = var x (prod n args)
+unapply (con x args) n      = con x (prod n args)
+unapply (def x args) n      = def x (prod n args)
+unapply (meta x args) n     = meta x (prod n args)
+unapply (pat-lam cs args) n = pat-lam cs (prod n args)
+unapply x _                 = x
 
 n-ary : ∀ (n : ℕ) → Term → Term
 n-ary zero body    = body
-n-ary (suc n) body = λ⦅ "x" ++ show n ⦆→ (n-ary n body)
+n-ary (suc n) body = λ⦅ "x" ⟨S⟩ show n ⦆→ (n-ary n body)
+
+debrujin : ∀ (n : ℕ) → Vec Term n
+debrujin zero    = []
+debrujin (suc n) = (var n []) ∷ debrujin n
+
+η-convert : ∀ (n : ℕ) → Term → Term
+η-convert n t = n-ary n (apply t (toList (map vra (debrujin n))))
+
+prefix : ℕ → Term → Term → Bool
+prefix n x y with x ≟ η-convert n (unapply y n)
+...             | yes _ = true
+...             | no _  = false
+
+extract-type-arg : Term → TC Term
+extract-type-arg (pi (arg _ x) _) = return x
+extract-type-arg x                = typeError (termErr x ∷ strErr "isn't a pi type" ∷ [])
+
+extract-name : Term → TC Name
+extract-name (def x _) = return x
+extract-name x         = typeError (termErr x ∷ strErr "isn't an application of a definition" ∷ [])
 
 vec : ∀ {n : ℕ} → Vec Term n → Term
 vec []       = con (quote Vec.[]) []
 vec (x ∷ xs) = con (quote Vec._∷_) (vra x ∷ vra (vec xs) ∷ [])
 
-{-
-apply : Name → Name → TC Term
-apply m op
-  = do n ← arity m op
-       return (n-ary n (call ({!!})))
-  where call : Term → Term
-        call term = def (quote Model.⟦_⟧) (vra (def m []) ∷ (vra (con op [])) ∷ (vra term) ∷ [])
+vec-len : Term → TC ℕ
+vec-len (def (quote Vec) (_ ∷ _ ∷ (arg _ n) ∷ [])) = unquoteTC n
+vec-len _ = typeError (strErr "can't get length of type that isn't" ∷ nameErr (quote Vec) ∷ [])
 
-macro
-  interpret : Name → Name → Term → TC ⊤
-  interpret m op goal = {!!}
-
-  {-
-  operators : TC (List Name)
-  operators = do δ ← getDefinition (quote ops)
-                 return {!!}
-  -}
--}
+panic : ∀ {a} {A : Set a} → Term → TC A
+panic x = typeError (termErr x ∷ [])
