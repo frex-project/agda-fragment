@@ -8,9 +8,10 @@ open import Fragment.Macros.Base
 open import Data.Unit using (⊤)
 open import Data.Bool using (Bool; true; false; if_then_else_)
 open import Data.Nat using (ℕ; zero; suc; _+_)
-open import Data.List using (List; []; _∷_; map)
+open import Data.List using (List; []; _∷_; map; zip)
 open import Data.Vec using (Vec; []; _∷_)
-open import Data.Product using (_×_)
+open import Data.Maybe using (just; nothing)
+open import Data.Product using (_×_; proj₁; proj₂; _,_)
 
 open import Fragment.Equational.Theory
 open import Fragment.Equational.Model
@@ -30,6 +31,23 @@ normalised-⟦⟧ m op
   = do n ← arity m op
        normalise (n-ary n (apply (⟦⟧ m op) (vra (vec (debrujin n)) ∷ [])))
 
+sig-ops : Term → TC Term
+sig-ops Σ = normalise (def (quote Signature.ops) (vra Σ ∷ []))
+
+model-sig : Term → TC Term
+model-sig (def (quote Model) (Θ ∷ _ ∷ _ ∷ [])) = normalise (def (quote Theory.Σ) (Θ ∷ []))
+model-sig _ = typeError (strErr "can't get signature of type that isn't" ∷ nameErr (quote Model) ∷ [])
+
+gather-⟦⟧ : Name → TC (List (Term × ℕ))
+gather-⟦⟧ m
+  = do τ ← inferType (def m [])
+       Σ ← model-sig τ
+       ops ← sig-ops Σ
+       cs ← extract-constructors ops
+       arities ← flattenTC (map (arity m) cs)
+       normalised-⟦⟧s ← flattenTC (map (normalised-⟦⟧ m) cs)
+       return (zip normalised-⟦⟧s arities)
+
 mutual
   leaves-args : List (Term × ℕ) → List (Arg Term) → TC ℕ
   leaves-args ops [] = return 0
@@ -47,10 +65,14 @@ mutual
   leaves-inner ops n (pat-lam _ args) = leaves-args ops (ekat n args)
   leaves-inner _ _ t = typeError (termErr t ∷ strErr "has no arguments" ∷ [])
 
-{-
-  1. Find an operator that is a prefix of the term
-  2. Strip the application
-  3. Apply leaves-inner
--}
   leaves : List (Term × ℕ) → Term → TC ℕ
-  leaves ops ts = {!!}
+  leaves ops t with findMap (λ x → prefix (proj₂ x) (proj₁ x) t) proj₂ ops
+  ...             | just n  = leaves-inner ops n t
+  ...             | nothing = return 1
+
+macro
+  count-leaves : Name → Term → Term → TC ⊤
+  count-leaves m t goal
+    = do ops ← gather-⟦⟧ m
+         count ← leaves ops t
+         unify goal (lit (nat count))

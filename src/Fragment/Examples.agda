@@ -23,6 +23,7 @@ open import Relation.Binary.PropositionalEquality as PE using (_≡_)
 open import Function using (_∘_)
 
 open import Fragment.Macros.Fin
+open import Fragment.Macros.Destructure
 
 open import Algebra.Structures using (IsSemigroup)
 
@@ -39,6 +40,9 @@ open import Fragment.Extensions.Semigroup +-isModel 2
 open PE.≡-Reasoning
 
 module _ {m n : ℕ} where
+  test : (count-leaves +-model ((m + 2) + (3 + n))) ≡ 4
+  test = PE.refl
+
   lhsStructure : Expr (Σ-magma ⦉ 4 ⦊)
   lhsStructure =
     (⟨ inj₂ (# 0) ⟩₀ ⟨ MagmaOp.• ⟩₂ ⟨ inj₂ (# 1) ⟩₀)

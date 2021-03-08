@@ -34,3 +34,4 @@ import Fragment.Equational.TermModel.ProvableEquivalence
 import Fragment.Equational.Theory
 import Fragment.Examples
 import Fragment.Extensions.Semigroup
+import Fragment.Macros.Base

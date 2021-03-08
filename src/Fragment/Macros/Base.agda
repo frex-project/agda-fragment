@@ -10,7 +10,8 @@ open import Data.Nat.Show using (show)
 open import Data.String using (String) renaming (_++_ to _⟨S⟩_)
 open import Data.List using (List; []; _∷_; _++_; drop; take; reverse)
 open import Data.Vec using (Vec; []; _∷_; map; toList)
-open import Data.Bool using (Bool; true; false)
+open import Data.Bool using (Bool; true; false; if_then_else_)
+open import Data.Maybe using (Maybe; nothing; just)
 open import Relation.Nullary using (yes; no)
 
 vra : ∀ {a} {A : Set a} → A → Arg A
@@ -45,6 +46,11 @@ prod n xs = reverse (drop n (reverse xs))
 ekat : ∀ {a} {A : Set a} → ℕ → List A → List A
 ekat n xs = reverse (take n (reverse xs))
 
+findMap : ∀ {a b} {A : Set a} {B : Set b}
+          → (A → Bool) → (A → B) → List A → Maybe B
+findMap p f []       = nothing
+findMap p f (x ∷ xs) = if p x then just (f x) else findMap p f xs
+
 unapply : Term → ℕ → Term
 unapply (var x args) n      = var x (prod n args)
 unapply (con x args) n      = con x (prod n args)
@@ -52,6 +58,13 @@ unapply (def x args) n      = def x (prod n args)
 unapply (meta x args) n     = meta x (prod n args)
 unapply (pat-lam cs args) n = pat-lam cs (prod n args)
 unapply x _                 = x
+
+flattenTC : ∀ {a} {A : Set a} → List (TC A) → TC (List A)
+flattenTC []       = return []
+flattenTC (x ∷ xs)
+  = do x' ← x
+       xs' ← flattenTC xs
+       return (x' ∷ xs')
 
 n-ary : ∀ (n : ℕ) → Term → Term
 n-ary zero body    = body
@@ -76,6 +89,17 @@ extract-type-arg x                = typeError (termErr x ∷ strErr "isn't a pi 
 extract-name : Term → TC Name
 extract-name (def x _) = return x
 extract-name x         = typeError (termErr x ∷ strErr "isn't an application of a definition" ∷ [])
+
+extract-definition : Term → TC Definition
+extract-definition x
+  = do x' ← normalise x
+       η ← extract-name x'
+       getDefinition η
+
+extract-constructors : Term → TC (List Name)
+extract-constructors x
+  = do δ ← extract-definition x
+       return (constructors δ)
 
 vec : ∀ {n : ℕ} → Vec Term n → Term
 vec []       = con (quote Vec.[]) []
