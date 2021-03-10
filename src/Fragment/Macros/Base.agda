@@ -51,6 +51,15 @@ findMap : ∀ {a b} {A : Set a} {B : Set b}
 findMap p f []       = nothing
 findMap p f (x ∷ xs) = if p x then just (f x) else findMap p f xs
 
+find : ∀ {a} {A : Set a} → (A → Bool) → List A → Maybe A
+find p = findMap p (λ x → x)
+
+mapList : ∀ {a b} {A : Set a} {B : Set b}
+          → List (A → B) → List A → List B
+mapList [] _              = []
+mapList _ []              = []
+mapList (f ∷ fs) (x ∷ xs) = f x ∷ mapList fs xs
+
 unapply : Term → ℕ → Term
 unapply (var x args) n      = var x (prod n args)
 unapply (con x args) n      = con x (prod n args)

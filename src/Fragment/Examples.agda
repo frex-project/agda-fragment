@@ -40,15 +40,11 @@ open import Fragment.Extensions.Semigroup +-isModel 2
 open PE.≡-Reasoning
 
 module _ {m n : ℕ} where
-  test : (count-leaves +-model ((m + 2) + (3 + n))) ≡ 4
+  test : 4 ≡ count-leaves +-model ((m + 2) + (3 + n))
   test = PE.refl
 
   lhsStructure : Expr (Σ-magma ⦉ 4 ⦊)
-  lhsStructure =
-    (⟨ inj₂ (# 0) ⟩₀ ⟨ MagmaOp.• ⟩₂ ⟨ inj₂ (# 1) ⟩₀)
-      ⟨ MagmaOp.• ⟩₂
-    (⟨ inj₂ (# 2) ⟩₀ ⟨ MagmaOp.• ⟩₂ ⟨ inj₂ (# 3) ⟩₀)
-    where open import Fragment.Algebra.TermAlgebra.Syntax (Σ-magma ⦉ 4 ⦊)
+  lhsStructure = destruct +-model ((m + 2) + (3 + n))
 
   lhs-α : Fin 4 → NormalSemigroup
   lhs-α zero                   = ++-inr-θ (# 0)
@@ -66,9 +62,7 @@ module _ {m n : ℕ} where
   lhs = subst ++-algebra lhs-α lhsStructure
 
   rhsStructure : Expr (Σ-magma ⦉ 3 ⦊)
-  rhsStructure =
-    (⟨ inj₂ (# 0) ⟩₀ ⟨ MagmaOp.• ⟩₂ ⟨ inj₂ (# 1) ⟩₀) ⟨ MagmaOp.• ⟩₂ ⟨ inj₂ (# 2) ⟩₀
-    where open import Fragment.Algebra.TermAlgebra.Syntax (Σ-magma ⦉ 3 ⦊)
+  rhsStructure = destruct +-model ((m + 5) + n)
 
   rhs-α : Fin 3 → NormalSemigroup
   rhs-α zero                   = ++-inr-θ (# 0)

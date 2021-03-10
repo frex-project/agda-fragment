@@ -5,12 +5,16 @@ module Fragment.Macros.Fin where
 open import Reflection hiding (name; Type)
 open import Fragment.Macros.Base
 
-open import Data.Nat using (ℕ)
+open import Data.Nat using (ℕ; zero; suc)
 open import Data.Fin using (Fin; zero; suc)
 open import Data.List using ([]; _∷_)
 open import Data.Vec using (toList; map; allFin)
 open import Data.Unit using (⊤)
 open import Relation.Binary.PropositionalEquality as PE using (_≡_)
+
+fin : ℕ → Term
+fin zero    = con (quote Fin.zero) []
+fin (suc n) = con (quote Fin.suc) (vra (fin n) ∷ [])
 
 fin-pat : ∀ {n : ℕ} → Fin n → Pattern
 fin-pat zero    = Pattern.con (quote Fin.zero) []
