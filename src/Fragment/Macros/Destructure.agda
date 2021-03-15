@@ -20,7 +20,7 @@ open import Fragment.Equational.Model
 open import Fragment.Algebra.Signature
 open import Fragment.Algebra.TermAlgebra using (term)
 
-open import Fragment.Macros.Fin using (fin; fin-vclause)
+open import Fragment.Macros.Fin using (fin; fin-vclause; fin-def)
 
 extract-arity : Name → Name → TC ℕ
 extract-arity m op
@@ -75,52 +75,59 @@ mk-atom Σ t =
   con (quote term) (hra Σ ∷ hra (lit (nat 0)) ∷ vra t ∷ vra (vec []) ∷ [])
 
 mutual
-  parse-args : ∀ {a} {A : Set a}
-               → (Term → ℕ → TC A)
-               → (Operator → List A → TC A)
-               → List Operator → ℕ → List (Arg Term) → TC (List A × ℕ)
-  parse-args f g ops acc [] = return ([] , acc)
-  parse-args f g ops acc (vArg x ∷ xs)
-    = do (x' , acc') ← parse-acc f g ops acc x
-         (xs' , acc'') ← parse-args f g ops acc' xs
+  fold-args : ∀ {a b} {A : Set a} {B : Set b}
+               → (Term → B → A × B)
+               → (Operator → List A → A)
+               → List Operator → B → List (Arg Term) → TC (List A × B)
+  fold-args f g ops acc [] = return ([] , acc)
+  fold-args f g ops acc (vArg x ∷ xs)
+    = do (x' , acc') ← fold-acc f g ops acc x
+         (xs' , acc'') ← fold-args f g ops acc' xs
          return (x' ∷ xs' , acc'')
-  parse-args f g ops acc (_ ∷ xs) = parse-args f g ops acc xs
+  fold-args f g ops acc (_ ∷ xs) = fold-args f g ops acc xs
 
-  parse-inner : ∀ {a} {A : Set a}
-                      → (Term → ℕ → TC A)
-                      → (Operator → List A → TC A)
-                      → List Operator → ℕ → ℕ → Term → TC (List A × ℕ)
-  parse-inner f g ops n acc (var _ args)     = parse-args f g ops acc (ekat n args)
-  parse-inner f g ops n acc (con _ args)     = parse-args f g ops acc (ekat n args)
-  parse-inner f g ops n acc (def _ args)     = parse-args f g ops acc (ekat n args)
-  parse-inner f g ops n acc (meta _ args)    = parse-args f g ops acc (ekat n args)
-  parse-inner f g ops n acc (pat-lam _ args) = parse-args f g ops acc (ekat n args)
-  parse-inner _ _ _ _ _ t = typeError (termErr t ∷ strErr "has no arguments" ∷ [])
+  fold-inner : ∀ {a b} {A : Set a} {B : Set b}
+                → (Term → B → A × B)
+                → (Operator → List A → A)
+                → List Operator → ℕ → B → Term → TC (List A × B)
+  fold-inner f g ops n acc (var _ args)     = fold-args f g ops acc (ekat n args)
+  fold-inner f g ops n acc (con _ args)     = fold-args f g ops acc (ekat n args)
+  fold-inner f g ops n acc (def _ args)     = fold-args f g ops acc (ekat n args)
+  fold-inner f g ops n acc (meta _ args)    = fold-args f g ops acc (ekat n args)
+  fold-inner f g ops n acc (pat-lam _ args) = fold-args f g ops acc (ekat n args)
+  fold-inner _ _ _ _ _ t = typeError (termErr t ∷ strErr "has no arguments" ∷ [])
 
-  parse-acc : ∀ {a} {A : Set a}
-                → (Term → ℕ → TC A)
-                → (Operator → List A → TC A)
-                → List Operator → ℕ → Term → TC (A × ℕ)
-  parse-acc f g ops acc t
+  fold-acc : ∀ {a b} {A : Set a} {B : Set b}
+              → (Term → B → A × B)
+              → (Operator → List A → A)
+              → List Operator → B → Term → TC (A × B)
+  fold-acc f g ops acc t
     with find (λ x → prefix (arity x) (normalised x) t) ops
   ...  | just x@(operator _ _ n)
-           = do (args , acc') ← parse-inner f g ops n acc t
-                ρ ← g x args
-                return (ρ , acc')
-  ...  | nothing = do μ ← f t acc
-                      return (μ , acc + 1)
+           = do (args , acc') ← fold-inner f g ops n acc t
+                return (g x args , acc')
+  ...  | nothing = return (f t acc)
 
-parse : ∀ {a} {A : Set a}
-        → (Term → ℕ → TC A)
-        → (Operator → List A → TC A)
-        → Name → Term → TC A
-parse f g m t
+fold : ∀ {a b} {A : Set a} {B : Set b}
+       → (Term → B → A × B)
+       → (Operator → List A → A)
+       → Name → Term → B → TC A
+fold f g m t ε
   = do ops ← gather-⟦⟧ m
-       (x , _) ← parse-acc f g ops 0 t
+       (x , _) ← fold-acc f g ops ε t
        return x
 
+fold-⊤ : ∀ {a} {A : Set a}
+         → (Term → A)
+         → (Operator → List A → A)
+         → Name → Term → TC A
+fold-⊤ f g m t = fold (λ x → λ _ → (f x , ⊤)) g m t ⊤
+
 leaves : Name → Term → TC ℕ
-leaves = parse (λ _ → λ _ → return 1) (λ _ → λ xs → return (sum xs))
+leaves = fold-⊤ (λ _ → 1) (λ _ → sum)
+
+free : Name → Term → TC ℕ
+free = fold-⊤ (λ { (var _ _) → 1 ; _ → 0 }) (λ _ → sum)
 
 macro
   destruct : Name → Term → Term → TC ⊤
@@ -128,21 +135,18 @@ macro
     = do count ← leaves m t
          Σ ← extract-sig m
          let Σ' = def (quote _⦉_⦊) (vra Σ ∷ vra (lit (nat count)) ∷ [])
-         t' ← parse (λ _ → λ n → return (mk-atom Σ' (con (quote inj₂) (vra (fin n) ∷ []))))
-                    (λ op → λ xs → return (apply (mk-term Σ' op) (vra (vec (fromList xs)) ∷ [])))
-                    m t
+         t' ← fold (λ _ → λ n → (mk-atom Σ' (con (quote inj₂) (vra (fin n) ∷ [])) , n + 1))
+                   (λ op → λ xs → apply (mk-term Σ' op) (vra (vec (fromList xs)) ∷ []))
+                   m t 0
          unify goal t'
 
   direct-subst : Name → Term → Term → TC ⊤
   direct-subst m t goal
     = do count ← leaves m t
          carrier ← inferType t
-         fin ← quoteTC (Fin count)
-         let τ = pi (vra fin) (abs "n" carrier)
-         η ← freshName "_"
-         declareDef (vra η) τ
-         clauses ← parse (λ x → λ n → return (fin-vclause n x ∷ []))
-                         (λ _ → λ xs → return (concat xs))
-                         m t
+         η ← fin-def count carrier
+         clauses ← fold (λ x → λ n → (fin-vclause n x ∷ [] , n + 1))
+                        (λ _ → concat)
+                        m t 0
          defineFun η clauses
          unify goal (def η [])

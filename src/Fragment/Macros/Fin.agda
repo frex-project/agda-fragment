@@ -25,6 +25,14 @@ fin-hclause n body = Clause.clause (hra (fin-pat n) ∷ []) body
 fin-vclause : ℕ → Term → Clause
 fin-vclause n body = Clause.clause (vra (fin-pat n) ∷ []) body
 
+fin-def : ℕ → Term → TC Name
+fin-def n τ
+  = do fin ← quoteTC (Fin n)
+       let τ' = pi (vra fin) (abs "n" τ)
+       η ← freshName "_"
+       declareDef (vra η) τ'
+       return η
+
 macro
   fin-refl : ∀ {a} {A : Set a}
              → (n : ℕ) → (Fin n → A) → (Fin n → A)
