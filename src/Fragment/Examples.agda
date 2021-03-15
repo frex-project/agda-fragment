@@ -13,11 +13,8 @@ open import Fragment.Algebra.TermAlgebra using (Expr)
 open import Fragment.Algebra.FreeAlgebra
 open import Fragment.Algebra.Algebra
 
-open import Data.Product using (_,_)
-open import Data.Sum using (inj₁; inj₂)
 open import Data.Nat using (ℕ; _+_)
 open import Data.Nat.Properties using (+-isSemigroup)
-open import Data.Vec using ([]; _∷_)
 open import Data.Fin using (Fin; zero; suc; #_)
 open import Relation.Binary.PropositionalEquality as PE using (_≡_)
 open import Function using (_∘_)
@@ -37,12 +34,8 @@ open import Algebra.Structures using (IsSemigroup)
 +-algebra = algebra (PE.setoid ℕ) (IsModel.isAlgebra +-isModel)
 
 open import Fragment.Extensions.Semigroup +-isModel 2
-open PE.≡-Reasoning
 
 module _ {m n : ℕ} where
-  test : 4 ≡ count-leaves +-model ((m + 2) + (3 + n))
-  test = PE.refl
-
   lhsStructure : Expr (Σ-magma ⦉ 4 ⦊)
   lhsStructure = destruct +-model ((m + 2) + (3 + n))
 
@@ -53,10 +46,7 @@ module _ {m n : ℕ} where
   lhs-α (suc (suc (suc zero))) = ++-inr-θ (# 1)
 
   lhs-ω : Fin 4 → ℕ
-  lhs-ω zero                   = m
-  lhs-ω (suc zero)             = 2
-  lhs-ω (suc (suc zero))       = 3
-  lhs-ω (suc (suc (suc zero))) = n
+  lhs-ω = direct-subst +-model ((m + 2) + (3 + n))
 
   lhs : NormalSemigroup
   lhs = subst ++-algebra lhs-α lhsStructure
@@ -70,9 +60,7 @@ module _ {m n : ℕ} where
   rhs-α (suc (suc zero))       = ++-inr-θ (# 1)
 
   rhs-ω : Fin 3 → ℕ
-  rhs-ω zero                   = m
-  rhs-ω (suc zero)             = 5
-  rhs-ω (suc (suc zero))       = n
+  rhs-ω = direct-subst +-model ((m + 5) + n)
 
   rhs : NormalSemigroup
   rhs = subst ++-algebra rhs-α rhsStructure
@@ -81,17 +69,15 @@ module _ {m n : ℕ} where
   θ zero       = m
   θ (suc zero) = n
 
-  factor-p : ∀ {k : Fin 4} → reduce ++-isFrex θ (lhs-α k) ≡ lhs-ω k
-  factor-p = fin-refl 4 ((reduce ++-isFrex θ) ∘ lhs-α) lhs-ω
-
   p : reduce ++-isFrex θ lhs ≡ (m + 2) + (3 + n)
-  p = factor ++-isFrex lhs-ω lhs-α θ factor-p {x = lhsStructure}
-
-  factor-q : ∀ {k : Fin 3} → reduce ++-isFrex θ (rhs-α k) ≡ rhs-ω k
-  factor-q = fin-refl 3 ((reduce ++-isFrex θ) ∘ rhs-α) rhs-ω
+  p = factor ++-isFrex lhs-ω lhs-α θ
+             (fin-refl 4 ((reduce ++-isFrex θ) ∘ lhs-α) lhs-ω)
+             {x = lhsStructure}
 
   q : reduce ++-isFrex θ rhs ≡ (m + 5) + n
-  q = factor ++-isFrex rhs-ω rhs-α θ factor-q {x = rhsStructure}
+  q = factor ++-isFrex rhs-ω rhs-α θ
+             (fin-refl 3 ((reduce ++-isFrex θ) ∘ rhs-α) rhs-ω)
+             {x = rhsStructure}
 
   simple : (m + 2) + (3 + n) ≡ (m + 5) + n
   simple = fundamental ++-isFrex {x' = lhs} {y' = rhs} θ p q PE.refl

@@ -8,18 +8,19 @@ open import Fragment.Macros.Base
 open import Data.Unit using (⊤)
 open import Data.Bool using (Bool; true; false; if_then_else_)
 open import Data.Nat using (ℕ; zero; suc; _+_)
-open import Data.List using (List; []; _∷_; map; zip)
+open import Data.List using (List; []; _∷_; map; zip; sum; concat)
 open import Data.Vec using (Vec; []; _∷_; fromList)
 open import Data.Maybe using (just; nothing)
 open import Data.Sum using (inj₂)
 open import Data.Product using (_×_; _,_; proj₁; proj₂)
+open import Data.Fin using (Fin)
 
 open import Fragment.Equational.Theory hiding (_⦉_⦊)
 open import Fragment.Equational.Model
 open import Fragment.Algebra.Signature
 open import Fragment.Algebra.TermAlgebra using (term)
 
-open import Fragment.Macros.Fin using (fin)
+open import Fragment.Macros.Fin using (fin; fin-vclause)
 
 extract-arity : Name → Name → TC ℕ
 extract-arity m op
@@ -65,28 +66,6 @@ gather-⟦⟧ m
        normalised-⟦⟧s ← flattenTC (map (normalised-⟦⟧ m) cs)
        return (mapList (mapList (map operator cs) normalised-⟦⟧s) arities)
 
-mutual
-  leaves-args : List Operator → List (Arg Term) → TC ℕ
-  leaves-args ops [] = return 0
-  leaves-args ops (vArg x ∷ xs)
-    = do x' ← leaves ops x
-         xs' ← leaves-args ops xs
-         return (x' + xs')
-  leaves-args ops (_  ∷ xs) = leaves-args ops xs
-
-  leaves-inner : List Operator → ℕ → Term → TC ℕ
-  leaves-inner ops n (var _ args)     = leaves-args ops (ekat n args)
-  leaves-inner ops n (con _ args)     = leaves-args ops (ekat n args)
-  leaves-inner ops n (def _ args)     = leaves-args ops (ekat n args)
-  leaves-inner ops n (meta _ args)    = leaves-args ops (ekat n args)
-  leaves-inner ops n (pat-lam _ args) = leaves-args ops (ekat n args)
-  leaves-inner _ _ t = typeError (termErr t ∷ strErr "has no arguments" ∷ [])
-
-  leaves : List Operator → Term → TC ℕ
-  leaves ops t with findMap (λ x → prefix (arity x) (normalised x) t) arity ops
-  ...             | just n  = leaves-inner ops n t
-  ...             | nothing = return 1
-
 mk-term : Term → Operator → Term
 mk-term Σ (operator η _ n) =
   con (quote term) (hra Σ ∷ hra (lit (nat n)) ∷ vra (con η []) ∷ [])
@@ -96,42 +75,74 @@ mk-atom Σ t =
   con (quote term) (hra Σ ∷ hra (lit (nat 0)) ∷ vra t ∷ vra (vec []) ∷ [])
 
 mutual
-  destructure-args : Term → List Operator → ℕ → List (Arg Term) → TC (List Term × ℕ)
-  destructure-args Σ ops acc [] = return ([] , acc)
-  destructure-args Σ ops acc (vArg x ∷ xs)
-    = do (x' , acc') ← destructure Σ ops acc x
-         (xs' , acc'') ← destructure-args Σ ops acc' xs
+  parse-args : ∀ {a} {A : Set a}
+               → (Term → ℕ → TC A)
+               → (Operator → List A → TC A)
+               → List Operator → ℕ → List (Arg Term) → TC (List A × ℕ)
+  parse-args f g ops acc [] = return ([] , acc)
+  parse-args f g ops acc (vArg x ∷ xs)
+    = do (x' , acc') ← parse-acc f g ops acc x
+         (xs' , acc'') ← parse-args f g ops acc' xs
          return (x' ∷ xs' , acc'')
-  destructure-args Σ ops acc (_ ∷ xs) = destructure-args Σ ops acc xs
+  parse-args f g ops acc (_ ∷ xs) = parse-args f g ops acc xs
 
-  destructure-inner : Term → List Operator → ℕ → ℕ → Term → TC (List Term × ℕ)
-  destructure-inner Σ ops n acc (var _ args)     = destructure-args Σ ops acc args
-  destructure-inner Σ ops n acc (con _ args)     = destructure-args Σ ops acc args
-  destructure-inner Σ ops n acc (def _ args)     = destructure-args Σ ops acc args
-  destructure-inner Σ ops n acc (meta _ args)    = destructure-args Σ ops acc args
-  destructure-inner Σ ops n acc (pat-lam _ args) = destructure-args Σ ops acc args
-  destructure-inner _ _ _ _ t = typeError (termErr t ∷ strErr "has no arguments" ∷ [])
+  parse-inner : ∀ {a} {A : Set a}
+                      → (Term → ℕ → TC A)
+                      → (Operator → List A → TC A)
+                      → List Operator → ℕ → ℕ → Term → TC (List A × ℕ)
+  parse-inner f g ops n acc (var _ args)     = parse-args f g ops acc (ekat n args)
+  parse-inner f g ops n acc (con _ args)     = parse-args f g ops acc (ekat n args)
+  parse-inner f g ops n acc (def _ args)     = parse-args f g ops acc (ekat n args)
+  parse-inner f g ops n acc (meta _ args)    = parse-args f g ops acc (ekat n args)
+  parse-inner f g ops n acc (pat-lam _ args) = parse-args f g ops acc (ekat n args)
+  parse-inner _ _ _ _ _ t = typeError (termErr t ∷ strErr "has no arguments" ∷ [])
 
-  destructure : Term → List Operator → ℕ → Term → TC (Term × ℕ)
-  destructure Σ ops acc t
+  parse-acc : ∀ {a} {A : Set a}
+                → (Term → ℕ → TC A)
+                → (Operator → List A → TC A)
+                → List Operator → ℕ → Term → TC (A × ℕ)
+  parse-acc f g ops acc t
     with find (λ x → prefix (arity x) (normalised x) t) ops
   ...  | just x@(operator _ _ n)
-           = do (args , acc') ← destructure-inner Σ ops n acc t
-                return (apply (mk-term Σ x) (vra (vec (fromList args)) ∷ []) , acc')
-  ...  | nothing = return (mk-atom Σ (con (quote inj₂) (vra (fin acc) ∷ [])) , acc + 1)
+           = do (args , acc') ← parse-inner f g ops n acc t
+                ρ ← g x args
+                return (ρ , acc')
+  ...  | nothing = do μ ← f t acc
+                      return (μ , acc + 1)
+
+parse : ∀ {a} {A : Set a}
+        → (Term → ℕ → TC A)
+        → (Operator → List A → TC A)
+        → Name → Term → TC A
+parse f g m t
+  = do ops ← gather-⟦⟧ m
+       (x , _) ← parse-acc f g ops 0 t
+       return x
+
+leaves : Name → Term → TC ℕ
+leaves = parse (λ _ → λ _ → return 1) (λ _ → λ xs → return (sum xs))
 
 macro
-  count-leaves : Name → Term → Term → TC ⊤
-  count-leaves m t goal
-    = do ops ← gather-⟦⟧ m
-         count ← leaves ops t
-         unify goal (lit (nat count))
-
   destruct : Name → Term → Term → TC ⊤
   destruct m t goal
-    = do ops ← gather-⟦⟧ m
-         count ← leaves ops t
+    = do count ← leaves m t
          Σ ← extract-sig m
          let Σ' = def (quote _⦉_⦊) (vra Σ ∷ vra (lit (nat count)) ∷ [])
-         (t' , _) ← destructure Σ' ops 0 t
+         t' ← parse (λ _ → λ n → return (mk-atom Σ' (con (quote inj₂) (vra (fin n) ∷ []))))
+                    (λ op → λ xs → return (apply (mk-term Σ' op) (vra (vec (fromList xs)) ∷ [])))
+                    m t
          unify goal t'
+
+  direct-subst : Name → Term → Term → TC ⊤
+  direct-subst m t goal
+    = do count ← leaves m t
+         carrier ← inferType t
+         fin ← quoteTC (Fin count)
+         let τ = pi (vra fin) (abs "n" carrier)
+         η ← freshName "_"
+         declareDef (vra η) τ
+         clauses ← parse (λ x → λ n → return (fin-vclause n x ∷ []))
+                         (λ _ → λ xs → return (concat xs))
+                         m t
+         defineFun η clauses
+         unify goal (def η [])
