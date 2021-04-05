@@ -8,6 +8,7 @@ open import Fragment.Equational.Model
 open import Fragment.Equational.FreeModel
 open import Fragment.Equational.Coproduct Θ
 
+open import Fragment.Algebra.Algebra using (Algebra)
 open import Fragment.Algebra.TermAlgebra
 open import Fragment.Algebra.FreeAlgebra using (Environment; subst; subst-args)
 open import Fragment.Algebra.Homomorphism (Σ Θ)
@@ -15,6 +16,7 @@ open import Fragment.Algebra.Homomorphism.Setoid (Σ Θ)
 open import Fragment.Algebra.Signature renaming (_⦉_⦊ to _⦉_⦊ₜ)
 
 open import Data.Nat using (ℕ)
+open import Data.Fin using (Fin)
 open import Data.Product using (proj₁; proj₂)
 open import Data.Sum using (inj₁; inj₂)
 open import Data.Vec using (Vec; []; _∷_; map)
@@ -40,6 +42,18 @@ module _
     hiding (⟦⟧-cong)
   open IsCoproduct F-frex
 
+  FXinl : A → FX
+  FXinl = applyₕ inl
+
+  FXinr : Fin n → FX
+  FXinr n = applyₕ inr (term (inj₂ n) [])
+
+  FXcarrier : Set _
+  FXcarrier = FX
+
+  FXalgebra : Algebra (Σ Θ)
+  FXalgebra = FXₐ
+
   reduceₕ : (θ : Environment n S) → FXₐ →ₕ S
   reduceₕ θ = ([_,_] {W = M} (idₕ S) (substₕ M θ))
 
@@ -49,7 +63,6 @@ module _
   open import Relation.Binary.Reasoning.Setoid (Model.Carrierₛ M)
 
   mutual
-
     factor-args : ∀ {arity m}
                   → (θ : Environment m S)
                   → (η : Environment m FXₐ)

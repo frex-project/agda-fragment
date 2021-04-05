@@ -12,7 +12,10 @@ open import Data.List using (List; []; _∷_; _++_; drop; take; reverse)
 open import Data.Vec using (Vec; []; _∷_; map; toList)
 open import Data.Bool using (Bool; true; false; if_then_else_)
 open import Data.Maybe using (Maybe; nothing; just)
+
 open import Relation.Nullary using (yes; no)
+open import Relation.Binary.Structures using (IsDecEquivalence)
+open import Relation.Binary.PropositionalEquality as PE using (_≡_)
 
 vra : ∀ {a} {A : Set a} → A → Arg A
 vra = arg (arg-info visible relevant)
@@ -68,11 +71,21 @@ unapply (meta x args) n     = meta x (prod n args)
 unapply (pat-lam cs args) n = pat-lam cs (prod n args)
 unapply x _                 = x
 
-flattenTC : ∀ {a} {A : Set a} → List (TC A) → TC (List A)
-flattenTC []       = return []
-flattenTC (x ∷ xs)
+equalTypes : Term → Term → Bool
+equalTypes τ τ' with τ ≟ τ'
+...                | yes _ = true
+...                | _     = false
+
+flatten : ∀ {a} {A : Set a} → TC (TC A) → TC A
+flatten x
   = do x' ← x
-       xs' ← flattenTC xs
+       x'
+
+listTC : ∀ {a} {A : Set a} → List (TC A) → TC (List A)
+listTC []       = return []
+listTC (x ∷ xs)
+  = do x' ← x
+       xs' ← listTC xs
        return (x' ∷ xs')
 
 n-ary : ∀ (n : ℕ) → Term → Term
@@ -120,3 +133,8 @@ vec-len _ = typeError (strErr "can't get length of type that isn't" ∷ nameErr 
 
 panic : ∀ {a} {A : Set a} → Term → TC A
 panic x = typeError (termErr x ∷ [])
+
+≡-isDecEquivalence : IsDecEquivalence (_≡_ {A = Term})
+≡-isDecEquivalence = record { isEquivalence = PE.isEquivalence
+                            ; _≟_           = _≟_
+                            }

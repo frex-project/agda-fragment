@@ -33,13 +33,14 @@ fin-def n τ
        declareDef (vra η) τ'
        return η
 
-macro
-  fin-refl : ∀ {a} {A : Set a}
-             → (n : ℕ) → (Fin n → A) → (Fin n → A)
-             → Term → TC ⊤
-  fin-refl {a} {A} n f g goal
-    = do τ ← quoteTC (∀ {x : Fin n} → f x ≡ g x)
-         η ← freshName "_"
-         declareDef (vra η) τ
-         defineFun η (map (λ m → fin-hclause m (con (quote PE.refl) [])) (upTo n))
-         unify goal (def η [])
+fin-refl : (n : ℕ) → Term → Term → TC Term
+fin-refl n f g
+  = do let prop = def (quote PE._≡_) ( vra (apply f (vra (var 0 []) ∷ []))
+                                     ∷ vra (apply g (vra (var 0 []) ∷ []))
+                                     ∷ [])
+       fin ← quoteTC (Fin n)
+       let τ = pi (hra fin) (abs "x" prop)
+       η ← freshName "_"
+       declareDef (vra η) τ
+       defineFun η (map (λ m → fin-hclause m (con (quote PE.refl) [])) (upTo n))
+       return (def η [])
