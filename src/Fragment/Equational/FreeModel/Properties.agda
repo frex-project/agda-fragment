@@ -11,6 +11,8 @@ open import Fragment.Algebra.FreeAlgebra
         ; Environment
         ; |T|_⦉_⦊
         ; |T|_⦉_⦊-⟦_⟧
+        ; term₁
+        ; term₂
         )
 
 open import Fragment.Equational.Theory
@@ -52,7 +54,7 @@ module _ {Θ n}
   -- FIXME this definition is duplicated from Fragment.Algebra.FreeAlgebra.Properties
   Substitution : (Expr → A) → Set a
   Substitution f = ∀ {k : Fin n}
-                   → f (term (inj₂ k) []) ≡ θ k
+                   → f (term₂ k) ≡ θ k
 
   Substitutionₕ : (|T| Θ ⦉ n ⦊/≈ₘ) →ₕ S → Set a
   Substitutionₕ H = Substitution (_→ₕ_.h H)
@@ -125,8 +127,8 @@ module _ {Θ n}
     substₕ-universal : (H : (|T| Θ ⦉ n ⦊/≈ₘ) →ₕ S)
                        → Substitutionₕ H
                        → H ≡ₕ substₕ
-    substₕ-universal H h-subst {term (inj₂ k) []} = reflexive (h-subst {k})
-    substₕ-universal H h-subst {term (inj₁ f) []} = Model.sym M (h-hom f [])
+    substₕ-universal H h-subst {term₂ k} = reflexive (h-subst {k})
+    substₕ-universal H h-subst {term₁ f} = Model.sym M (h-hom f [])
       where open _→ₕ_ H
     substₕ-universal H h-subst {term f (x ∷ xs)}  = begin
         h (term f (x ∷ xs))

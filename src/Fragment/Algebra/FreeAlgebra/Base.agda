@@ -13,12 +13,15 @@ open import Fragment.Algebra.TermAlgebra (Σ ⦉ n ⦊)
 
 import Relation.Binary.PropositionalEquality as PE
 open import Level using (Level)
-open import Data.Sum using (inj₁)
+open import Data.Sum using (inj₁; inj₂)
 open import Data.Vec using ([]; _∷_)
 open import Data.Vec.Relation.Binary.Equality.Propositional using (≋⇒≡)
 
+pattern term₁ x = term (inj₁ x) []
+pattern term₂ x = term (inj₂ x) []
+
 |T|_⦉_⦊-⟦_⟧ : Interpretation Σ Herbrand
-|T|_⦉_⦊-⟦_⟧ f []       = term (inj₁ f) []
+|T|_⦉_⦊-⟦_⟧ f []       = term₁ f
 |T|_⦉_⦊-⟦_⟧ f (x ∷ xs) = term f (x ∷ xs)
 
 |T|_⦉_⦊-⟦⟧-cong : Congruence Σ Herbrand |T|_⦉_⦊-⟦_⟧

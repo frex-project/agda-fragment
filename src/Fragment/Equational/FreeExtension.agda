@@ -10,10 +10,12 @@ open import Fragment.Equational.Coproduct Θ
 
 open import Fragment.Algebra.Algebra using (Algebra)
 open import Fragment.Algebra.TermAlgebra
-open import Fragment.Algebra.FreeAlgebra using (Environment; subst; subst-args)
 open import Fragment.Algebra.Homomorphism (Σ Θ)
 open import Fragment.Algebra.Homomorphism.Setoid (Σ Θ)
 open import Fragment.Algebra.Signature renaming (_⦉_⦊ to _⦉_⦊ₜ)
+open import Fragment.Algebra.FreeAlgebra
+  using (Environment; subst; subst-args; term₁; term₂)
+
 
 open import Data.Nat using (ℕ)
 open import Data.Fin using (Fin)
@@ -46,7 +48,7 @@ module _
   FXinl = applyₕ inl
 
   FXinr : Fin n → FX
-  FXinr n = applyₕ inr (term (inj₂ n) [])
+  FXinr n = applyₕ inr (term₂ n)
 
   FXcarrier : Set _
   FXcarrier = FX
@@ -79,8 +81,8 @@ module _
              → (ψ : Environment n S)
              → (∀ {k} → reduce ψ (η k) ≈ θ k)
              → reduceₕ ψ ∘ₕ (substₕ F η) ≡ₕ substₕ M θ
-    factor θ η ψ p {term (inj₂ k) []} = p
-    factor θ η ψ p {term (inj₁ f) []} = M-sym (reduce-hom f [])
+    factor θ η ψ p {term₂ k} = p
+    factor θ η ψ p {term₁ f} = M-sym (reduce-hom f [])
         where open _→ₕ_ (reduceₕ ψ) renaming (h-hom to reduce-hom)
     factor θ η ψ p {term f (x ∷ xs)}  = begin
         reduce ψ (subst FXₐ η (term f (x ∷ xs)))

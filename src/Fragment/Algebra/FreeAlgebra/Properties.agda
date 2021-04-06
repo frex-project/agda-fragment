@@ -40,7 +40,7 @@ module _ {Σ n}
 
   Substitution : (Expr → A) → Set a
   Substitution f = ∀ {k : Fin n}
-                   → f (term (inj₂ k) []) ≡ θ k
+                   → f (term₂ k) ≡ θ k
 
   Substitutionₕ : (|T| Σ ⦉ n ⦊) →ₕ S → Set a
   Substitutionₕ H = Substitution (_→ₕ_.h H)
@@ -51,8 +51,8 @@ module _ {Σ n}
     subst-args (x ∷ xs) = (subst x) ∷ (subst-args xs)
 
     subst : Expr → A
-    subst (term (inj₂ k) []) = θ k
-    subst (term (inj₁ f) []) = ⟦ f ⟧ []
+    subst (term₂ k) = θ k
+    subst (term₁ f) = ⟦ f ⟧ []
     subst (term f (x ∷ xs))  = ⟦ f ⟧ (subst-args (x ∷ xs))
 
   subst-args≡map : ∀ {arity} {xs : Vec Expr arity}
@@ -97,8 +97,8 @@ module _ {Σ n}
     substₕ-universal : (H : (|T| Σ ⦉ n ⦊) →ₕ S)
                        → Substitutionₕ H
                        → H ≡ₕ substₕ
-    substₕ-universal H h-subst {term (inj₂ k) []} = reflexive (h-subst {k})
-    substₕ-universal H _       {term (inj₁ f) []} = sym (h-hom f [])
+    substₕ-universal H h-subst {term₂ k} = reflexive (h-subst {k})
+    substₕ-universal H _       {term₁ f} = sym (h-hom f [])
       where open _→ₕ_ H
     substₕ-universal H h-subst {term f (x ∷ xs)}  = begin
         h (term f (x ∷ xs))
@@ -139,8 +139,8 @@ module _ {Σ n}
 
     subst-eval : ∀ {θ : Environment n |T|}
                  → evalₕ S ∘ₕ (substₕ |T| θ) ≡ₕ substₕ S (eval S ∘ θ)
-    subst-eval {x = term (inj₂ k) []} = refl
-    subst-eval {x = term (inj₁ f) []} = refl
+    subst-eval {x = term₂ k} = refl
+    subst-eval {x = term₁ f} = refl
     subst-eval {x = term f (x ∷ xs)}  = ⟦⟧-cong f (subst-eval-args {xs = x ∷ xs})
 
   mutual
@@ -157,6 +157,6 @@ module _ {Σ n}
                   → {θ : Environment m S}
                   → {θ' : Environment n |T| Σ ⦉ m ⦊}
                   → (substₕ S θ) ∘ₕ (substₕ |T| Σ ⦉ m ⦊ θ') ≡ₕ substₕ S ((subst S θ) ∘ θ')
-    subst-subst {x = term (inj₂ k) []} = refl
-    subst-subst {x = term (inj₁ f) []} = refl
+    subst-subst {x = term₂ k} = refl
+    subst-subst {x = term₁ f} = refl
     subst-subst {x = term f (x ∷ xs)} = ⟦⟧-cong f (subst-subst-args {xs = x ∷ xs})

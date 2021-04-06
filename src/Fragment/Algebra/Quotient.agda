@@ -87,7 +87,7 @@ module _ {n}
     quotient-subst-args (x ∷ xs) = (quotient-subst x) ∷ (quotient-subst-args xs)
 
     quotient-subst : ∀ (x : Expr) → subst S θ x ≡ subst (S / ▲) θ x
-    quotient-subst (term (inj₂ k) []) = PE.refl
-    quotient-subst (term (inj₁ f) []) = PE.refl
+    quotient-subst (term₂ k) = PE.refl
+    quotient-subst (term₁ f) = PE.refl
     quotient-subst (term f (x ∷ xs))  =
       PE.cong ⟦ f ⟧ (PW.Pointwise-≡⇒≡ (quotient-subst-args (x ∷ xs)))
