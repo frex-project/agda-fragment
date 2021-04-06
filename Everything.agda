@@ -36,4 +36,5 @@ import Fragment.Examples
 import Fragment.Extensions.Semigroup
 import Fragment.Macros.Base
 import Fragment.Macros.Destructure
+import Fragment.Macros.Environment
 import Fragment.Macros.Fin

@@ -1,6 +1,6 @@
 {-# OPTIONS --without-K --safe #-}
 
-module Fragment.Macros.Destructure where
+module Fragment.Macros.Fragment where
 
 open import Reflection hiding (name; Type; _≟_; reduce)
 open import Reflection.Term using (_≟_)
@@ -29,16 +29,16 @@ open import Fragment.Macros.Base
 open import Fragment.Macros.Fin
 open import Fragment.Macros.Environment Term _≡_ {{≡-isDecEquivalence}}
 
-extract-arity : Name → Name → TC ℕ
+extract-arity : Term → Name → TC ℕ
 extract-arity m op
-  = do τ ← inferType (def (quote Model.⟦_⟧) (vra (def m []) ∷ (vra (con op [])) ∷ []))
+  = do τ ← inferType (def (quote Model.⟦_⟧) (vra m ∷ (vra (con op [])) ∷ []))
        α ← extract-type-arg τ
        vec-len α
 
-⟦⟧ : Name → Name → Term
-⟦⟧ m op = def (quote Model.⟦_⟧) (vra (def m []) ∷ (vra (con op [])) ∷ [])
+⟦⟧ : Term → Name → Term
+⟦⟧ m op = def (quote Model.⟦_⟧) (vra m ∷ (vra (con op [])) ∷ [])
 
-normalised-⟦⟧ : Name → Name → TC Term
+normalised-⟦⟧ : Term → Name → TC Term
 normalised-⟦⟧ m op
   = do n ← extract-arity m op
        normalise (n-ary n (apply (⟦⟧ m op) (vra (vec (debrujin n)) ∷ [])))
@@ -54,18 +54,18 @@ model-sig : Term → TC Term
 model-sig (def (quote Model) (Θ ∷ _ ∷ _ ∷ [])) = normalise (def (quote Theory.Σ) (Θ ∷ []))
 model-sig _ = typeError (strErr "can't get signature of type that isn't" ∷ nameErr (quote Model) ∷ [])
 
-extract-theory : Name → TC Term
+extract-theory : Term → TC Term
 extract-theory m
-  = do τ ← getType m
+  = do τ ← inferType m
        model-theory τ
 
-extract-sig : Name → TC Term
+extract-sig : Term → TC Term
 extract-sig m
-  = do τ ← getType m
+  = do τ ← inferType m
        model-sig τ
 
-extract-carrier : Name → TC Term
-extract-carrier m = normalise (def (quote Model.Carrier) (vra (def m []) ∷ []))
+extract-carrier : Term → TC Term
+extract-carrier m = normalise (def (quote Model.Carrier) (vra m ∷ []))
 
 record Operator : Set where
   constructor operator
@@ -76,7 +76,7 @@ record Operator : Set where
 
 open Operator
 
-gather-⟦⟧ : Name → TC (List Operator)
+gather-⟦⟧ : Term → TC (List Operator)
 gather-⟦⟧ m
   = do Σ ← extract-sig m
        ops ← sig-ops Σ
@@ -93,11 +93,11 @@ mk-atom : Term → Term → Term
 mk-atom Σ t =
   con (quote term) (hra Σ ∷ hra (lit (nat 0)) ∷ vra t ∷ vra (vec []) ∷ [])
 
-mk-body : Name → Term → Environment ℕ → Term → Term
-mk-body frex Θ env t
+mk-injection : Term → Term → Environment ℕ → Term → Term
+mk-injection frex Θ env t
   with lookup t env
-...  | just n  = def (quote FXinr) ((vra Θ) ∷ (vra (def frex [])) ∷ (vra (fin n)) ∷ [])
-...  | nothing = def (quote FXinl) ((vra Θ) ∷ (vra (def frex [])) ∷ vra t ∷ [])
+...  | just n  = def (quote FXinr) ((vra Θ) ∷ vra frex ∷ (vra (fin n)) ∷ [])
+...  | nothing = def (quote FXinl) ((vra Θ) ∷ vra frex ∷ vra t ∷ [])
 
 mutual
   fold-args : ∀ {a b} {A : Set a} {B : Set b}
@@ -136,7 +136,7 @@ mutual
 fold : ∀ {a b} {A : Set a} {B : Set b}
        → (Term → B → A × B)
        → (Operator → List A → A)
-       → Name → Term → B → TC (A × B)
+       → Term → Term → B → TC (A × B)
 fold f g m t ε
   = do ops ← gather-⟦⟧ m
        fold-acc f g ops ε t
@@ -144,19 +144,19 @@ fold f g m t ε
 fold-⊤ : ∀ {a} {A : Set a}
          → (Term → A)
          → (Operator → List A → A)
-         → Name → Term → TC A
+         → Term → Term → TC A
 fold-⊤ f g m t
   = do (x , _) ← fold (λ x → λ _ → (f x , ⊤)) g m t ⊤
        return x
 
 fold-s : ∀ {a} {A : Set a}
          → (Term → A → A)
-         → Name → Term → A → TC A
+         → Term → Term → A → TC A
 fold-s f m t ε
   = do (_ , acc) ← fold (λ x → λ acc → (⊤ , f x acc)) (λ _ → λ _ → ⊤) m t ε
        return acc
 
-leaves : Name → Term → TC ℕ
+leaves : Term → Term → TC ℕ
 leaves = fold-⊤ (λ _ → 1) (λ _ → sum)
 
 mutual
@@ -181,7 +181,7 @@ mutual
   isOpen τ (def f args)  = isOpen-args τ args
   isOpen τ _             = return false
 
-open-env : Name → Term → Environment ℕ → TC (Environment ℕ)
+open-env : Term → Term → Environment ℕ → TC (Environment ℕ)
 open-env m t e = flatten (fold-s binding m t (return e))
   where binding : Term → TC (Environment ℕ) → TC (Environment ℕ)
         binding x e
@@ -191,7 +191,7 @@ open-env m t e = flatten (fold-s binding m t (return e))
                if xOpen then return (setDefault x e' (keys e'))
                         else e
 
-destruct : Name → Term → ℕ → TC Term
+destruct : Term → Term → ℕ → TC Term
 destruct m t count
   = do Σ ← extract-sig m
        let Σ' = def (quote _⦉_⦊) (vra Σ ∷ vra (lit (nat count)) ∷ [])
@@ -200,14 +200,14 @@ destruct m t count
                        m t 0
        return t'
 
-environment : Name → Environment ℕ → Term → TC Term
+environment : Term → Environment ℕ → Term → TC Term
 environment m env τ
   = do η ← fin-def (keys env) τ
        let clauses = map (λ (k , v) → fin-vclause v k) env
        defineFun η clauses
        return (def η [])
 
-direct-subst : Name → Term → Term → ℕ → TC Term
+direct-subst : Term → Term → Term → ℕ → TC Term
 direct-subst m t τ count
   = do η ← fin-def count τ
        (clauses , _) ← fold (λ x → λ n → (fin-vclause n x ∷ [] , n + 1))
@@ -216,30 +216,31 @@ direct-subst m t τ count
        defineFun η clauses
        return (def η [])
 
-indirect-subst : Name → Name → Term → Environment ℕ → Term → ℕ → TC Term
+indirect-subst : Term → Term → Term → Environment ℕ → Term → ℕ → TC Term
 indirect-subst m frex Θ env t count
-  = do let carrier = def (quote FXcarrier) (vra Θ ∷ vra (def frex []) ∷ [])
+  = do let carrier = def (quote FXcarrier) (vra Θ ∷ vra frex ∷ [])
        η ← fin-def count carrier
-       (clauses , _) ← fold (λ x → λ n → (fin-vclause n (mk-body frex Θ env x) ∷ [] , n + 1))
+       (clauses , _) ← fold (λ x → λ n → (fin-vclause n (mk-injection frex Θ env x) ∷ [] , n + 1))
                             (λ _ → concat)
                             m t 0
        defineFun η clauses
        return (def η [])
 
-auto-factor : Name → Name → Term → Environment ℕ → Term → Term → Term → TC (Term × Term)
+auto-factor : Term → Term → Term → Environment ℕ → Term → Term → Term → TC (Term × Term)
 auto-factor m frex Θ env θ t τ
   = do count ← leaves m t
        structure ← destruct m t count
        direct ← direct-subst m t τ count
        indirect ← indirect-subst m frex Θ env t count
        η ← freshName "_"
-       let substitution = def (quote subst) ( vra (def (quote FXalgebra) (vra Θ ∷ vra (def frex []) ∷ []))
+       let algebra = def (quote FXalgebra) (vra Θ ∷ vra frex ∷ [])
+       let substitution = def (quote subst) ( vra algebra
                                             ∷ vra indirect
                                             ∷ vra structure
                                             ∷ []
                                             )
        let reduction = def (quote reduce) ( vra Θ
-                                          ∷ vra (def frex [])
+                                          ∷ vra frex
                                           ∷ vra θ
                                           ∷ vra substitution
                                           ∷ []
@@ -251,7 +252,7 @@ auto-factor m frex Θ env θ t τ
        declareDef (vra η) prop
        let f = def (quote _∘_) ( vra (def (quote reduce)
                                           ( vra Θ
-                                          ∷ vra (def frex [])
+                                          ∷ vra frex
                                           ∷ vra θ
                                           ∷ []))
                                ∷ vra indirect
@@ -259,7 +260,7 @@ auto-factor m frex Θ env θ t τ
                                )
        proof ← fin-refl count f direct
        let factorisation = def (quote factor) ( vra Θ
-                                              ∷ vra (def frex [])
+                                              ∷ vra frex
                                               ∷ vra direct
                                               ∷ vra indirect
                                               ∷ vra θ
@@ -271,18 +272,23 @@ auto-factor m frex Θ env θ t τ
        return (substitution , def η [])
 
 macro
-  fragment : Name → Name → Term → Term → Term → TC ⊤
-  fragment m frex lhs rhs goal
+  fragment : Name → Term → Term → Term → Term → TC ⊤
+  fragment frex m lhs rhs goal
     = do Θ ← extract-theory m
          carrier ← extract-carrier m
          env ← open-env m lhs empty
          env' ← open-env m rhs env
          θ ← environment m env' carrier
+         let model = def (quote Model.isModel) (vra m ∷ [])
+         let frex = def frex ( vra model
+                             ∷ vra (lit (nat (keys env')))
+                             ∷ []
+                             )
          (s , p) ← auto-factor m frex Θ env' θ lhs carrier
          (t , q) ← auto-factor m frex Θ env' θ rhs carrier
          let frag = def (quote fundamental)
                         ( vra Θ
-                        ∷ vra (def frex [])
+                        ∷ vra frex
                         ∷ hra lhs
                         ∷ hra rhs
                         ∷ hra s
@@ -293,4 +299,5 @@ macro
                         ∷ vra (con (quote PE.refl) [])
                         ∷ []
                         )
+         frag ← normalise frag
          unify goal frag
