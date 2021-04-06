@@ -72,30 +72,30 @@ normalise (cons₂ x xs) = consD x (normalise xs)
 normalise x            = x
 
 data Normal : Semigroup → Set a where
-  isLeaf : ∀ {x} → Normal (leaf x)
-  SDLeaf : ∀ {x y} → Normal (cons₁ x (leaf₂ y))
-  DCons  : ∀ {x xs} → Normal xs → Normal (cons₂ x xs)
-  SDCons : ∀ {x y ys} → Normal ys → Normal (cons₁ x (cons₂ y ys))
+  isleaf : ∀ {x} → Normal (leaf x)
+  SDleaf : ∀ {x y} → Normal (cons₁ x (leaf₂ y))
+  Dcons  : ∀ {x xs} → Normal xs → Normal (cons₂ x xs)
+  SDcons : ∀ {x y ys} → Normal ys → Normal (cons₁ x (cons₂ y ys))
 
 canonicity : ∀ {x : Semigroup} → (p : Normal x) → (q : Normal x) → p ≡ q
-canonicity {x = leaf _} isLeaf isLeaf                       = PE.refl
-canonicity {x = cons₁ x (leaf₂ _)} SDLeaf SDLeaf            = PE.refl
-canonicity {x = cons₁ x (cons₂ y ys)} (SDCons p) (SDCons q) =
-  PE.cong SDCons (canonicity p q)
-canonicity {x = cons₂ x xs} (DCons p) (DCons q)             =
-  PE.cong DCons (canonicity p q)
+canonicity {x = leaf _} isleaf isleaf                       = PE.refl
+canonicity {x = cons₁ x (leaf₂ _)} SDleaf SDleaf            = PE.refl
+canonicity {x = cons₁ x (cons₂ y ys)} (SDcons p) (SDcons q) =
+  PE.cong SDcons (canonicity p q)
+canonicity {x = cons₂ x xs} (Dcons p) (Dcons q)             =
+  PE.cong Dcons (canonicity p q)
 
 consS-preserves : ∀ {x xs} → Normal xs → Normal (consS x xs)
-consS-preserves (isLeaf {x = inj₁ y}) = isLeaf
-consS-preserves (isLeaf {x = inj₂ y}) = SDLeaf
-consS-preserves SDLeaf                = SDLeaf
-consS-preserves (DCons p)             = SDCons p
-consS-preserves (SDCons p)            = SDCons p
+consS-preserves (isleaf {x = inj₁ y}) = isleaf
+consS-preserves (isleaf {x = inj₂ y}) = SDleaf
+consS-preserves SDleaf                = SDleaf
+consS-preserves (Dcons p)             = SDcons p
+consS-preserves (SDcons p)            = SDcons p
 
 normalise-reduction : ∀ {x} → Normal (normalise x)
-normalise-reduction {x = leaf x}     = isLeaf
+normalise-reduction {x = leaf x}     = isleaf
 normalise-reduction {x = cons₁ x xs} = consS-preserves (normalise-reduction {x = xs})
-normalise-reduction {x = cons₂ x xs} = DCons (normalise-reduction {x = xs})
+normalise-reduction {x = cons₂ x xs} = Dcons (normalise-reduction {x = xs})
 
 _++-raw_ : Semigroup → Semigroup → Semigroup
 leaf₁ x    ++-raw y = consS x y
@@ -137,27 +137,29 @@ consS-++ {a = a} (cons₁ x xs) y = begin
 ++-raw-assoc (cons₂ x xs) y z              =
   PE.cong (cons₂ x) (++-raw-assoc xs y z)
 ++-raw-assoc (cons₁ x xs) y z              = begin
-    ((cons₁ x xs) ++-raw y) ++-raw z
-  ≡⟨⟩
     (consS x (xs ++-raw y)) ++-raw z
   ≡⟨ consS-++ (xs ++-raw y) z ⟩
     consS x ((xs ++-raw y) ++-raw z)
   ≡⟨ PE.cong (consS x) (++-raw-assoc xs y z) ⟩
     consS x (xs ++-raw (y ++-raw z))
-  ≡⟨⟩
-    ((cons₁ x xs) ++-raw (y ++-raw z))
   ∎
   where open PE.≡-Reasoning
 
 _++ₙ_ : ∀ {x y} →  Normal x → Normal y → Normal (x ++-raw y)
-_++ₙ_ {x = leaf₁ x} {y = y} isLeaf q         = consS-preserves q
-_++ₙ_ {x = leaf₂ x} {y = y} isLeaf q         = DCons q
-_++ₙ_ {x = cons₁ x (leaf₂ _)} SDLeaf q       = SDCons q
-_++ₙ_ {x = cons₁ x (cons₂ _ _)} (SDCons p) q = SDCons (p ++ₙ q)
-_++ₙ_ {x = cons₂ x xs} {y = y} (DCons p) q   = DCons (p ++ₙ q)
+_++ₙ_ {x = leaf₁ x} {y = y} isleaf q         = consS-preserves q
+_++ₙ_ {x = leaf₂ x} {y = y} isleaf q         = Dcons q
+_++ₙ_ {x = cons₁ x (leaf₂ _)} SDleaf q       = SDcons q
+_++ₙ_ {x = cons₁ x (cons₂ _ _)} (SDcons p) q = SDcons (p ++ₙ q)
+_++ₙ_ {x = cons₂ x xs} {y = y} (Dcons p) q   = Dcons (p ++ₙ q)
 
 NormalSemigroup : Set a
 NormalSemigroup = Σ[ x ∈ Semigroup ] (Normal x)
+
+pattern nleaf₁ x    = leaf₁ x , isleaf
+pattern nleaf₂ x    = leaf₂ x , isleaf
+pattern nSDleaf x y      = cons₁ x (leaf₂ y) , SDleaf
+pattern nDcons x xs p    = cons₂ x xs , Dcons p
+pattern nSDcons x y ys p = cons₁ x (cons₂ y ys) , SDcons p
 
 _++_ : NormalSemigroup → NormalSemigroup → NormalSemigroup
 ( x , p ) ++ ( y , q ) =  x ++-raw y , p ++ₙ q
@@ -199,7 +201,7 @@ _++_ : NormalSemigroup → NormalSemigroup → NormalSemigroup
                   }
 
 ++-inl : A → NormalSemigroup
-++-inl a = leaf₁ a , isLeaf
+++-inl a = leaf₁ a , isleaf
 
 ++-inl-hom : Homomorphic S ++-algebra ++-inl
 ++-inl-hom MagmaOp.• (x ∷ y ∷ []) = PE.refl
@@ -211,14 +213,21 @@ _++_ : NormalSemigroup → NormalSemigroup → NormalSemigroup
                  }
 
 ++-inr-θ : Fin n → NormalSemigroup
-++-inr-θ k = leaf₂ k , isLeaf
+++-inr-θ k = leaf₂ k , isleaf
 
 ++-inrₕ : |T| Θ-semigroup ⦉ n ⦊/≈ₘ →ₕ ++-algebra
 ++-inrₕ = substₕ ++-model ++-inr-θ
 
 module _ {b ℓ} {W : Model Θ-semigroup {b} {ℓ}} where
 
-  open Model W renaming (Carrierₐ to Wₐ; Carrier to U; ⟦_⟧ to W⟦_⟧; ⟦⟧-cong to W⟦⟧-cong)
+  open Model W renaming ( Carrierₐ to Wₐ
+                        ; Carrier to U
+                        ; ⟦_⟧ to W⟦_⟧
+                        ; ⟦⟧-cong to W⟦⟧-cong
+                        ; reflexive to W-reflexive
+                        ; refl to W-refl
+                        ; sym to W-sym
+                        )
   open IsSemigroup (isModel→semigroup Carrierₛ (Model.isModel W))
     renaming (assoc to ⊕-assoc)
 
@@ -231,98 +240,68 @@ module _ {b ℓ} {W : Model Θ-semigroup {b} {ℓ}} where
       where open import Data.Vec.Relation.Binary.Pointwise.Inductive using ([]; _∷_)
 
   ++-[_,_] : (A → U) → (Expr → U) → NormalSemigroup → U
-  ++-[ f , g ] (leaf₁ x , _)                     = f x
-  ++-[ f , g ] (leaf₂ x , _)                     = g (term₂ x)
-  ++-[ f , g ] (cons₁ x (leaf₂ y) , SDLeaf)      = f x ⊕ g (term₂ y)
-  ++-[ f , g ] (cons₁ x (cons₂ y ys) , SDCons p) =
-    f x ⊕ ++-[ f , g ] (cons₂ y ys , DCons p)
-  ++-[ f , g ] (cons₂ x xs , DCons p)            =
-    g (term₂ x) ⊕ ++-[ f , g ] (xs , p)
+  ++-[ f , g ] (nleaf₁ x)         = f x
+  ++-[ f , g ] (nleaf₂ x)         = g (term₂ x)
+  ++-[ f , g ] (nSDleaf x y)      = f x ⊕ g (term₂ y)
+  ++-[ f , g ] (nSDcons x y ys p) = f x ⊕ ++-[ f , g ] (nDcons y ys p)
+  ++-[ f , g ] (nDcons x xs p)    = g (term₂ x) ⊕ ++-[ f , g ] (xs , p)
 
   ++-[_,_]-cong : (f : A → U) → (g : Expr → U) → Congruent _≡_ _≈_ (++-[ f , g ])
-  ++-[ f , g ]-cong p = Model.reflexive W (PE.cong ++-[ f , g ] p)
+  ++-[ f , g ]-cong p = W-reflexive (PE.cong ++-[ f , g ] p)
 
   open import Relation.Binary.Reasoning.Setoid Carrierₛ
 
-  ++-[_,_]-hom : ∀ {f : A → U} {g : Expr → U}
-                 → Homomorphic S Wₐ f
-                 → Homomorphic |T| Θ-semigroup ⦉ n ⦊/≈ₘ  Wₐ g
-                 → Homomorphic ++-algebra Wₐ ++-[ f , g ]
-  ++-[_,_]-hom {f = f} {g = g} f-hom g-hom MagmaOp.•
-    ((leaf₁ x , isLeaf) ∷ (leaf₁ y , isLeaf) ∷ []) = f-hom MagmaOp.• (x ∷ y ∷ [])
-  ++-[_,_]-hom {f = f} {g = g} f-hom g-hom MagmaOp.•
-    ((leaf₁ x , isLeaf) ∷ (leaf₂ y , isLeaf) ∷ []) = Model.refl W
-  ++-[_,_]-hom {f = f} {g = g} f-hom g-hom MagmaOp.•
-    ((leaf₁ x , isLeaf) ∷ (cons₁ y (leaf₂ z) , SDLeaf) ∷ []) = begin
-      f x ⊕ (f y ⊕ g (term₂ z))
-    ≈⟨ Model.sym W (⊕-assoc (f x) (f y) (g (term₂ z))) ⟩
-      (f x ⊕ f y) ⊕ g (term₂ z)
-    ≈⟨ ⊕-cong (f-hom MagmaOp.• (x ∷ y ∷ [])) (Model.refl W) ⟩
-      f (x • y) ⊕ g (term₂ z)
-    ≡⟨⟩
-      ++-[ f , g ] (cons₁ (x • y) (leaf₂ z) , SDLeaf)
-    ≡⟨⟩
-      ++-[ f , g ] ((leaf₁ (x • y) , isLeaf) ++ (leaf₂ z , isLeaf))
-    ∎
-  ++-[_,_]-hom {f = f} {g = g} f-hom g-hom MagmaOp.•
-    ((leaf₁ x , isLeaf) ∷ (cons₁ y (cons₂ z w) , SDCons p) ∷ []) = begin
-      f x ⊕ (f y ⊕ (g (term₂ z) ⊕ ++-[ f , g ] (w , p)))
-    ≈⟨ Model.sym W (⊕-assoc (f x) (f y) (g (term₂ z) ⊕ ++-[ f , g ] (w , p))) ⟩
-      (f x ⊕ f y) ⊕ (g (term₂ z) ⊕ ++-[ f , g ] (w , p))
-    ≈⟨ ⊕-cong (f-hom MagmaOp.• (x ∷ y ∷ [])) (Model.refl W) ⟩
-      f (x • y) ⊕ ++-[ f , g ] ((leaf₂ z , isLeaf) ++ (w , p))
-    ≡⟨⟩
-      ++-[ f , g ] ((cons₁ (x • y) (leaf₂ z) , SDLeaf) ++ (w , p))
-    ∎
-  ++-[_,_]-hom {f = f} {g = g} f-hom g-hom MagmaOp.•
-    ((leaf₁ x , isLeaf) ∷ (cons₂ y z , DCons p) ∷ []) =
-    ⊕-cong (Model.refl W) (Model.refl W)
-  ++-[_,_]-hom {f = f} {g = g} f-hom g-hom MagmaOp.•
-    ((leaf₂ x , isLeaf) ∷ (y , p) ∷ []) = Model.refl W
-  ++-[_,_]-hom {f = f} {g = g} f-hom g-hom MagmaOp.•
-    ((cons₁ x (leaf₂ y) , SDLeaf) ∷ (z , q) ∷ []) = begin
-      (f x ⊕ g (term₂ y)) ⊕ ++-[ f , g ] (z , q)
-    ≈⟨ ⊕-assoc (f x) (g (term₂ y)) (++-[ f , g ] (z , q)) ⟩
-      f x ⊕ (g (term₂ y) ⊕ ++-[ f , g ] (z , q))
-    ≡⟨⟩
-      f x ⊕ ++-[ f , g ] (cons₂ y z , DCons q)
-    ≡⟨⟩
-      ++-[ f , g ] (cons₁ x (cons₂ y z) , SDCons q)
-    ≡⟨⟩
-      ++-[ f , g ] ((cons₁ x (leaf₂ y) , SDLeaf) ++ (z , q))
-    ∎
-  ++-[_,_]-hom {f = f} {g = g} f-hom g-hom MagmaOp.•
-    ((cons₁ x (cons₂ y z) , SDCons p) ∷ (w , q) ∷ []) = begin
-      (f x ⊕ (g (term₂ y) ⊕ ++-[ f , g ] (z , p))) ⊕ ++-[ f , g ] (w , q)
-    ≈⟨ ⊕-assoc (f x) (g (term₂ y) ⊕ ++-[ f , g ] (z , p)) (++-[ f , g ] (w , q)) ⟩
-      f x ⊕ ((g (term₂ y) ⊕ ++-[ f , g ] (z , p)) ⊕ ++-[ f , g ] (w , q))
-    ≈⟨ ⊕-cong (Model.refl W) (⊕-assoc (g (term₂ y)) (++-[ f , g ] (z , p)) (++-[ f , g ] (w , q))) ⟩
-      f x ⊕ (g (term₂ y) ⊕ (++-[ f , g ] (z , p) ⊕ ++-[ f , g ] (w , q)))
-    ≈⟨ Model.sym W (⊕-assoc (f x) (g (term₂ y)) ((++-[ f , g ] (z , p) ⊕ ++-[ f , g ] (w , q)))) ⟩
-      (f x ⊕ g (term₂ y)) ⊕ (++-[ f , g ] (z , p) ⊕ ++-[ f , g ] (w , q))
-    ≈⟨ ⊕-cong (Model.refl W) (++-[ f-hom , g-hom ]-hom MagmaOp.• ((z , p) ∷ (w , q) ∷ [])) ⟩
-      (f x ⊕ g (term₂ y)) ⊕ ++-[ f , g ] ((z , p) ++ (w , q))
-    ≈⟨ ⊕-assoc (f x) (g (term₂ y)) (++-[ f , g ] ((z ++-raw w) , (p ++ₙ q))) ⟩
-      f x ⊕ (g (term₂ y) ⊕ ++-[ f , g ] ((z , p) ++ (w , q)))
-    ≡⟨⟩
-      f x ⊕ ++-[ f , g ] (cons₂ y (z ++-raw w) , DCons (p ++ₙ q))
-    ≡⟨⟩
-      ++-[ f , g ] (cons₁ x (cons₂ y (z ++-raw w)) , SDCons (p ++ₙ q))
-    ≡⟨⟩
-      ++-[ f , g ] ((cons₁ x (cons₂ y z) , SDCons p) ++ (w , q))
-    ∎
-  ++-[_,_]-hom {f = f} {g = g} f-hom g-hom MagmaOp.•
-    ((cons₂ x xs , DCons p) ∷ (y , q) ∷ []) = begin
-      (g (term₂ x) ⊕ ++-[ f ,  g ] (xs , p)) ⊕ ++-[ f , g ] (y , q)
-    ≈⟨ ⊕-assoc (g (term₂ x)) (++-[ f , g ] (xs , p)) (++-[ f , g ] (y , q)) ⟩
-      g (term₂ x) ⊕ (++-[ f ,  g ] (xs , p) ⊕ ++-[ f , g ] (y , q))
-    ≈⟨ ⊕-cong (Model.refl W) (++-[ f-hom , g-hom ]-hom MagmaOp.• ((xs , p) ∷ (y , q) ∷ [])) ⟩
-      g (term₂ x) ⊕ ++-[ f , g ] (xs ++-raw y , p ++ₙ q)
-    ≡⟨⟩
-      ++-[ f , g ] ((cons₂ x (xs ++-raw y)) , DCons (p ++ₙ q))
-    ≡⟨⟩
-      ++-[ f , g ] ((cons₂ x xs , DCons p) ++ (y , q))
-    ∎
+  module _ {f : A → U}
+    {g : Expr → U}
+    (f-hom : Homomorphic S Wₐ f)
+    (g-hom : Homomorphic |T| Θ-semigroup ⦉ n ⦊/≈ₘ  Wₐ g)
+    where
+
+    private
+      ++-[] : _
+      ++-[] = ++-[ f , g ]
+
+    ++-[_,_]-hom : Homomorphic ++-algebra Wₐ ++-[ f , g ]
+    ++-[_,_]-hom MagmaOp.• (nleaf₁ x ∷ nleaf₁ y ∷ [])     = f-hom MagmaOp.• (x ∷ y ∷ [])
+    ++-[_,_]-hom MagmaOp.• (nleaf₁ _ ∷ nleaf₂ _ ∷ [])     = W-refl
+    ++-[_,_]-hom MagmaOp.• (nleaf₁ _ ∷ nDcons _ _ _ ∷ []) = ⊕-cong W-refl W-refl
+    ++-[_,_]-hom MagmaOp.• (nleaf₂ _ ∷ _ ∷ [])            = W-refl
+    ++-[_,_]-hom MagmaOp.• (nSDleaf x y ∷ z ∷ [])         =
+      ⊕-assoc (f x) (g (term₂ y)) (++-[] z)
+    ++-[_,_]-hom MagmaOp.• (nleaf₁ x ∷ nSDleaf y z ∷ [])      = begin
+        f x ⊕ (f y ⊕ g (term₂ z))
+      ≈⟨ W-sym (⊕-assoc (f x) (f y) (g (term₂ z))) ⟩
+        (f x ⊕ f y) ⊕ g (term₂ z)
+      ≈⟨ ⊕-cong (f-hom MagmaOp.• (x ∷ y ∷ [])) W-refl ⟩
+        f (x • y) ⊕ g (term₂ z)
+      ∎
+    ++-[_,_]-hom MagmaOp.• (nleaf₁ x ∷ nSDcons y z w p ∷ [])  = begin
+        f x ⊕ (f y ⊕ (g (term₂ z) ⊕ ++-[] (w , p)))
+      ≈⟨ W-sym (⊕-assoc (f x) (f y) (g (term₂ z) ⊕ ++-[] (w , p))) ⟩
+        (f x ⊕ f y) ⊕ (g (term₂ z) ⊕ ++-[] (w , p))
+      ≈⟨ ⊕-cong (f-hom MagmaOp.• (x ∷ y ∷ [])) W-refl ⟩
+        f (x • y) ⊕ ++-[] ((nleaf₂ z) ++ (w , p))
+      ∎
+    ++-[_,_]-hom MagmaOp.• (nSDcons x y z p ∷ t@(w , q) ∷ []) = begin
+        (f x ⊕ (g (term₂ y) ⊕ ++-[] (z , p))) ⊕ ++-[] t
+      ≈⟨ ⊕-assoc (f x) (g (term₂ y) ⊕ ++-[] (z , p)) (++-[] t) ⟩
+        f x ⊕ ((g (term₂ y) ⊕ ++-[] (z , p)) ⊕ ++-[] t)
+      ≈⟨ ⊕-cong W-refl (⊕-assoc (g (term₂ y)) (++-[] (z , p)) (++-[] t)) ⟩
+        f x ⊕ (g (term₂ y) ⊕ (++-[] (z , p) ⊕ ++-[] t))
+      ≈⟨ W-sym (⊕-assoc (f x) (g (term₂ y)) (++-[] (z , p) ⊕ ++-[] t)) ⟩
+        (f x ⊕ g (term₂ y)) ⊕ (++-[] (z , p) ⊕ ++-[] t)
+      ≈⟨ ⊕-cong W-refl (++-[_,_]-hom MagmaOp.• ((z , p) ∷ t ∷ [])) ⟩
+        (f x ⊕ g (term₂ y)) ⊕ ++-[] ((z , p) ++ t)
+      ≈⟨ ⊕-assoc (f x) (g (term₂ y)) (++-[] (z ++-raw w , p ++ₙ q)) ⟩
+        f x ⊕ (g (term₂ y) ⊕ ++-[] ((z , p) ++ t))
+      ∎
+    ++-[_,_]-hom MagmaOp.• (nDcons x xs p ∷ t@(y , q) ∷ [])   = begin
+        (g (term₂ x) ⊕ ++-[] (xs , p)) ⊕ ++-[] t
+      ≈⟨ ⊕-assoc (g (term₂ x)) (++-[] (xs , p)) (++-[] t) ⟩
+        g (term₂ x) ⊕ (++-[] (xs , p) ⊕ ++-[] t)
+      ≈⟨ ⊕-cong W-refl (++-[_,_]-hom MagmaOp.• ((xs , p) ∷ t ∷ [])) ⟩
+        g (term₂ x) ⊕ ++-[] (xs ++-raw y , p ++ₙ q)
+      ∎
 
   ++-[_,_]ₕ : S →ₕ Wₐ → |T| Θ-semigroup ⦉ n ⦊/≈ₘ →ₕ Wₐ → ++-algebra →ₕ Wₐ
   ++-[_,_]ₕ F G = record { h      = ++-[ f , g ]
@@ -332,85 +311,72 @@ module _ {b ℓ} {W : Model Θ-semigroup {b} {ℓ}} where
     where open _→ₕ_ F renaming (h to f; h-hom to f-hom)
           open _→ₕ_ G renaming (h to g; h-hom to g-hom)
 
-  ++-[_,_]-commute₁ : ∀ {F : S →ₕ Wₐ}
-                      → {G : |T| Θ-semigroup ⦉ n ⦊/≈ₘ →ₕ Wₐ}
-                      → ++-[ F , G ]ₕ ∘ₕ ++-inlₕ ≡ₕ F
-  ++-[_,_]-commute₁ = Model.refl W
+  module _ {F : S →ₕ Wₐ} {G : |T| Θ-semigroup ⦉ n ⦊/≈ₘ →ₕ Wₐ} where
 
-  ++-[_,_]-commute₂ : ∀ {F : S →ₕ Wₐ}
-                      → {G : |T| Θ-semigroup ⦉ n ⦊/≈ₘ →ₕ Wₐ}
-                      → ++-[ F , G ]ₕ ∘ₕ ++-inrₕ ≡ₕ G
-  ++-[_,_]-commute₂ {F = F} {G = G} {x = term {0} (inj₂ k) []} =
-    ++-[ f , g ]-cong (PE.refl {x = ++-inr-θ k})
-    where open _→ₕ_ F renaming (h to f)
-          open _→ₕ_ G renaming (h to g)
-  ++-[_,_]-commute₂ {F = F} {G = G} {x = term {2} (MagmaOp.•) (x ∷ y ∷ [])} = begin
-      ++-[ f , g ] (subst ++-algebra ++-inr-θ (term MagmaOp.• (x ∷ y ∷ [])))
-    ≈⟨ ++-[ f , g ]-cong (subst-hom ++-model ++-inr-θ MagmaOp.• (x ∷ y ∷ [])) ⟩
-      ++-[ f , g ] ((subst ++-algebra ++-inr-θ x) ++ (subst ++-algebra ++-inr-θ y))
-    ≈⟨
-       Model.sym W (++-[ f-hom , g-hom ]-hom MagmaOp.•
-         ((subst ++-algebra ++-inr-θ x) ∷ (subst ++-algebra ++-inr-θ y) ∷ []))
-     ⟩
-      (++-[ f , g ] (subst ++-algebra ++-inr-θ x)) ⊕ (++-[ f , g ] (subst ++-algebra ++-inr-θ y))
-    ≈⟨ ⊕-cong (++-[_,_]-commute₂ {F = F} {G = G}) (++-[_,_]-commute₂ {F = F} {G = G}) ⟩
-      g x ⊕ g y
-    ≈⟨ g-hom MagmaOp.• (x ∷ y ∷ []) ⟩
-      g (term MagmaOp.• (x ∷ y ∷ []))
-    ∎
-    where open _→ₕ_ F renaming (h to f; h-hom to f-hom)
-          open _→ₕ_ G renaming (h to g; h-hom to g-hom; h-cong to g-cong)
+    open _→ₕ_ F renaming (h to f; h-hom to f-hom; h-cong to f-cong)
+    open _→ₕ_ G renaming (h to g; h-hom to g-hom; h-cong to g-cong)
 
-  ++-[_,_]-universal : ∀ {F : S →ₕ Wₐ}
-                       → {G : |T| Θ-semigroup ⦉ n ⦊/≈ₘ →ₕ Wₐ}
-                       → {H : ++-algebra →ₕ Wₐ}
-                       → H ∘ₕ ++-inlₕ ≡ₕ F
-                       → H ∘ₕ ++-inrₕ ≡ₕ G
-                       → ++-[ F , G ]ₕ ≡ₕ H
-  ++-[ c₁ , c₂ ]-universal {leaf₁ x , isLeaf} = Model.sym W c₁
-  ++-[ c₁ , c₂ ]-universal {leaf₂ x , isLeaf} = Model.sym W c₂
-  ++-[_,_]-universal {F} {G} {H} c₁ c₂ {cons₁ x (leaf₂ y) , SDLeaf} = begin
-      ++-[ f , g ] (cons₁ x (leaf₂ y) , SDLeaf)
-    ≡⟨⟩
-      f x ⊕ g (term₂ y)
-    ≈⟨ ⊕-cong (Model.sym W c₁) (Model.sym W c₂) ⟩
-      h (leaf₁ x , isLeaf) ⊕ h (leaf₂ y , isLeaf)
-    ≈⟨ h-hom MagmaOp.• ((leaf₁ x , isLeaf) ∷ (leaf₂ y , isLeaf) ∷ []) ⟩
-      h ((leaf₁ x , isLeaf) ++ (leaf₂ y , isLeaf))
-    ≡⟨⟩
-      h (cons₁ x (leaf₂ y) , SDLeaf)
-    ∎
-    where open _→ₕ_ F renaming (h to f; h-hom to f-hom)
-          open _→ₕ_ G renaming (h to g; h-hom to g-hom)
-          open _→ₕ_ H
-  ++-[_,_]-universal {F} {G} {H} c₁ c₂ {cons₁ x (cons₂ y z) , SDCons p} = begin
-      ++-[ f , g ] (cons₁ x (cons₂ y z) , SDCons p)
-    ≡⟨⟩
-      f x ⊕ (g (term₂ y) ⊕ ++-[ f , g ] (z , p))
-    ≈⟨ ⊕-cong (Model.sym W c₁) (⊕-cong (Model.sym W c₂) (++-[_,_]-universal {F} {G} {H} c₁ c₂)) ⟩
-      h (leaf₁ x , isLeaf) ⊕ (h (leaf₂ y , isLeaf) ⊕ h (z , p))
-    ≈⟨ ⊕-cong (Model.refl W) (h-hom MagmaOp.• ((leaf₂ y , isLeaf) ∷ (z , p) ∷ [])) ⟩
-      h (leaf₁ x , isLeaf) ⊕ h (cons₂ y z , DCons p)
-    ≈⟨ h-hom MagmaOp.• ((leaf₁ x , isLeaf) ∷ (cons₂ y z , DCons p) ∷ []) ⟩
-      h (cons₁ x (cons₂ y z) , SDCons p)
-    ∎
-    where open _→ₕ_ F renaming (h to f; h-hom to f-hom)
-          open _→ₕ_ G renaming (h to g; h-hom to g-hom)
-          open _→ₕ_ H
-  ++-[_,_]-universal {F} {G} {H} c₁ c₂ {cons₂ x y , DCons p} = begin
-      ++-[ f , g ] (cons₂ x y , DCons p)
-    ≡⟨⟩
-      g (term₂ x) ⊕ ++-[ f , g ] (y , p)
-    ≈⟨ ⊕-cong (Model.sym W c₂) (++-[_,_]-universal {F} {G} {H} c₁ c₂) ⟩
-      h (leaf₂ x , isLeaf) ⊕ h (y , p)
-    ≈⟨ h-hom MagmaOp.• ((leaf₂ x , isLeaf) ∷ (y , p) ∷ []) ⟩
-      h ((leaf₂ x , isLeaf) ++ (y , p))
-    ≡⟨⟩
-      h (cons₂ x y , DCons p)
-    ∎
-    where open _→ₕ_ F renaming (h to f; h-hom to f-hom)
-          open _→ₕ_ G renaming (h to g; h-hom to g-hom)
-          open _→ₕ_ H
+    private
+      ++-[] : _
+      ++-[] = ++-[ f , g ]
+
+      ++-[]-cong : _
+      ++-[]-cong = ++-[ f , g ]-cong
+
+      ++-[]-hom : _
+      ++-[]-hom = ++-[ f-hom , g-hom ]-hom
+
+    ++-[_,_]-commute₁ : ++-[ F , G ]ₕ ∘ₕ ++-inlₕ ≡ₕ F
+    ++-[_,_]-commute₁ = W-refl
+
+    ++-[_,_]-commute₂ : ++-[ F , G ]ₕ ∘ₕ ++-inrₕ ≡ₕ G
+    ++-[_,_]-commute₂ {x = term₂ k} =
+      ++-[]-cong (PE.refl {x = ++-inr-θ k})
+    ++-[_,_]-commute₂ {x = t@(term (MagmaOp.•) (x ∷ y ∷ []))} = begin
+        ++-[] (subst ++-algebra ++-inr-θ t)
+      ≈⟨ ++-[]-cong (subst-hom ++-model ++-inr-θ MagmaOp.• (x ∷ y ∷ [])) ⟩
+        ++-[] (subst-x ++ subst-y)
+      ≈⟨ W-sym (++-[]-hom MagmaOp.• ( subst-x ∷ subst-y ∷ [])) ⟩
+        (++-[] subst-x) ⊕ (++-[] subst-y)
+      ≈⟨ ⊕-cong ++-[_,_]-commute₂ ++-[_,_]-commute₂ ⟩
+        g x ⊕ g y
+      ≈⟨ g-hom MagmaOp.• (x ∷ y ∷ []) ⟩
+        g t
+      ∎
+      where subst-x = subst ++-algebra ++-inr-θ x
+            subst-y = subst ++-algebra ++-inr-θ y
+
+    module _ {H : ++-algebra →ₕ Wₐ} where
+
+      open _→ₕ_ H
+
+      ++-[_,_]-universal : H ∘ₕ ++-inlₕ ≡ₕ F → H ∘ₕ ++-inrₕ ≡ₕ G
+                           → ++-[ F , G ]ₕ ≡ₕ H
+      ++-[ c₁ , c₂ ]-universal {nleaf₁ x}    = W-sym c₁
+      ++-[ c₁ , c₂ ]-universal {nleaf₂ x}    = W-sym c₂
+      ++-[_,_]-universal c₁ c₂ {nSDleaf x y}         = begin
+          f x ⊕ g (term₂ y)
+        ≈⟨ ⊕-cong (W-sym c₁) (W-sym c₂) ⟩
+          h (nleaf₁ x) ⊕ h (nleaf₂ y)
+        ≈⟨ h-hom MagmaOp.• (nleaf₁ x ∷ nleaf₂ y ∷ []) ⟩
+          h ((nleaf₁ x) ++ (nleaf₂ y))
+        ∎
+      ++-[_,_]-universal c₁ c₂ {nSDcons x y z p}     = begin
+          f x ⊕ (g (term₂ y) ⊕ ++-[ f , g ] (z , p))
+        ≈⟨ ⊕-cong (W-sym c₁) (⊕-cong (W-sym c₂) (++-[_,_]-universal c₁ c₂)) ⟩
+          h (nleaf₁ x) ⊕ (h (nleaf₂ y) ⊕ h (z , p))
+        ≈⟨ ⊕-cong W-refl (h-hom MagmaOp.• (nleaf₂ y ∷ (z , p) ∷ [])) ⟩
+          h (nleaf₁ x) ⊕ h (nDcons y z p)
+        ≈⟨ h-hom MagmaOp.• (nleaf₁ x ∷ nDcons y z p ∷ []) ⟩
+          h (nSDcons x y z p)
+        ∎
+      ++-[_,_]-universal c₁ c₂ {nDcons x y p} = begin
+          g (term₂ x) ⊕ ++-[ f , g ] (y , p)
+        ≈⟨ ⊕-cong (W-sym c₂) (++-[_,_]-universal c₁ c₂) ⟩
+          h (nleaf₂ x) ⊕ h (y , p)
+        ≈⟨ h-hom MagmaOp.• (nleaf₂ x ∷ (y , p) ∷ []) ⟩
+          h ((nleaf₂ x) ++ (y , p))
+        ∎
 
 ++-isFrex : IsFreeExtension M n ++-model
 ++-isFrex =
