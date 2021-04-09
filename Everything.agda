@@ -26,6 +26,7 @@ import Fragment.Equational.FreeModel.Properties
 import Fragment.Equational.Initial
 import Fragment.Equational.Laws
 import Fragment.Equational.Model
+import Fragment.Equational.Satisfaction
 import Fragment.Equational.Structures
 import Fragment.Equational.TermModel
 import Fragment.Equational.TermModel.Base
@@ -33,6 +34,7 @@ import Fragment.Equational.TermModel.Properties
 import Fragment.Equational.TermModel.ProvableEquivalence
 import Fragment.Equational.Theory
 import Fragment.Examples
+import Fragment.Extensions.Base
 import Fragment.Extensions.Semigroup
 import Fragment.Macros.Base
 import Fragment.Macros.Environment
