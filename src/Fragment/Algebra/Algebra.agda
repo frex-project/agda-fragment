@@ -5,7 +5,10 @@ open import Fragment.Algebra.Signature
 module Fragment.Algebra.Algebra (Σ : Signature) where
 
 open import Level using (Level; _⊔_; suc)
-open import Relation.Binary using (Setoid)
+open import Function using (id)
+open import Data.Vec
+open import Relation.Binary using (Setoid; Rel; IsEquivalence)
+open import Relation.Binary.PropositionalEquality as PE using (_≡_)
 
 private
   variable
@@ -13,7 +16,6 @@ private
 
 module _ (S : Setoid a ℓ) where
 
-  open import Data.Vec
   open import Data.Vec.Relation.Binary.Equality.Setoid S using (_≋_)
 
   open Setoid S renaming (Carrier to A)
@@ -34,8 +36,24 @@ module _ (S : Setoid a ℓ) where
 record Algebra : Set (suc a ⊔ suc ℓ) where
   constructor algebra
   field
-    Carrierₛ  : Setoid a ℓ
-    isAlgebra : IsAlgebra Carrierₛ
+    ∥_∥/≈     : Setoid a ℓ
+    isAlgebra : IsAlgebra ∥_∥/≈
 
-  open Setoid Carrierₛ public
-  open IsAlgebra isAlgebra public
+  ∥_∥ : Set a
+  ∥_∥ = Setoid.Carrier ∥_∥/≈
+
+  infix 10 _⟦_⟧
+
+  _⟦_⟧ : Interpretation (∥_∥/≈)
+  _⟦_⟧ = IsAlgebra.⟦_⟧ isAlgebra
+
+  _⟦⟧-cong : Congruence (∥_∥/≈) (_⟦_⟧)
+  _⟦⟧-cong = IsAlgebra.⟦⟧-cong isAlgebra
+
+  ≈[_] : Rel ∥_∥ ℓ
+  ≈[_] = Setoid._≈_ ∥_∥/≈
+
+  ≈[_]-isEquivalence : IsEquivalence ≈[_]
+  ≈[_]-isEquivalence = Setoid.isEquivalence ∥_∥/≈
+
+open Algebra public

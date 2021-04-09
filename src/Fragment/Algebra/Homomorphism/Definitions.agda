@@ -4,27 +4,21 @@ open import Fragment.Algebra.Signature
 
 module Fragment.Algebra.Homomorphism.Definitions (Σ : Signature) where
 
-open import Fragment.Algebra.Algebra
+open import Fragment.Algebra.Algebra Σ
 
 open import Level using (Level; _⊔_)
+open import Relation.Binary using (Setoid)
+open import Data.Vec using (Vec; map)
+open import Function.Definitions using (Congruent) public
 
 private
   variable
     a b ℓ₁ ℓ₂ : Level
 
-module _
-  (S : Algebra Σ {a} {ℓ₁})
-  (T : Algebra Σ {b} {ℓ₂})
-  where
-
-  open Algebra S renaming (Carrier to A; _≈_ to _≈ₛ_; ⟦_⟧ to S⟦_⟧)
-  open Algebra T renaming (Carrier to B; _≈_ to _≈ₜ_; ⟦_⟧ to T⟦_⟧)
-
-  open import Data.Vec using (Vec; map)
-
-  open import Function.Definitions using (Congruent) public
-
-  Homomorphic : (A → B) → Set (a ⊔ ℓ₂)
-  Homomorphic h = ∀ {arity} → (f : ops Σ arity)
-                  → (xs : Vec A arity)
-                  → T⟦ f ⟧ (map h xs) ≈ₜ h (S⟦ f ⟧ xs)
+Homomorphic : (S : Algebra {a} {ℓ₁})
+              → (T : Algebra {b} {ℓ₂})
+              → (∥ S ∥ → ∥ T ∥) → Set (a ⊔ ℓ₂)
+Homomorphic S T h = ∀ {arity} → (f : ops Σ arity)
+                    → (xs : Vec ∥ S ∥ arity)
+                    → (T ⟦ f ⟧) (map h xs) ≈ h ((S ⟦ f ⟧) xs)
+  where open Setoid ∥ T ∥/≈ using (_≈_)

@@ -4,7 +4,9 @@ open import Fragment.Equational.Theory
 
 module Fragment.Equational.Coproduct (Θ : Theory) where
 
-open import Fragment.Equational.Model
+open import Fragment.Equational.Model Θ
+open import Fragment.Algebra.Homomorphism (Σ Θ)
+open import Fragment.Algebra.Homomorphism.Setoid (Σ Θ)
 
 open import Level using (Level; Setω)
 
@@ -12,45 +14,36 @@ private
   variable
     a b c ℓ₁ ℓ₂ ℓ₃ : Level
 
--- FIXME duplicates code in Fragment.Algebra.Coproduct
-
 module _
-  (M : Model Θ {a} {ℓ₁})
-  (N : Model Θ {b} {ℓ₂})
-  (M+N : Model Θ {c} {ℓ₃})
+  (M : Model {a} {ℓ₁})
+  (N : Model {b} {ℓ₂})
+  (M+N : Model {c} {ℓ₃})
   where
-
-  open Model M renaming (Carrierₐ to S)
-  open Model N renaming (Carrierₐ to T)
-  open Model M+N renaming (Carrierₐ to S+T)
-
-  open import Fragment.Algebra.Homomorphism (Σ Θ)
-  open import Fragment.Algebra.Homomorphism.Setoid (Σ Θ) using (_≡ₕ_)
 
   record IsCoproduct : Setω where
     field
-      inl : S →ₕ S+T
-      inr : T →ₕ S+T
+      inl : ∥ M ∥ₐ →ₕ ∥ M+N ∥ₐ
+      inr : ∥ N ∥ₐ →ₕ ∥ M+N ∥ₐ
 
-      [_,_] : ∀ {d ℓ₄} {W : Model Θ {d} {ℓ₄}}
-              → S →ₕ Model.Carrierₐ W
-              → T →ₕ Model.Carrierₐ W
-              → S+T →ₕ Model.Carrierₐ W
+      [_,_] : ∀ {d ℓ₄} {W : Model {d} {ℓ₄}}
+              → ∥ M ∥ₐ →ₕ ∥ W ∥ₐ
+              → ∥ N ∥ₐ →ₕ ∥ W ∥ₐ
+              → ∥ M+N ∥ₐ →ₕ ∥ W ∥ₐ
 
-      commute₁ : ∀ {d ℓ₄} {W : Model Θ {d} {ℓ₄}}
-                 → {F : S →ₕ Model.Carrierₐ W}
-                 → {G : T →ₕ Model.Carrierₐ W}
-                 → ([_,_] {W = W} F G) ∘ₕ inl ≡ₕ F
+      commute₁ : ∀ {d ℓ₄} {W : Model {d} {ℓ₄}}
+                 → {f : ∥ M ∥ₐ →ₕ ∥ W ∥ₐ}
+                 → {g : ∥ N ∥ₐ →ₕ ∥ W ∥ₐ}
+                 → ([_,_] {W = W} f g) ∘ₕ inl ≡ₕ f
 
-      commute₂ : ∀ {d ℓ₄} {W : Model Θ {d} {ℓ₄}}
-                 → {F : S →ₕ Model.Carrierₐ W}
-                 → {G : T →ₕ Model.Carrierₐ W}
-                 → ([_,_] {W = W} F G) ∘ₕ inr ≡ₕ G
+      commute₂ : ∀ {d ℓ₄} {W : Model {d} {ℓ₄}}
+                 → {f : ∥ M ∥ₐ →ₕ ∥ W ∥ₐ}
+                 → {g : ∥ N ∥ₐ →ₕ ∥ W ∥ₐ}
+                 → ([_,_] {W = W} f g) ∘ₕ inr ≡ₕ g
 
-      universal : ∀ {d ℓ₄} {W : Model Θ {d} {ℓ₄}}
-                  → {F : S →ₕ Model.Carrierₐ W}
-                  → {G : T →ₕ Model.Carrierₐ W}
-                  → {H : S+T →ₕ Model.Carrierₐ W}
-                  → H ∘ₕ inl ≡ₕ F
-                  → H ∘ₕ inr ≡ₕ G
-                  → ([_,_] {W = W} F G) ≡ₕ H
+      universal : ∀ {d ℓ₄} {W : Model {d} {ℓ₄}}
+                  → {f : ∥ M ∥ₐ →ₕ ∥ W ∥ₐ}
+                  → {g : ∥ N ∥ₐ →ₕ ∥ W ∥ₐ}
+                  → {h : ∥ M+N ∥ₐ →ₕ ∥ W ∥ₐ}
+                  → h ∘ₕ inl ≡ₕ f
+                  → h ∘ₕ inr ≡ₕ g
+                  → ([_,_] {W = W} f g) ≡ₕ h

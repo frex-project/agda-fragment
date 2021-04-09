@@ -1,7 +1,9 @@
 {-# OPTIONS --without-K --safe #-}
 
-module Fragment.Algebra.FreeAlgebra where
+open import Fragment.Algebra.Signature
 
-open import Fragment.Algebra.FreeAlgebra.Base public
-open import Fragment.Algebra.FreeAlgebra.Definitions public
-open import Fragment.Algebra.FreeAlgebra.Properties public
+module Fragment.Algebra.FreeAlgebra (Σ : Signature) where
+
+open import Fragment.Algebra.FreeAlgebra.Base Σ public
+open import Fragment.Algebra.FreeAlgebra.Definitions Σ public
+open import Fragment.Algebra.FreeAlgebra.Properties Σ public

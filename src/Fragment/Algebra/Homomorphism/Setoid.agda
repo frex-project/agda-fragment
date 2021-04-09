@@ -21,26 +21,26 @@ module _
   {T : Algebra Σ {b} {ℓ₂}}
   where
 
-  open Algebra T
+  open Setoid ∥ T ∥/≈
 
   infix 4 _≡ₕ_
 
   _≡ₕ_ : Rel (S →ₕ T) (a ⊔ ℓ₂)
-  F ≡ₕ G = ∀ {x} → applyₕ F x ≈ applyₕ G x
+  f ≡ₕ g = ∀ {x} → ∥ f ∥ₕ x ≈ ∥ g ∥ₕ x
 
   ≡ₕ-refl : Reflexive _≡ₕ_
   ≡ₕ-refl = refl
 
   ≡ₕ-sym : Symmetric _≡ₕ_
-  ≡ₕ-sym F≈ₕG {x} = sym (F≈ₕG {x})
+  ≡ₕ-sym f≈ₕg {x} = sym (f≈ₕg {x})
 
   ≡ₕ-trans : Transitive _≡ₕ_
-  ≡ₕ-trans F≡ₕG G≡ₕH {x} = trans (F≡ₕG {x}) (G≡ₕH {x})
+  ≡ₕ-trans f≡ₕg g≡ₕh {x} = trans (f≡ₕg {x}) (g≡ₕh {x})
 
   ≡ₕ-isEquivalence : IsEquivalence _≡ₕ_
-  ≡ₕ-isEquivalence = record { refl  = λ {F} → ≡ₕ-refl {F}
-                            ; sym   = λ {F G} → ≡ₕ-sym {F} {G}
-                            ; trans = λ {F G H} → ≡ₕ-trans {F} {G} {H}
+  ≡ₕ-isEquivalence = record { refl  = λ {f} → ≡ₕ-refl {f}
+                            ; sym   = λ {f g} → ≡ₕ-sym {f} {g}
+                            ; trans = λ {f g h} → ≡ₕ-trans {f} {g} {h}
                             }
 
 ≡ₕ-setoid : (S : Algebra Σ {a} {ℓ₁})

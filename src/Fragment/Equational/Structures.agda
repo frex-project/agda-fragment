@@ -6,6 +6,7 @@ import Fragment.Equational.Laws as L
 open import Fragment.Equational.Bundles
 open import Fragment.Equational.Theory
 open import Fragment.Equational.Model
+
 open import Fragment.Algebra.Algebra
 
 open import Level using (Level)
@@ -51,7 +52,7 @@ module _ (S : Setoid a ℓ) where
                              }
 
     magma→algebra : Algebra Σ-magma
-    magma→algebra = record { Carrierₛ  = S
+    magma→algebra = record { ∥_∥/≈     = S
                            ; isAlgebra = magma→isAlgebra
                            }
 
@@ -64,7 +65,7 @@ module _ (S : Setoid a ℓ) where
                            }
 
     magma→model : Model Θ-magma
-    magma→model = record { Carrierₛ = S
+    magma→model = record { ∥_∥/≈    = S
                          ; isModel  = magma→isModel
                          }
 
@@ -97,7 +98,7 @@ module _ (S : Setoid a ℓ) where
                                }
 
     semigroup→model : Model Θ-semigroup
-    semigroup→model = record { Carrierₛ = S
+    semigroup→model = record { ∥_∥/≈    = S
                              ; isModel  = semigroup→isModel
                              }
 
@@ -105,16 +106,16 @@ module _ (S : Setoid a ℓ) where
 
     open IsModel M
 
-    isModel→assoc : Associative (isModel→∙ (isAlgebra→isModel isAlgebra))
+    isModel→assoc : Associative (isModel→∙ (isAlgebra→isModel (isAlgebra M)))
     isModel→assoc x y z = models assoc {θ}
       where θ : Fin 3 → A
             θ zero             = x
             θ (suc zero)       = y
             θ (suc (suc zero)) = z
 
-    isModel→semigroup : IsSemigroup (isModel→∙ (isAlgebra→isModel isAlgebra))
+    isModel→semigroup : IsSemigroup (isModel→∙ (isAlgebra→isModel (isAlgebra M)))
     isModel→semigroup =
-      record { isMagma = isModel→magma (isAlgebra→isModel isAlgebra)
+      record { isMagma = isModel→magma (isAlgebra→isModel (isAlgebra M))
              ; assoc   = isModel→assoc
              }
 
@@ -134,7 +135,7 @@ module _ (S : Setoid a ℓ) where
                                 }
 
     csemigroup→model : Model Θ-csemigroup
-    csemigroup→model = record { Carrierₛ = S
+    csemigroup→model = record { ∥_∥/≈    = S
                               ; isModel  = csemigroup→isModel
                               }
 
@@ -142,22 +143,22 @@ module _ (S : Setoid a ℓ) where
 
     open IsModel M
 
-    isModel→models-semigroup : Models Θ-semigroup (algebra S isAlgebra)
+    isModel→models-semigroup : Models Θ-semigroup (algebra S (isAlgebra M))
     isModel→models-semigroup assoc {θ} = models assoc {θ}
 
     isModel→isModel-semigroup : IsModel Θ-semigroup S
-    isModel→isModel-semigroup = record { isAlgebra = isAlgebra
+    isModel→isModel-semigroup = record { isAlgebra = isAlgebra M
                                        ; models    = isModel→models-semigroup
                                        }
 
-    isModel→comm : Commutative (isModel→∙ (isAlgebra→isModel isAlgebra))
+    isModel→comm : Commutative (isModel→∙ (isAlgebra→isModel (isAlgebra M)))
     isModel→comm x y = models comm {θ}
       where θ : Fin 2 → A
             θ zero       = x
             θ (suc zero) = y
 
     isModel→csemigroup : IsCommutativeSemigroup
-                           (isModel→∙ (isAlgebra→isModel isAlgebra))
+                           (isModel→∙ (isAlgebra→isModel (isAlgebra M)))
     isModel→csemigroup =
       record { isSemigroup = isModel→semigroup isModel→isModel-semigroup
              ; comm        = isModel→comm

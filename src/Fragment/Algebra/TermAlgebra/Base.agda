@@ -4,7 +4,7 @@ open import Fragment.Algebra.Signature
 
 module Fragment.Algebra.TermAlgebra.Base (Σ : Signature) where
 
-open import Fragment.Algebra.Algebra
+open import Fragment.Algebra.Algebra Σ
 
 import Relation.Binary.PropositionalEquality as PE
 open import Data.Vec using (Vec)
@@ -17,15 +17,15 @@ data Expr : Set where
 Herbrand : Setoid _ _
 Herbrand = PE.setoid Expr
 
-term-cong : Congruence Σ Herbrand term
+term-cong : Congruence Herbrand term
 term-cong f p = PE.cong (term f) (≋⇒≡ p)
 
-|T|-isAlgebra : IsAlgebra Σ Herbrand
+|T|-isAlgebra : IsAlgebra Herbrand
 |T|-isAlgebra = record { ⟦_⟧     = term
                        ; ⟦⟧-cong = term-cong
                        }
 
-|T| : Algebra Σ
-|T| = record { Carrierₛ  = Herbrand
+|T| : Algebra
+|T| = record { ∥_∥/≈     = Herbrand
              ; isAlgebra = |T|-isAlgebra
              }

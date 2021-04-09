@@ -1,6 +1,8 @@
 {-# OPTIONS --without-K --safe #-}
 
-module Fragment.Equational.FreeModel where
+open import Fragment.Equational.Theory
 
-open import Fragment.Equational.FreeModel.Base public
-open import Fragment.Equational.FreeModel.Properties public
+module Fragment.Equational.FreeModel (Θ : Theory) where
+
+open import Fragment.Equational.FreeModel.Base Θ public
+open import Fragment.Equational.FreeModel.Properties Θ public

@@ -2,26 +2,21 @@
 
 module Fragment.Equational.Theory where
 
-open import Fragment.Algebra.Algebra
 open import Fragment.Algebra.Signature
-  renaming (_⦉_⦊ to _⦉_⦊ₛ)
-
-import Fragment.Algebra.TermAlgebra as T
+open import Fragment.Algebra.Algebra
+open import Fragment.Algebra.TermAlgebra
+open import Fragment.Algebra.FreeAlgebra
 
 open import Function using (_∘_)
 
-open import Data.Nat using (ℕ; _≡ᵇ_)
-open import Data.Bool using (true; false)
+open import Data.Nat using (ℕ)
 open import Data.Fin using (Fin)
 open import Data.Product using (_×_; _,_)
-open import Data.Empty using (⊥)
-open import Data.Unit using (⊤)
 open import Data.Sum using (inj₁; inj₂)
 open import Data.Vec using (Vec; []; _∷_)
 
 Eq : (Σ : Signature) → (n : ℕ) → Set
-Eq Σ n = Expr × Expr
-  where open T (Σ ⦉ n ⦊ₛ)
+Eq Σ n = Expr (Σ ⦉ n ⦊) × Expr (Σ ⦉ n ⦊)
 
 record Theory : Set₁ where
   field
@@ -33,27 +28,28 @@ record Theory : Set₁ where
 
 open Theory public
 
-mutual
-    frex-expr-args : ∀ {Σ n m arity}
-                     → Vec (T.Expr (Σ ⦉ m ⦊ₛ)) arity
-                     → Vec (T.Expr ((Σ ⦉ n ⦊ₛ) ⦉ m ⦊ₛ)) arity
-    frex-expr-args []       = []
-    frex-expr-args (x ∷ xs) = (frex-expr x) ∷ (frex-expr-args xs)
+private
+  mutual
+    extend-expr-args : ∀ {Σ n m arity}
+                       → Vec (Expr (Σ ⦉ m ⦊)) arity
+                       → Vec (Expr ((Σ ⦉ n ⦊) ⦉ m ⦊)) arity
+    extend-expr-args []       = []
+    extend-expr-args (x ∷ xs) = extend-expr x ∷ extend-expr-args xs
 
-    frex-expr : ∀ {Σ n m}
-                → T.Expr (Σ ⦉ m ⦊ₛ)
-                → T.Expr ((Σ ⦉ n ⦊ₛ) ⦉ m ⦊ₛ)
-    frex-expr (T.term (inj₂ k) []) = T.term (inj₂ k) []
-    frex-expr (T.term (inj₁ f) []) = T.term (inj₁ (inj₁ f)) []
-    frex-expr (T.term f (x ∷ xs))  = T.term f (frex-expr-args (x ∷ xs))
+    extend-expr : ∀ {Σ n m}
+                  → Expr (Σ ⦉ m ⦊)
+                  → Expr ((Σ ⦉ n ⦊) ⦉ m ⦊)
+    extend-expr (term₂ k)         = term₂ k
+    extend-expr (term₁ f)         = term₁ (inj₁ f)
+    extend-expr (term f (x ∷ xs)) = term f (extend-expr-args (x ∷ xs))
 
-frex-eq : ∀ {Σ n arity}
-          → Eq Σ arity
-          → Eq (Σ ⦉ n ⦊ₛ) arity
-frex-eq (lhs , rhs) = frex-expr lhs , frex-expr rhs
+  extend : ∀ {Σ n arity}
+           → Eq Σ arity
+           → Eq (Σ ⦉ n ⦊) arity
+  extend (lhs , rhs) = extend-expr lhs , extend-expr rhs
 
-_⦉_⦊ : (Θ : Theory) → ℕ → Theory
-Θ ⦉ n ⦊ = record { Σ     = (Σ Θ) ⦉ n ⦊ₛ
-                 ; eqs   = eqs Θ
-                 ; _⟦_⟧ₑ = frex-eq ∘ (Θ ⟦_⟧ₑ)
-                 }
+_⦉_⦊ₜ : (Θ : Theory) → ℕ → Theory
+Θ ⦉ n ⦊ₜ = record { Σ     = (Σ Θ) ⦉ n ⦊
+                  ; eqs   = eqs Θ
+                  ; _⟦_⟧ₑ = extend ∘ (Θ ⟦_⟧ₑ)
+                  }

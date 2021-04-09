@@ -8,43 +8,39 @@ module Fragment.Equational.FreeModel.Base
   (n : ℕ)
   where
 
-open import Fragment.Algebra.Algebra
-open import Fragment.Algebra.Quotient
-open import Fragment.Algebra.FreeAlgebra
+open import Fragment.Algebra.Algebra (Σ Θ)
+open import Fragment.Algebra.Quotient (Σ Θ)
+open import Fragment.Algebra.FreeAlgebra (Σ Θ)
 
-open import Fragment.Equational.Model
-open import Fragment.Equational.TermModel (Θ ⦉ n ⦊)
-open import Fragment.Equational.TermModel.ProvableEquivalence Θ (|T| (Σ Θ) ⦉ n ⦊)
+open import Fragment.Equational.Model Θ
+open import Fragment.Equational.TermModel (Θ ⦉ n ⦊ₜ)
+open import Fragment.Equational.TermModel.ProvableEquivalence Θ (|T|⦉ n ⦊)
 
 open import Data.Product using (proj₁; proj₂)
 open import Relation.Binary using (IsEquivalence)
 
-|T|_⦉_⦊/≈ₘ : Algebra (Σ Θ)
-|T|_⦉_⦊/≈ₘ = |T| (Σ Θ) ⦉ n ⦊ / ≈ₘ
+open import Relation.Binary.Reasoning.Setoid ∥ |T|⦉ n ⦊ / ≈ₘ ∥/≈
 
-open Algebra |T|_⦉_⦊/≈ₘ renaming (Carrierₛ to A)
-
-open import Relation.Binary.Reasoning.Setoid A
-
-|T|_⦉_⦊/≈ₘ-models : Models Θ |T|_⦉_⦊/≈ₘ
-|T|_⦉_⦊/≈ₘ-models eq {θ} = begin
-    subst |T|_⦉_⦊/≈ₘ θ lhs
-  ≈⟨ IsEquivalence.reflexive ≈ₘ-isEquivalence (quotient-subst lhs) ⟩
-    subst (|T| (Σ Θ) ⦉ n ⦊) θ lhs
+|T|⦉_⦊/≈ₘ-models : Models (|T|⦉ n ⦊ / ≈ₘ)
+|T|⦉_⦊/≈ₘ-models eq {θ} = begin
+    subst (|T|⦉ n ⦊ / ≈ₘ) θ lhs
+  ≈⟨ reflexive (quotient-subst lhs) ⟩
+    subst (|T|⦉ n ⦊) θ lhs
   ≈⟨ model eq θ ⟩
-    subst (|T| (Σ Θ) ⦉ n ⦊) θ rhs
-  ≈⟨ IsEquivalence.reflexive ≈ₘ-isEquivalence (quotient-subst rhs) ⟩
-    subst |T|_⦉_⦊/≈ₘ θ rhs
+    subst (|T|⦉ n ⦊) θ rhs
+  ≈⟨ reflexive (quotient-subst rhs) ⟩
+    subst (|T|⦉ n ⦊ / ≈ₘ) θ rhs
   ∎
-  where lhs = proj₁ (Θ ⟦ eq ⟧ₑ)
+  where open IsEquivalence  ≈ₘ-isEquivalence
+        lhs = proj₁ (Θ ⟦ eq ⟧ₑ)
         rhs = proj₂ (Θ ⟦ eq ⟧ₑ)
 
-|T|_⦉_⦊/≈ₘ-isModel : IsModel Θ A
-|T|_⦉_⦊/≈ₘ-isModel = record { isAlgebra = isAlgebra
-                            ; models    = |T|_⦉_⦊/≈ₘ-models
-                            }
+|T|⦉_⦊/≈ₘ-isModel : IsModel ∥ |T|⦉ n ⦊ / ≈ₘ ∥/≈
+|T|⦉_⦊/≈ₘ-isModel = record { isAlgebra = |T|⦉ n ⦊ / ≈ₘ -isAlgebra
+                           ; models    = |T|⦉_⦊/≈ₘ-models
+                           }
 
-|T|ₘ_⦉_⦊ : Model Θ
-|T|ₘ_⦉_⦊ = record { Carrierₛ  = A
-                  ; isModel   = |T|_⦉_⦊/≈ₘ-isModel
-                  }
+|T|⦉_⦊/≈ₘ : Model
+|T|⦉_⦊/≈ₘ = record { ∥_∥/≈   = ∥ |T|⦉ n ⦊ / ≈ₘ ∥/≈
+                   ; isModel = |T|⦉_⦊/≈ₘ-isModel
+                   }

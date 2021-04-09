@@ -2,27 +2,28 @@
 
 open import Fragment.Equational.Bundles
   using (Θ-semigroup; Σ-magma; MagmaOp; SemigroupEq)
-open import Fragment.Equational.Model
+open import Fragment.Equational.Model Θ-semigroup
 
 open import Data.Nat using (ℕ)
 open import Relation.Binary.PropositionalEquality as PE using (_≡_)
 
 module Fragment.Extensions.Semigroup {a}
   {A : Set a}
-  (isModel : IsModel Θ-semigroup (PE.setoid A))
+  (isModel : IsModel (PE.setoid A))
   (n : ℕ)
   where
 
 open import Fragment.Equational.Structures using (isModel→semigroup)
 open import Fragment.Equational.FreeExtension Θ-semigroup
-open import Fragment.Equational.FreeModel
+open import Fragment.Equational.FreeModel Θ-semigroup
 
-open import Fragment.Algebra.Algebra
-open import Fragment.Algebra.Signature renaming (_⦉_⦊ to _⦉_⦊ₜ)
-open import Fragment.Algebra.TermAlgebra (Σ-magma ⦉ n ⦊ₜ)
-open import Fragment.Algebra.Homomorphism (Σ-magma)
-open import Fragment.Algebra.Homomorphism.Setoid (Σ-magma)
-open import Fragment.Algebra.FreeAlgebra using (subst; term₁; term₂)
+open import Fragment.Algebra.Signature
+open import Fragment.Algebra.TermAlgebra (Σ-magma ⦉ n ⦊)
+open import Fragment.Algebra.Homomorphism Σ-magma
+open import Fragment.Algebra.Homomorphism.Setoid Σ-magma
+open import Fragment.Algebra.FreeAlgebra Σ-magma using (subst; term₁; term₂)
+open import Fragment.Algebra.Algebra Σ-magma
+  using (Algebra; IsAlgebra; Interpretation; Congruence; algebra)
 
 open import Function.Bundles using (Inverse)
 open import Algebra.Structures using (IsSemigroup)
@@ -34,20 +35,16 @@ open import Data.Fin using (Fin; #_)
 open import Data.Vec using (Vec; _∷_; []; map)
 open import Data.Vec.Relation.Binary.Equality.Propositional using (≋⇒≡)
 
-open IsModel isModel
-open IsSemigroup (isModel→semigroup (PE.setoid A) isModel)
+open import Relation.Binary using (Setoid)
+
+open IsSemigroup (isModel→semigroup (PE.setoid A) isModel) using (assoc)
 
 private
-  M : Model Θ-semigroup
-  M = record { Carrierₛ = (PE.setoid A)
-             ; isModel  = isModel
-             }
+  M : Model
+  M = model (PE.setoid A) isModel
 
-  S : Algebra Σ-magma
-  S = algebra (PE.setoid A) isAlgebra
-
-_•_ : A → A → A
-x • y = ⟦ MagmaOp.• ⟧ (x ∷ y ∷ [])
+  _•_ : A → A → A
+  x • y = (Model._⟦_⟧ M MagmaOp.•) (x ∷ y ∷ [])
 
 data Semigroup : Set a where
   leaf : A ⊎ Fin n → Semigroup
@@ -173,124 +170,119 @@ _++_ : NormalSemigroup → NormalSemigroup → NormalSemigroup
         (PE.subst Normal (++-raw-assoc x y z) ((p ++ₙ q) ++ₙ r))
         (p ++ₙ (q ++ₙ r)))
 
-++-⟦_⟧ : Interpretation Σ-magma (PE.setoid (NormalSemigroup))
+++-⟦_⟧ : Interpretation (PE.setoid (NormalSemigroup))
 ++-⟦_⟧ MagmaOp.• (x ∷ y ∷ []) = _++_ x y
 
-++-⟦⟧-cong : Congruence Σ-magma (PE.setoid NormalSemigroup) (++-⟦_⟧)
+++-⟦⟧-cong : Congruence (PE.setoid NormalSemigroup) (++-⟦_⟧)
 ++-⟦⟧-cong MagmaOp.• p = PE.cong (++-⟦_⟧ MagmaOp.•) (≋⇒≡ p)
 
-++-isAlgebra : IsAlgebra Σ-magma (PE.setoid NormalSemigroup)
+++-isAlgebra : IsAlgebra (PE.setoid NormalSemigroup)
 ++-isAlgebra = record { ⟦_⟧     = ++-⟦_⟧
                       ; ⟦⟧-cong = ++-⟦⟧-cong
                       }
 
-++-algebra : Algebra Σ-magma
+++-algebra : Algebra
 ++-algebra = algebra (PE.setoid NormalSemigroup) ++-isAlgebra
 
-++-models : Models Θ-semigroup ++-algebra
+++-models : Models ++-algebra
 ++-models SemigroupEq.assoc {θ} = ++-assoc (θ (# 0)) (θ (# 1)) (θ (# 2))
 
-++-isModel : IsModel Θ-semigroup (PE.setoid NormalSemigroup)
+++-isModel : IsModel (PE.setoid NormalSemigroup)
 ++-isModel = record { isAlgebra = ++-isAlgebra
                     ; models    = ++-models
                     }
 
-++-model : Model Θ-semigroup
-++-model = record { Carrierₛ = PE.setoid NormalSemigroup
-                  ; isModel  = ++-isModel
+++-model : Model
+++-model = record { ∥_∥/≈   = PE.setoid NormalSemigroup
+                  ; isModel = ++-isModel
                   }
 
 ++-inl : A → NormalSemigroup
 ++-inl a = leaf₁ a , isleaf
 
-++-inl-hom : Homomorphic S ++-algebra ++-inl
+++-inl-hom : Homomorphic ∥ M ∥ₐ ++-algebra ++-inl
 ++-inl-hom MagmaOp.• (x ∷ y ∷ []) = PE.refl
 
-++-inlₕ : S →ₕ ++-algebra
-++-inlₕ = record { h      = ++-inl
-                 ; h-cong = PE.cong ++-inl
-                 ; h-hom  = ++-inl-hom
+++-inlₕ : ∥ M ∥ₐ →ₕ ++-algebra
+++-inlₕ = record { ∥_∥ₕ      = ++-inl
+                 ; ∥_∥ₕ-cong = PE.cong ++-inl
+                 ; ∥_∥ₕ-hom  = ++-inl-hom
                  }
 
 ++-inr-θ : Fin n → NormalSemigroup
 ++-inr-θ k = leaf₂ k , isleaf
 
-++-inrₕ : |T| Θ-semigroup ⦉ n ⦊/≈ₘ →ₕ ++-algebra
+++-inrₕ : ∥ |T|⦉ n ⦊/≈ₘ ∥ₐ →ₕ ++-algebra
 ++-inrₕ = substₕ ++-model ++-inr-θ
 
-module _ {b ℓ} {W : Model Θ-semigroup {b} {ℓ}} where
+module _ {b ℓ} {W : Model {b} {ℓ}} where
 
-  open Model W renaming ( Carrierₐ to Wₐ
-                        ; Carrier to U
-                        ; ⟦_⟧ to W⟦_⟧
-                        ; ⟦⟧-cong to W⟦⟧-cong
-                        ; reflexive to W-reflexive
-                        ; refl to W-refl
-                        ; sym to W-sym
-                        )
-  open IsSemigroup (isModel→semigroup Carrierₛ (Model.isModel W))
+  open Setoid ∥ W ∥/≈
+
+  open IsSemigroup (isModel→semigroup ∥ W ∥/≈ (Model.isModel W))
+    using ()
     renaming (assoc to ⊕-assoc)
 
   private
-    _⊕_ : U → U → U
-    x ⊕ y = W⟦ MagmaOp.• ⟧ (x ∷ y ∷ [])
+    _⊕_ : ∥ W ∥ → ∥ W ∥ → ∥ W ∥
+    x ⊕ y = (W ⟦ MagmaOp.• ⟧) (x ∷ y ∷ [])
 
-    ⊕-cong : ∀ {x y z w : U} → x ≈ y → z ≈ w → x ⊕ z ≈ y ⊕ w
-    ⊕-cong p q = W⟦⟧-cong MagmaOp.• (p ∷ q ∷ [])
+    ⊕-cong : ∀ {x y z w : ∥ W ∥} → x ≈ y → z ≈ w → x ⊕ z ≈ y ⊕ w
+    ⊕-cong p q = (W ⟦⟧-cong) MagmaOp.• (p ∷ q ∷ [])
       where open import Data.Vec.Relation.Binary.Pointwise.Inductive using ([]; _∷_)
 
-  ++-[_,_] : (A → U) → (Expr → U) → NormalSemigroup → U
+  ++-[_,_] : (A → ∥ W ∥) → (Expr → ∥ W ∥) → NormalSemigroup → ∥ W ∥
   ++-[ f , g ] (nleaf₁ x)         = f x
   ++-[ f , g ] (nleaf₂ x)         = g (term₂ x)
   ++-[ f , g ] (nSDleaf x y)      = f x ⊕ g (term₂ y)
   ++-[ f , g ] (nSDcons x y ys p) = f x ⊕ ++-[ f , g ] (nDcons y ys p)
   ++-[ f , g ] (nDcons x xs p)    = g (term₂ x) ⊕ ++-[ f , g ] (xs , p)
 
-  ++-[_,_]-cong : (f : A → U) → (g : Expr → U) → Congruent _≡_ _≈_ (++-[ f , g ])
-  ++-[ f , g ]-cong p = W-reflexive (PE.cong ++-[ f , g ] p)
+  ++-[_,_]-cong : (f : A → ∥ W ∥) → (g : Expr → ∥ W ∥) → Congruent _≡_ _≈_ (++-[ f , g ])
+  ++-[ f , g ]-cong p = reflexive (PE.cong ++-[ f , g ] p)
 
-  open import Relation.Binary.Reasoning.Setoid Carrierₛ
+  open import Relation.Binary.Reasoning.Setoid ∥ W ∥/≈
 
-  module _ {f : A → U}
-    {g : Expr → U}
-    (f-hom : Homomorphic S Wₐ f)
-    (g-hom : Homomorphic |T| Θ-semigroup ⦉ n ⦊/≈ₘ  Wₐ g)
+  module _ {f : A → ∥ W ∥}
+    {g : Expr → ∥ W ∥}
+    (f-hom : Homomorphic ∥ M ∥ₐ ∥ W ∥ₐ f)
+    (g-hom : Homomorphic ∥ |T|⦉ n ⦊/≈ₘ ∥ₐ  ∥ W ∥ₐ g)
     where
 
     private
       ++-[] : _
       ++-[] = ++-[ f , g ]
 
-    ++-[_,_]-hom : Homomorphic ++-algebra Wₐ ++-[ f , g ]
+    ++-[_,_]-hom : Homomorphic ++-algebra ∥ W ∥ₐ ++-[ f , g ]
     ++-[_,_]-hom MagmaOp.• (nleaf₁ x ∷ nleaf₁ y ∷ [])     = f-hom MagmaOp.• (x ∷ y ∷ [])
-    ++-[_,_]-hom MagmaOp.• (nleaf₁ _ ∷ nleaf₂ _ ∷ [])     = W-refl
-    ++-[_,_]-hom MagmaOp.• (nleaf₁ _ ∷ nDcons _ _ _ ∷ []) = ⊕-cong W-refl W-refl
-    ++-[_,_]-hom MagmaOp.• (nleaf₂ _ ∷ _ ∷ [])            = W-refl
+    ++-[_,_]-hom MagmaOp.• (nleaf₁ _ ∷ nleaf₂ _ ∷ [])     = refl
+    ++-[_,_]-hom MagmaOp.• (nleaf₁ _ ∷ nDcons _ _ _ ∷ []) = ⊕-cong refl refl
+    ++-[_,_]-hom MagmaOp.• (nleaf₂ _ ∷ _ ∷ [])            = refl
     ++-[_,_]-hom MagmaOp.• (nSDleaf x y ∷ z ∷ [])         =
       ⊕-assoc (f x) (g (term₂ y)) (++-[] z)
     ++-[_,_]-hom MagmaOp.• (nleaf₁ x ∷ nSDleaf y z ∷ [])      = begin
         f x ⊕ (f y ⊕ g (term₂ z))
-      ≈⟨ W-sym (⊕-assoc (f x) (f y) (g (term₂ z))) ⟩
+      ≈⟨ sym (⊕-assoc (f x) (f y) (g (term₂ z))) ⟩
         (f x ⊕ f y) ⊕ g (term₂ z)
-      ≈⟨ ⊕-cong (f-hom MagmaOp.• (x ∷ y ∷ [])) W-refl ⟩
+      ≈⟨ ⊕-cong (f-hom MagmaOp.• (x ∷ y ∷ [])) refl ⟩
         f (x • y) ⊕ g (term₂ z)
       ∎
     ++-[_,_]-hom MagmaOp.• (nleaf₁ x ∷ nSDcons y z w p ∷ [])  = begin
         f x ⊕ (f y ⊕ (g (term₂ z) ⊕ ++-[] (w , p)))
-      ≈⟨ W-sym (⊕-assoc (f x) (f y) (g (term₂ z) ⊕ ++-[] (w , p))) ⟩
+      ≈⟨ sym (⊕-assoc (f x) (f y) (g (term₂ z) ⊕ ++-[] (w , p))) ⟩
         (f x ⊕ f y) ⊕ (g (term₂ z) ⊕ ++-[] (w , p))
-      ≈⟨ ⊕-cong (f-hom MagmaOp.• (x ∷ y ∷ [])) W-refl ⟩
+      ≈⟨ ⊕-cong (f-hom MagmaOp.• (x ∷ y ∷ [])) refl ⟩
         f (x • y) ⊕ ++-[] ((nleaf₂ z) ++ (w , p))
       ∎
     ++-[_,_]-hom MagmaOp.• (nSDcons x y z p ∷ t@(w , q) ∷ []) = begin
         (f x ⊕ (g (term₂ y) ⊕ ++-[] (z , p))) ⊕ ++-[] t
       ≈⟨ ⊕-assoc (f x) (g (term₂ y) ⊕ ++-[] (z , p)) (++-[] t) ⟩
         f x ⊕ ((g (term₂ y) ⊕ ++-[] (z , p)) ⊕ ++-[] t)
-      ≈⟨ ⊕-cong W-refl (⊕-assoc (g (term₂ y)) (++-[] (z , p)) (++-[] t)) ⟩
+      ≈⟨ ⊕-cong refl (⊕-assoc (g (term₂ y)) (++-[] (z , p)) (++-[] t)) ⟩
         f x ⊕ (g (term₂ y) ⊕ (++-[] (z , p) ⊕ ++-[] t))
-      ≈⟨ W-sym (⊕-assoc (f x) (g (term₂ y)) (++-[] (z , p) ⊕ ++-[] t)) ⟩
+      ≈⟨ sym (⊕-assoc (f x) (g (term₂ y)) (++-[] (z , p) ⊕ ++-[] t)) ⟩
         (f x ⊕ g (term₂ y)) ⊕ (++-[] (z , p) ⊕ ++-[] t)
-      ≈⟨ ⊕-cong W-refl (++-[_,_]-hom MagmaOp.• ((z , p) ∷ t ∷ [])) ⟩
+      ≈⟨ ⊕-cong refl (++-[_,_]-hom MagmaOp.• ((z , p) ∷ t ∷ [])) ⟩
         (f x ⊕ g (term₂ y)) ⊕ ++-[] ((z , p) ++ t)
       ≈⟨ ⊕-assoc (f x) (g (term₂ y)) (++-[] (z ++-raw w , p ++ₙ q)) ⟩
         f x ⊕ (g (term₂ y) ⊕ ++-[] ((z , p) ++ t))
@@ -299,83 +291,76 @@ module _ {b ℓ} {W : Model Θ-semigroup {b} {ℓ}} where
         (g (term₂ x) ⊕ ++-[] (xs , p)) ⊕ ++-[] t
       ≈⟨ ⊕-assoc (g (term₂ x)) (++-[] (xs , p)) (++-[] t) ⟩
         g (term₂ x) ⊕ (++-[] (xs , p) ⊕ ++-[] t)
-      ≈⟨ ⊕-cong W-refl (++-[_,_]-hom MagmaOp.• ((xs , p) ∷ t ∷ [])) ⟩
+      ≈⟨ ⊕-cong refl (++-[_,_]-hom MagmaOp.• ((xs , p) ∷ t ∷ [])) ⟩
         g (term₂ x) ⊕ ++-[] (xs ++-raw y , p ++ₙ q)
       ∎
 
-  ++-[_,_]ₕ : S →ₕ Wₐ → |T| Θ-semigroup ⦉ n ⦊/≈ₘ →ₕ Wₐ → ++-algebra →ₕ Wₐ
-  ++-[_,_]ₕ F G = record { h      = ++-[ f , g ]
-                         ; h-cong = ++-[ f , g ]-cong
-                         ; h-hom  = ++-[ f-hom , g-hom ]-hom
+  ++-[_,_]ₕ : ∥ M ∥ₐ →ₕ ∥ W ∥ₐ → ∥ |T|⦉ n ⦊/≈ₘ ∥ₐ →ₕ ∥ W ∥ₐ → ++-algebra →ₕ ∥ W ∥ₐ
+  ++-[_,_]ₕ f g = record { ∥_∥ₕ      = ++-[ ∥ f ∥ₕ , ∥ g ∥ₕ ]
+                         ; ∥_∥ₕ-cong = ++-[ ∥ f ∥ₕ , ∥ g ∥ₕ ]-cong
+                         ; ∥_∥ₕ-hom  = ++-[ ∥ f ∥ₕ-hom , ∥ g ∥ₕ-hom ]-hom
                          }
-    where open _→ₕ_ F renaming (h to f; h-hom to f-hom)
-          open _→ₕ_ G renaming (h to g; h-hom to g-hom)
 
-  module _ {F : S →ₕ Wₐ} {G : |T| Θ-semigroup ⦉ n ⦊/≈ₘ →ₕ Wₐ} where
-
-    open _→ₕ_ F renaming (h to f; h-hom to f-hom; h-cong to f-cong)
-    open _→ₕ_ G renaming (h to g; h-hom to g-hom; h-cong to g-cong)
+  module _ {f : ∥ M ∥ₐ →ₕ ∥ W ∥ₐ} {g : ∥ |T|⦉ n ⦊/≈ₘ ∥ₐ →ₕ ∥ W ∥ₐ} where
 
     private
       ++-[] : _
-      ++-[] = ++-[ f , g ]
+      ++-[] = ++-[ ∥ f ∥ₕ , ∥ g ∥ₕ ]
 
       ++-[]-cong : _
-      ++-[]-cong = ++-[ f , g ]-cong
+      ++-[]-cong = ++-[ ∥ f ∥ₕ , ∥ g ∥ₕ ]-cong
 
       ++-[]-hom : _
-      ++-[]-hom = ++-[ f-hom , g-hom ]-hom
+      ++-[]-hom = ++-[ ∥ f ∥ₕ-hom , ∥ g ∥ₕ-hom ]-hom
 
-    ++-[_,_]-commute₁ : ++-[ F , G ]ₕ ∘ₕ ++-inlₕ ≡ₕ F
-    ++-[_,_]-commute₁ = W-refl
+    ++-[_,_]-commute₁ : ++-[ f , g ]ₕ ∘ₕ ++-inlₕ ≡ₕ f
+    ++-[_,_]-commute₁ = refl
 
-    ++-[_,_]-commute₂ : ++-[ F , G ]ₕ ∘ₕ ++-inrₕ ≡ₕ G
+    ++-[_,_]-commute₂ : ++-[ f , g ]ₕ ∘ₕ ++-inrₕ ≡ₕ g
     ++-[_,_]-commute₂ {x = term₂ k} =
       ++-[]-cong (PE.refl {x = ++-inr-θ k})
     ++-[_,_]-commute₂ {x = t@(term (MagmaOp.•) (x ∷ y ∷ []))} = begin
         ++-[] (subst ++-algebra ++-inr-θ t)
       ≈⟨ ++-[]-cong (subst-hom ++-model ++-inr-θ MagmaOp.• (x ∷ y ∷ [])) ⟩
         ++-[] (subst-x ++ subst-y)
-      ≈⟨ W-sym (++-[]-hom MagmaOp.• ( subst-x ∷ subst-y ∷ [])) ⟩
+      ≈⟨ sym (++-[]-hom MagmaOp.• ( subst-x ∷ subst-y ∷ [])) ⟩
         (++-[] subst-x) ⊕ (++-[] subst-y)
       ≈⟨ ⊕-cong ++-[_,_]-commute₂ ++-[_,_]-commute₂ ⟩
-        g x ⊕ g y
-      ≈⟨ g-hom MagmaOp.• (x ∷ y ∷ []) ⟩
-        g t
+        ∥ g ∥ₕ x ⊕ ∥ g ∥ₕ y
+      ≈⟨ ∥ g ∥ₕ-hom MagmaOp.• (x ∷ y ∷ []) ⟩
+        ∥ g ∥ₕ t
       ∎
       where subst-x = subst ++-algebra ++-inr-θ x
             subst-y = subst ++-algebra ++-inr-θ y
 
-    module _ {H : ++-algebra →ₕ Wₐ} where
+    module _ {h : ++-algebra →ₕ ∥ W ∥ₐ} where
 
-      open _→ₕ_ H
-
-      ++-[_,_]-universal : H ∘ₕ ++-inlₕ ≡ₕ F → H ∘ₕ ++-inrₕ ≡ₕ G
-                           → ++-[ F , G ]ₕ ≡ₕ H
-      ++-[ c₁ , c₂ ]-universal {nleaf₁ x}    = W-sym c₁
-      ++-[ c₁ , c₂ ]-universal {nleaf₂ x}    = W-sym c₂
+      ++-[_,_]-universal : h ∘ₕ ++-inlₕ ≡ₕ f → h ∘ₕ ++-inrₕ ≡ₕ g
+                           → ++-[ f , g ]ₕ ≡ₕ h
+      ++-[ c₁ , c₂ ]-universal {nleaf₁ x} = sym c₁
+      ++-[ c₁ , c₂ ]-universal {nleaf₂ x} = sym c₂
       ++-[_,_]-universal c₁ c₂ {nSDleaf x y}         = begin
-          f x ⊕ g (term₂ y)
-        ≈⟨ ⊕-cong (W-sym c₁) (W-sym c₂) ⟩
-          h (nleaf₁ x) ⊕ h (nleaf₂ y)
-        ≈⟨ h-hom MagmaOp.• (nleaf₁ x ∷ nleaf₂ y ∷ []) ⟩
-          h ((nleaf₁ x) ++ (nleaf₂ y))
+          ∥ f ∥ₕ x ⊕ ∥ g ∥ₕ (term₂ y)
+        ≈⟨ ⊕-cong (sym c₁) (sym c₂) ⟩
+          ∥ h ∥ₕ (nleaf₁ x) ⊕ ∥ h ∥ₕ (nleaf₂ y)
+        ≈⟨ ∥ h ∥ₕ-hom MagmaOp.• (nleaf₁ x ∷ nleaf₂ y ∷ []) ⟩
+          ∥ h ∥ₕ ((nleaf₁ x) ++ (nleaf₂ y))
         ∎
       ++-[_,_]-universal c₁ c₂ {nSDcons x y z p}     = begin
-          f x ⊕ (g (term₂ y) ⊕ ++-[ f , g ] (z , p))
-        ≈⟨ ⊕-cong (W-sym c₁) (⊕-cong (W-sym c₂) (++-[_,_]-universal c₁ c₂)) ⟩
-          h (nleaf₁ x) ⊕ (h (nleaf₂ y) ⊕ h (z , p))
-        ≈⟨ ⊕-cong W-refl (h-hom MagmaOp.• (nleaf₂ y ∷ (z , p) ∷ [])) ⟩
-          h (nleaf₁ x) ⊕ h (nDcons y z p)
-        ≈⟨ h-hom MagmaOp.• (nleaf₁ x ∷ nDcons y z p ∷ []) ⟩
-          h (nSDcons x y z p)
+          ∥ f ∥ₕ x ⊕ (∥ g ∥ₕ (term₂ y) ⊕ ++-[] (z , p))
+        ≈⟨ ⊕-cong (sym c₁) (⊕-cong (sym c₂) (++-[_,_]-universal c₁ c₂)) ⟩
+          ∥ h ∥ₕ (nleaf₁ x) ⊕ (∥ h ∥ₕ (nleaf₂ y) ⊕ ∥ h ∥ₕ (z , p))
+        ≈⟨ ⊕-cong refl (∥ h ∥ₕ-hom MagmaOp.• (nleaf₂ y ∷ (z , p) ∷ [])) ⟩
+          ∥ h ∥ₕ (nleaf₁ x) ⊕ ∥ h ∥ₕ (nDcons y z p)
+        ≈⟨ ∥ h ∥ₕ-hom MagmaOp.• (nleaf₁ x ∷ nDcons y z p ∷ []) ⟩
+          ∥ h ∥ₕ (nSDcons x y z p)
         ∎
       ++-[_,_]-universal c₁ c₂ {nDcons x y p} = begin
-          g (term₂ x) ⊕ ++-[ f , g ] (y , p)
-        ≈⟨ ⊕-cong (W-sym c₂) (++-[_,_]-universal c₁ c₂) ⟩
-          h (nleaf₂ x) ⊕ h (y , p)
-        ≈⟨ h-hom MagmaOp.• (nleaf₂ x ∷ (y , p) ∷ []) ⟩
-          h ((nleaf₂ x) ++ (y , p))
+          ∥ g ∥ₕ (term₂ x) ⊕ ++-[] (y , p)
+        ≈⟨ ⊕-cong (sym c₂) (++-[_,_]-universal c₁ c₂) ⟩
+          ∥ h ∥ₕ (nleaf₂ x) ⊕ ∥ h ∥ₕ (y , p)
+        ≈⟨ ∥ h ∥ₕ-hom MagmaOp.• (nleaf₂ x ∷ (y , p) ∷ []) ⟩
+          ∥ h ∥ₕ ((nleaf₂ x) ++ (y , p))
         ∎
 
 ++-isFrex : IsFreeExtension M n ++-model
@@ -383,7 +368,7 @@ module _ {b ℓ} {W : Model Θ-semigroup {b} {ℓ}} where
   record { inl       = ++-inlₕ
          ; inr       = ++-inrₕ
          ; [_,_]     = λ {_} {_} {W} → ++-[_,_]ₕ {W = W}
-         ; commute₁  = λ {_} {_} {W} {F} {G} → ++-[_,_]-commute₁ {W = W} {F = F} {G = G}
-         ; commute₂  = λ {_} {_} {W} {F} {G} → ++-[_,_]-commute₂ {W = W} {F = F} {G = G}
-         ; universal = λ {_} {_} {W} {F} {G} {H} → ++-[_,_]-universal {W = W} {F = F} {G = G} {H = H}
+         ; commute₁  = λ {_} {_} {W} {f} {g} → ++-[_,_]-commute₁ {W = W} {f = f} {g = g}
+         ; commute₂  = λ {_} {_} {W} {f} {g} → ++-[_,_]-commute₂ {W = W} {f = f} {g = g}
+         ; universal = λ {_} {_} {W} {f} {g} {h} → ++-[_,_]-universal {W = W} {f = f} {g = g} {h = h}
          }

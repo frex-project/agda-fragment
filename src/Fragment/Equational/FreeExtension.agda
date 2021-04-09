@@ -4,103 +4,101 @@ open import Fragment.Equational.Theory
 
 module Fragment.Equational.FreeExtension (Θ : Theory) where
 
-open import Fragment.Equational.Model
-open import Fragment.Equational.FreeModel
+open import Fragment.Equational.Model Θ
+open import Fragment.Equational.FreeModel Θ
 open import Fragment.Equational.Coproduct Θ
 
-open import Fragment.Algebra.Algebra using (Algebra)
-open import Fragment.Algebra.TermAlgebra
+open import Fragment.Algebra.Signature
+open import Fragment.Algebra.Algebra (Σ Θ) using (Algebra)
+open import Fragment.Algebra.TermAlgebra (Σ Θ) using (term)
+open import Fragment.Algebra.TermAlgebra using (Expr)
 open import Fragment.Algebra.Homomorphism (Σ Θ)
 open import Fragment.Algebra.Homomorphism.Setoid (Σ Θ)
-open import Fragment.Algebra.Signature renaming (_⦉_⦊ to _⦉_⦊ₜ)
-open import Fragment.Algebra.FreeAlgebra
-  using (Environment; subst; subst-args; term₁; term₂)
+open import Fragment.Algebra.FreeAlgebra (Σ Θ)
+  using (Environment; term₁; term₂; subst; subst-args)
 
-
+open import Level using (Level; Setω)
 open import Data.Nat using (ℕ)
 open import Data.Fin using (Fin)
 open import Data.Product using (proj₁; proj₂)
 open import Data.Sum using (inj₁; inj₂)
 open import Data.Vec using (Vec; []; _∷_; map)
-open import Data.Vec.Relation.Binary.Pointwise.Inductive as PW using ([]; _∷_)
-open import Level using (Level; Setω)
+open import Data.Vec.Relation.Binary.Pointwise.Inductive
+  using (Pointwise; []; _∷_)
+open import Relation.Binary using (Setoid)
 
 private
   variable
     a b ℓ₁ ℓ₂ : Level
 
-IsFreeExtension : Model Θ {a} {ℓ₁} → ℕ → Model Θ {b} {ℓ₂} → Setω
-IsFreeExtension M n N = IsCoproduct M (|T|ₘ Θ ⦉ n ⦊) N
+IsFreeExtension : Model {a} {ℓ₁} → ℕ → Model {b} {ℓ₂} → Setω
+IsFreeExtension M n N = IsCoproduct M |T|⦉ n ⦊/≈ₘ N
 
 module _
-  {M : Model Θ {a} {ℓ₁}}
-  {F : Model Θ {b} {ℓ₂}}
+  {M : Model {a} {ℓ₁}}
+  {FX : Model {b} {ℓ₂}}
   {n : ℕ}
-  (F-frex : IsFreeExtension M n F)
+  (isFrex : IsFreeExtension M n FX)
   where
 
-  open Model M renaming (Carrierₐ to S; Carrier to A; trans to M-trans; sym to M-sym)
-  open Model F renaming (_≈_ to _≈ₓ_; Carrierₐ to FXₐ; Carrier to FX; ⟦_⟧ to ⟦_⟧ₓ)
-    hiding (⟦⟧-cong)
-  open IsCoproduct F-frex
+  open Setoid ∥ M ∥/≈
+  open Setoid ∥ FX ∥/≈ using () renaming (_≈_ to _≈ₓ_)
 
-  FXinl : A → FX
-  FXinl = applyₕ inl
+  open IsCoproduct isFrex
 
-  FXinr : Fin n → FX
-  FXinr n = applyₕ inr (term₂ n)
+  -- The following make the macro implementation slightly less painful
 
-  FXcarrier : Set _
-  FXcarrier = FX
+  FX-inl : ∥ M ∥ → ∥ FX ∥
+  FX-inl = ∥ inl ∥ₕ
 
-  FXalgebra : Algebra (Σ Θ)
-  FXalgebra = FXₐ
+  FX-inr : Fin n → ∥ FX ∥
+  FX-inr n = ∥ inr ∥ₕ (term₂ n)
 
-  reduceₕ : (θ : Environment n S) → FXₐ →ₕ S
-  reduceₕ θ = ([_,_] {W = M} (idₕ S) (substₕ M θ))
+  ∥FX∥ : Set _
+  ∥FX∥ = ∥ FX ∥
 
-  reduce : (θ : Environment n S) → FX → A
-  reduce θ x = applyₕ (reduceₕ θ) x
+  ∥FX∥ₐ : Algebra
+  ∥FX∥ₐ = ∥ FX ∥ₐ
 
-  open import Relation.Binary.Reasoning.Setoid (Model.Carrierₛ M)
+  reduceₕ : (θ : Environment n ∥ M ∥ₐ) → ∥ FX ∥ₐ →ₕ ∥ M ∥ₐ
+  reduceₕ θ = ([_,_] {W = M} (idₕ ∥ M ∥ₐ) (substₕ M θ))
+
+  reduce : (θ : Environment n ∥ M ∥ₐ) → ∥ FX ∥ → ∥ M ∥
+  reduce θ x = ∥ reduceₕ θ ∥ₕ x
+
+  open import Relation.Binary.Reasoning.Setoid ∥ M ∥/≈
 
   mutual
     factor-args : ∀ {arity m}
-                  → (θ : Environment m S)
-                  → (η : Environment m FXₐ)
-                  → (ψ : Environment n S)
+                  → (θ : Environment m ∥ M ∥ₐ)
+                  → (η : Environment m ∥ FX ∥ₐ)
+                  → (ψ : Environment n ∥ M ∥ₐ)
                   → (∀ {k} → reduce ψ (η k) ≈ θ k)
-                  → ∀ {xs : Vec (Expr ((Σ Θ) ⦉ m ⦊ₜ)) arity}
-                  → PW.Pointwise _≈_ (map (reduce ψ) (subst-args FXₐ η xs)) (subst-args S θ xs)
+                  → ∀ {xs : Vec (Expr ((Σ Θ) ⦉ m ⦊)) arity}
+                  → Pointwise _≈_ (map (reduce ψ) (subst-args ∥ FX ∥ₐ η xs)) (subst-args ∥ M ∥ₐ θ xs)
     factor-args θ η ψ p {[]}     = []
     factor-args θ η ψ p {x ∷ xs} = (factor θ η ψ p {x = x}) ∷ (factor-args θ η ψ p {xs = xs})
 
     factor : ∀ {m}
-             → (θ : Environment m S)
-             → (η : Environment m FXₐ)
-             → (ψ : Environment n S)
+             → (θ : Environment m ∥ M ∥ₐ)
+             → (η : Environment m ∥ FX ∥ₐ)
+             → (ψ : Environment n ∥ M ∥ₐ)
              → (∀ {k} → reduce ψ (η k) ≈ θ k)
-             → reduceₕ ψ ∘ₕ (substₕ F η) ≡ₕ substₕ M θ
+             → reduceₕ ψ ∘ₕ (substₕ FX η) ≡ₕ substₕ M θ
     factor θ η ψ p {term₂ k} = p
-    factor θ η ψ p {term₁ f} = M-sym (reduce-hom f [])
-        where open _→ₕ_ (reduceₕ ψ) renaming (h-hom to reduce-hom)
+    factor θ η ψ p {term₁ f} = sym (∥ reduceₕ ψ ∥ₕ-hom f [])
     factor θ η ψ p {term f (x ∷ xs)}  = begin
-        reduce ψ (subst FXₐ η (term f (x ∷ xs)))
-      ≡⟨⟩
-        reduce ψ (⟦ f ⟧ₓ (subst-args FXₐ η (x ∷ xs)))
-      ≈⟨ M-sym (reduce-hom f (subst-args FXₐ η (x ∷ xs))) ⟩
-        ⟦ f ⟧ (map (reduce ψ) (subst-args FXₐ η (x ∷ xs)))
-      ≈⟨ ⟦⟧-cong f (factor-args θ η ψ p {xs = x ∷ xs}) ⟩
-        ⟦ f ⟧ (subst-args S θ (x ∷ xs))
-       ≡⟨⟩
-        subst S θ (term f (x ∷ xs))
+        reduce ψ ((FX ⟦ f ⟧) (subst-args ∥ FX ∥ₐ η (x ∷ xs)))
+      ≈⟨ sym (∥ reduceₕ ψ ∥ₕ-hom f (subst-args ∥ FX ∥ₐ η (x ∷ xs))) ⟩
+        (M ⟦ f ⟧) (map (reduce ψ) (subst-args ∥ FX ∥ₐ η (x ∷ xs)))
+      ≈⟨ (M ⟦⟧-cong) f (factor-args θ η ψ p {xs = x ∷ xs}) ⟩
+        (M ⟦ f ⟧) (subst-args ∥ M ∥ₐ θ (x ∷ xs))
       ∎
-      where open _→ₕ_ (reduceₕ ψ) renaming (h-hom to reduce-hom)
 
-  fundamental : ∀ {x y : A} {x' y' : FX}
-                → (θ : Environment n S)
+  fundamental : ∀ {x y : ∥ M ∥} {x' y' : ∥ FX ∥}
+                → (θ : Environment n ∥ M ∥ₐ)
                 → reduce θ x' ≈ x
                 → reduce θ y' ≈ y
                 → x' ≈ₓ y'
                 → x ≈ y
-  fundamental θ p q x'≈ₓy' = M-trans (M-trans (M-sym p) (_→ₕ_.h-cong (reduceₕ θ) x'≈ₓy')) q
+  fundamental θ p q x'≈ₓy' = trans (trans (sym p) (∥ reduceₕ θ ∥ₕ-cong x'≈ₓy')) q

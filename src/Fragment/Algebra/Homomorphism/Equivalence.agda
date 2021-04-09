@@ -4,112 +4,94 @@ open import Fragment.Algebra.Signature
 
 module Fragment.Algebra.Homomorphism.Equivalence (Σ : Signature) where
 
-open import Fragment.Algebra.Algebra
+open import Fragment.Algebra.Algebra Σ
 open import Fragment.Algebra.Homomorphism.Base Σ
 open import Fragment.Algebra.Homomorphism.Properties Σ
 open import Fragment.Algebra.Homomorphism.Setoid Σ
 
 open import Level using (Level; _⊔_)
+open import Relation.Binary using (Setoid; IsEquivalence)
+open import Relation.Binary.Definitions using (Reflexive; Transitive; Symmetric)
 
 private
   variable
     a b c ℓ₁ ℓ₂ ℓ₃ : Level
+    S : Algebra {a} {ℓ₁}
+    T : Algebra {b} {ℓ₂}
+    U : Algebra {c} {ℓ₃}
 
 module _
-  (S : Algebra Σ {a} {ℓ₁})
-  (T : Algebra Σ {b} {ℓ₂})
+  (S : Algebra {a} {ℓ₁})
+  (T : Algebra {b} {ℓ₂})
   where
 
   infix 3 _≅ₕ_
 
   record _≅ₕ_ : Set (a ⊔ b ⊔ ℓ₁ ⊔ ℓ₂) where
     field
-      H   : S →ₕ T
-      H⁻¹ : T →ₕ S
+      ∥_∥ₑ   : S →ₕ T
+      ∥_∥ₑ⁻¹ : T →ₕ S
 
-      invˡ : H ∘ₕ H⁻¹ ≡ₕ idₕ T
-      invʳ : H⁻¹ ∘ₕ H ≡ₕ idₕ S
+      ∥_∥ₑ-invˡ : ∥_∥ₑ ∘ₕ ∥_∥ₑ⁻¹ ≡ₕ idₕ T
+      ∥_∥ₑ-invʳ : ∥_∥ₑ⁻¹ ∘ₕ ∥_∥ₑ ≡ₕ idₕ S
 
-id-≅ₕ : (S : Algebra Σ {a} {ℓ₁}) → S ≅ₕ S
-id-≅ₕ S = record { H    = idₕ S
-                 ; H⁻¹  = idₕ S
-                 ; invˡ = λ {_} → refl
-                 ; invʳ = λ {_} → refl
-                 }
-  where open Algebra S
+open _≅ₕ_ public
 
-flip : ∀ {S : Algebra Σ {a} {ℓ₁}} {T : Algebra Σ {b} {ℓ₂}}
-       → S ≅ₕ T → T ≅ₕ S
-flip S≅ₕT = record { H    = H⁻¹
-                   ; H⁻¹  = H
-                   ; invˡ = invʳ
-                   ; invʳ = invˡ
-                   }
-  where open _≅ₕ_ S≅ₕT
+idₑ : (S : Algebra {a} {ℓ₁}) → S ≅ₕ S
+idₑ S = record { ∥_∥ₑ      = idₕ S
+               ; ∥_∥ₑ⁻¹    = idₕ S
+               ; ∥_∥ₑ-invˡ = λ {_} → refl
+               ; ∥_∥ₑ-invʳ = λ {_} → refl
+               }
+  where open Setoid ∥ S ∥/≈
 
-module _
-  {S : Algebra Σ {a} {ℓ₁}}
-  {T : Algebra Σ {b} {ℓ₂}}
-  {U : Algebra Σ {c} {ℓ₃}}
-  (T≅ₕU : T ≅ₕ U)
-  (S≅ₕT : S ≅ₕ T)
-  where
+flip : S ≅ₕ T → T ≅ₕ S
+flip f = record { ∥_∥ₑ      = ∥ f ∥ₑ⁻¹
+                ; ∥_∥ₑ⁻¹    = ∥ f ∥ₑ
+                ; ∥_∥ₑ-invˡ = ∥ f ∥ₑ-invʳ
+                ; ∥_∥ₑ-invʳ = ∥ f ∥ₑ-invˡ
+                }
 
-  open _≅ₕ_ T≅ₕU renaming (H to G; H⁻¹ to G⁻¹; invˡ to G-invˡ)
-  open _≅ₕ_ S≅ₕT renaming (H to F; H⁻¹ to F⁻¹; invˡ to F-invˡ)
+∘ₑ-inv : ∀ (g : T ≅ₕ U) (f : S ≅ₕ T)
+         → (∥ g ∥ₑ ∘ₕ ∥ f ∥ₑ) ∘ₕ (∥ f ∥ₑ⁻¹ ∘ₕ ∥ g ∥ₑ⁻¹) ≡ₕ idₕ U
+∘ₑ-inv {T = T} {U = U} g f = begin
+    (∥ g ∥ₑ ∘ₕ ∥ f ∥ₑ) ∘ₕ (∥ f ∥ₑ⁻¹ ∘ₕ ∥ g ∥ₑ⁻¹)
+  ≈⟨ ∘ₕ-assoc ∥ g ∥ₑ ∥ f ∥ₑ (∥ f ∥ₑ⁻¹ ∘ₕ ∥ g ∥ₑ⁻¹) ⟩
+    ∥ g ∥ₑ ∘ₕ (∥ f ∥ₑ ∘ₕ (∥ f ∥ₑ⁻¹ ∘ₕ ∥ g ∥ₑ⁻¹))
+  ≈⟨ ∘ₕ-congˡ ∥ g ∥ₑ
+              (∥ f ∥ₑ ∘ₕ (∥ f ∥ₑ⁻¹ ∘ₕ ∥ g ∥ₑ⁻¹))
+              ((∥ f ∥ₑ ∘ₕ ∥ f ∥ₑ⁻¹) ∘ₕ ∥ g ∥ₑ⁻¹)
+              (∘ₕ-assoc ∥ f ∥ₑ ∥ f ∥ₑ⁻¹ ∥ g ∥ₑ⁻¹) ⟩
+    ∥ g ∥ₑ ∘ₕ ((∥ f ∥ₑ ∘ₕ ∥ f ∥ₑ⁻¹) ∘ₕ ∥ g ∥ₑ⁻¹)
+  ≈⟨ ∘ₕ-congˡ ∥ g ∥ₑ
+              ((∥ f ∥ₑ ∘ₕ ∥ f ∥ₑ⁻¹) ∘ₕ ∥ g ∥ₑ⁻¹)
+              (idₕ T ∘ₕ ∥ g ∥ₑ⁻¹)
+              (∘ₕ-congʳ ∥ g ∥ₑ⁻¹ (∥ f ∥ₑ ∘ₕ ∥ f ∥ₑ⁻¹) (idₕ T) ∥ f ∥ₑ-invˡ) ⟩
+    ∥ g ∥ₑ ∘ₕ (idₕ T ∘ₕ ∥ g ∥ₑ⁻¹)
+  ≈⟨ ∘ₕ-congˡ ∥ g ∥ₑ (idₕ T ∘ₕ ∥ g ∥ₑ⁻¹) ∥ g ∥ₑ⁻¹ (idₕ-unitˡ ∥ g ∥ₑ⁻¹) ⟩
+    ∥ g ∥ₑ ∘ₕ ∥ g ∥ₑ⁻¹
+  ≈⟨ ∥ g ∥ₑ-invˡ ⟩
+    idₕ U
+  ∎
+  where open import Relation.Binary.Reasoning.Setoid (≡ₕ-setoid U U)
 
-  open import Relation.Binary.Reasoning.Setoid (≡ₕ-setoid U U)
+infix 9 _∘ₑ_
 
-  ∘-≅ₕ-inv : (G ∘ₕ F) ∘ₕ (F⁻¹ ∘ₕ G⁻¹) ≡ₕ idₕ U
-  ∘-≅ₕ-inv = begin
-      (G ∘ₕ F) ∘ₕ (F⁻¹ ∘ₕ G⁻¹)
-    ≈⟨ ∘ₕ-assoc G F (F⁻¹ ∘ₕ G⁻¹) ⟩
-      G ∘ₕ (F ∘ₕ (F⁻¹ ∘ₕ G⁻¹))
-    ≈⟨ ∘ₕ-congˡ G (F ∘ₕ (F⁻¹ ∘ₕ G⁻¹)) ((F ∘ₕ F⁻¹) ∘ₕ G⁻¹)
-                  (∘ₕ-assoc F F⁻¹ G⁻¹) ⟩
-      G ∘ₕ ((F ∘ₕ F⁻¹) ∘ₕ G⁻¹)
-    ≈⟨ ∘ₕ-congˡ G ((F ∘ₕ F⁻¹) ∘ₕ G⁻¹)
-                  (idₕ T ∘ₕ G⁻¹)
-                  (∘ₕ-congʳ G⁻¹ (F ∘ₕ F⁻¹) (idₕ T) F-invˡ) ⟩
-      G ∘ₕ (idₕ T ∘ₕ G⁻¹)
-    ≈⟨ ∘ₕ-congˡ G (idₕ T ∘ₕ G⁻¹) G⁻¹ (idₕ-unitˡ G⁻¹) ⟩
-      G ∘ₕ G⁻¹
-    ≈⟨ G-invˡ ⟩
-      idₕ U
-    ∎
-
-module _
-  {S : Algebra Σ {a} {ℓ₁}}
-  {T : Algebra Σ {b} {ℓ₂}}
-  {U : Algebra Σ {c} {ℓ₃}}
-  (T≅ₕU : T ≅ₕ U)
-  (S≅ₕT : S ≅ₕ T)
-  where
-
-  open _≅ₕ_ T≅ₕU renaming (H to G; H⁻¹ to G⁻¹; invˡ to G-invˡ)
-  open _≅ₕ_ S≅ₕT renaming (H to F; H⁻¹ to F⁻¹; invˡ to F-invˡ)
-
-  infix 9 _∘-≅ₕ_
-
-  _∘-≅ₕ_ : S ≅ₕ U
-  _∘-≅ₕ_ = record { H    = G ∘ₕ F
-                  ; H⁻¹  = F⁻¹ ∘ₕ G⁻¹
-                  ; invˡ = ∘-≅ₕ-inv T≅ₕU S≅ₕT
-                  ; invʳ = ∘-≅ₕ-inv (flip S≅ₕT) (flip T≅ₕU)
-                  }
-
-open import Relation.Binary using (Setoid; IsEquivalence)
-open import Relation.Binary.Definitions
-  using (Reflexive; Transitive; Symmetric)
+_∘ₑ_ : T ≅ₕ U → S ≅ₕ T → S ≅ₕ U
+g ∘ₑ f = record { ∥_∥ₑ      = ∥ g ∥ₑ ∘ₕ ∥ f ∥ₑ
+                ; ∥_∥ₑ⁻¹    = ∥ f ∥ₑ⁻¹ ∘ₕ ∥ g ∥ₑ⁻¹
+                ; ∥_∥ₑ-invˡ = ∘ₑ-inv g f
+                ; ∥_∥ₑ-invʳ = ∘ₑ-inv (flip f) (flip g)
+                }
 
 ≅ₕ-refl : Reflexive (_≅ₕ_ {a} {ℓ₁} {a} {ℓ₁})
-≅ₕ-refl {_} {_} {S} = id-≅ₕ S
+≅ₕ-refl {_} {_} {S} = idₑ S
 
 ≅ₕ-sym : Symmetric (_≅ₕ_ {a} {ℓ₁} {a} {ℓ₁})
 ≅ₕ-sym = flip
 
 ≅ₕ-trans : Transitive (_≅ₕ_ {a} {ℓ₁} {a} {ℓ₁})
-≅ₕ-trans S≅ₕT T≅ₕU = T≅ₕU ∘-≅ₕ S≅ₕT
+≅ₕ-trans f g = g ∘ₑ f
 
 ≅ₕ-isEquivalence : IsEquivalence (_≅ₕ_ {a} {ℓ₁} {a} {ℓ₁})
 ≅ₕ-isEquivalence =
@@ -119,7 +101,7 @@ open import Relation.Binary.Definitions
          }
 
 ≅ₕ-setoid : ∀ {a ℓ} → Setoid _ _
-≅ₕ-setoid {a} {ℓ} = record { Carrier       = Algebra Σ {a} {ℓ}
-                           ; _≈_           = (_≅ₕ_ {a} {ℓ} {a} {ℓ})
+≅ₕ-setoid {a} {ℓ} = record { Carrier       = Algebra {a} {ℓ}
+                           ; _≈_           = _≅ₕ_ {a} {ℓ} {a} {ℓ}
                            ; isEquivalence = ≅ₕ-isEquivalence
                            }

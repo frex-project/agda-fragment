@@ -2,57 +2,42 @@
 
 open import Fragment.Equational.Theory
 
-module Fragment.Equational.Model where
+module Fragment.Equational.Model (Θ : Theory) where
 
-open import Fragment.Algebra.Algebra
-open import Fragment.Algebra.Signature
-open import Fragment.Algebra.FreeAlgebra
+open import Fragment.Equational.Satisfaction {Σ Θ}
+open import Fragment.Algebra.Algebra (Σ Θ) hiding (isAlgebra; ∥_∥/≈)
 
 open import Level using (Level; _⊔_; suc)
-open import Data.Product using (_,_)
-open import Data.List.Relation.Unary.All using (All)
 open import Relation.Binary using (Setoid)
 
 private
   variable
     a ℓ : Level
 
-_⊨⟨_⟩_ : ∀ {Σ n}
-         → (S : Algebra Σ {a} {ℓ})
-         → Environment n S
-         → Eq Σ n
-         → Set ℓ
-S ⊨⟨ θ ⟩ (lhs , rhs) = subst S θ lhs ≈ subst S θ rhs
-  where open Algebra S using (_≈_)
+Models : Algebra {a} {ℓ} → Set (a ⊔ ℓ)
+Models S = ∀ {n} → (eq : eqs Θ n) → S ⊨ (Θ ⟦ eq ⟧ₑ)
 
-_⊨_ : ∀ {Σ n}
-      → (Algebra Σ {a} {ℓ})
-      → Eq Σ n
-      → Set (a ⊔ ℓ)
-_⊨_ S eq = ∀ {θ} → S ⊨⟨ θ ⟩ eq
-
-Models : (Θ : Theory) → Algebra (Σ Θ) {a} {ℓ} → Set (a ⊔ ℓ)
-Models Θ S = ∀ {n} → (eq : eqs Θ n) → S ⊨ (Θ ⟦ eq ⟧ₑ)
-
-module _ (Θ : Theory) (S : Setoid a ℓ) where
+module _ (S : Setoid a ℓ) where
 
   record IsModel : Set (a ⊔ ℓ) where
     field
-      isAlgebra : IsAlgebra (Σ Θ) S
-      models    : Models Θ (algebra S isAlgebra)
+      isAlgebra : IsAlgebra S
+      models    : Models (algebra S isAlgebra)
 
     open IsAlgebra isAlgebra public
 
-module _ (Θ : Theory) where
+record Model : Set (suc a ⊔ suc ℓ) where
+  constructor model
+  field
+    ∥_∥/≈   : Setoid a ℓ
+    isModel : IsModel ∥_∥/≈
 
-  record Model : Set (suc a ⊔ suc ℓ) where
-    constructor model
-    field
-      Carrierₛ : Setoid a ℓ
-      isModel  : IsModel Θ Carrierₛ
+  ∥_∥ₐ : Algebra
+  ∥_∥ₐ = algebra ∥_∥/≈ (IsModel.isAlgebra isModel)
 
-    open Setoid Carrierₛ public
-    open IsModel isModel public
+  ∥_∥ₐ-models : Models ∥_∥ₐ
+  ∥_∥ₐ-models = IsModel.models isModel
 
-    Carrierₐ : Algebra (Σ Θ)
-    Carrierₐ = algebra Carrierₛ isAlgebra
+  open Algebra (algebra ∥_∥/≈ (IsModel.isAlgebra isModel)) hiding (∥_∥/≈)public
+
+open Model public
