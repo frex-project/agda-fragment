@@ -31,9 +31,9 @@ data _≈ₘ_ : ∥ S ∥ → ∥ S ∥ → Set (a ⊔ ℓ) where
 
 ≈ₘ-isEquivalence : IsEquivalence _≈ₘ_
 ≈ₘ-isEquivalence = record { refl  = refl
-                        ; sym   = sym
-                        ; trans = trans
-                        }
+                          ; sym   = sym
+                          ; trans = trans
+                          }
 
 ≈ₘ : CompatibleEquivalence S
 ≈ₘ = record { _≈_           = _≈ₘ_

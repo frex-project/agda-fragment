@@ -29,25 +29,23 @@ open import Relation.Binary using (Setoid)
 
 private
   variable
-    a b ℓ₁ ℓ₂ : Level
+    a ℓ : Level
 
-module _ {x ℓₓ} where
+Extension : Setω
+Extension = ∀ {a} {ℓ} → Model {a} {ℓ} → ℕ → Model {a} {a ⊔ ℓ}
 
-  Extension : Setω
-  Extension = ∀ {a} {ℓ₁} → Model {a} {ℓ₁} → ℕ → Model {a ⊔ x} {ℓ₁ ⊔ ℓₓ}
+IsFreeExtension : Extension → Setω
+IsFreeExtension FX =
+  ∀ {a ℓ} (M : Model {a} {ℓ}) (n : ℕ) → IsCoproduct M |T|⦉ n ⦊/≈ₘ (FX M n)
 
-  IsFreeExtension : Extension → Setω
-  IsFreeExtension FX =
-    ∀ {a ℓ₁} (M : Model {a} {ℓ₁}) (n : ℕ) → IsCoproduct M |T|⦉ n ⦊/≈ₘ (FX M n)
-
-  record FreeExtension : Setω where
-    field
-      _[_]        : Extension
-      _[_]-isFrex : IsFreeExtension _[_]
+record FreeExtension : Setω where
+  field
+    _[_]        : Extension
+    _[_]-isFrex : IsFreeExtension _[_]
 
 module _
-  {FX : FreeExtension {b} {ℓ₂}}
-  (M : Model {a} {ℓ₁})
+  (FX : FreeExtension)
+  (M : Model {a} {ℓ})
   (n : ℕ)
   where
 
@@ -91,7 +89,7 @@ module _
                                   (subst-args ∥ M ∥ₐ θ xs)
     factor-args θ η ψ p {[]}     = []
     factor-args θ η ψ p {x ∷ xs} =
-      (factor θ η ψ p {x = x}) ∷ (factor-args θ η ψ p {xs = xs})
+      factor θ η ψ p {x = x} ∷ factor-args θ η ψ p {xs = xs}
 
     factor : ∀ {m}
              → (θ : Environment m ∥ M ∥ₐ)

@@ -37,6 +37,7 @@ import Fragment.Equational.Theory.Combinators
 import Fragment.Equational.Theory.Laws
 import Fragment.Examples
 import Fragment.Extensions.Base
+import Fragment.Extensions.Combinators
 import Fragment.Extensions.Semigroup
 import Fragment.Macros.Base
 import Fragment.Macros.Environment
