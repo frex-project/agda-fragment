@@ -1,34 +1,27 @@
 {-# OPTIONS --without-K --safe #-}
 
-open import Fragment.Extensions.Base
+module Fragment.Extensions.Semigroup where
+
 open import Fragment.Equational.Theory.Bundles
-  using (Θ-semigroup; Σ-magma; MagmaOp; SemigroupEq)
-open import Fragment.Equational.Model Θ-semigroup
-
-open import Data.Nat using (ℕ)
-open import Relation.Binary.PropositionalEquality as PE using (_≡_)
-
-module Fragment.Extensions.Semigroup {a}
-  {A : Set a}
-  (isModel : IsModel (PE.setoid A))
-  (n : ℕ)
-  where
-
-open import Fragment.Equational.Structures using (isModel→semigroup)
-open import Fragment.Equational.FreeExtension Θ-semigroup
-open import Fragment.Equational.FreeModel Θ-semigroup
 
 open import Fragment.Algebra.Signature
-open import Fragment.Algebra.TermAlgebra (Σ-magma ⦉ n ⦊)
 open import Fragment.Algebra.Homomorphism Σ-magma
 open import Fragment.Algebra.Homomorphism.Setoid Σ-magma
 open import Fragment.Algebra.FreeAlgebra Σ-magma using (subst; term₁; term₂)
 open import Fragment.Algebra.Algebra Σ-magma
   using (Algebra; IsAlgebra; Interpretation; Congruence; algebra)
 
+open import Fragment.Extensions.Base
+
+open import Fragment.Equational.Structures using (isModel→semigroup)
+open import Fragment.Equational.FreeExtension Θ-semigroup
+open import Fragment.Equational.FreeModel Θ-semigroup
+open import Fragment.Equational.Model Θ-semigroup
+
 open import Function.Bundles using (Inverse)
 open import Algebra.Structures using (IsSemigroup)
 
+open import Data.Nat using (ℕ)
 open import Data.Sum using (_⊎_; inj₁; inj₂)
 open import Data.Product using (Σ-syntax; _,_; proj₁; proj₂)
 open import Data.Product.Properties using (Σ-≡,≡↔≡)
@@ -37,8 +30,14 @@ open import Data.Vec using (Vec; _∷_; []; map)
 open import Data.Vec.Relation.Binary.Equality.Propositional using (≋⇒≡)
 
 open import Relation.Binary using (Setoid)
+open import Relation.Binary.PropositionalEquality as PE using (_≡_)
 
-open IsSemigroup (isModel→semigroup (PE.setoid A) isModel) using (assoc)
+{-
+  {A : Set a}
+  (isModel : IsModel (PE.setoid A))
+  (n : ℕ)
+
+open import Fragment.Algebra.TermAlgebra (Σ-magma ⦉ n ⦊)
 
 private
   M : Model
@@ -373,3 +372,4 @@ module _ {b ℓ} {W : Model {b} {ℓ}} where
          ; commute₂  = λ {_} {_} {W} {f} {g} → ++-[_,_]-commute₂ {W = W} {f = f} {g = g}
          ; universal = λ {_} {_} {W} {f} {g} {h} → ++-[_,_]-universal {W = W} {f = f} {g = g} {h = h}
          }
+-}

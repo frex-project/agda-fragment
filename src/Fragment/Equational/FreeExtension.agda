@@ -17,7 +17,7 @@ open import Fragment.Algebra.Homomorphism.Setoid (Σ Θ)
 open import Fragment.Algebra.FreeAlgebra (Σ Θ)
   using (Environment; term₁; term₂; subst; subst-args)
 
-open import Level using (Level; Setω)
+open import Level using (Level; Setω; _⊔_)
 open import Data.Nat using (ℕ)
 open import Data.Fin using (Fin)
 open import Data.Product using (proj₁; proj₂)
@@ -31,71 +31,85 @@ private
   variable
     a b ℓ₁ ℓ₂ : Level
 
-IsFreeExtension : Model {a} {ℓ₁} → ℕ → Model {b} {ℓ₂} → Setω
-IsFreeExtension M n N = IsCoproduct M |T|⦉ n ⦊/≈ₘ N
+module _ {x ℓₓ} where
+
+  Extension : Setω
+  Extension = ∀ {a} {ℓ₁} → Model {a} {ℓ₁} → ℕ → Model {a ⊔ x} {ℓ₁ ⊔ ℓₓ}
+
+  IsFreeExtension : Extension → Setω
+  IsFreeExtension FX =
+    ∀ {a ℓ₁} (M : Model {a} {ℓ₁}) (n : ℕ) → IsCoproduct M |T|⦉ n ⦊/≈ₘ (FX M n)
+
+  record FreeExtension : Setω where
+    field
+      _[_]        : Extension
+      _[_]-isFrex : IsFreeExtension _[_]
 
 module _
-  {M : Model {a} {ℓ₁}}
-  {FX : Model {b} {ℓ₂}}
-  {n : ℕ}
-  (isFrex : IsFreeExtension M n FX)
+  {FX : FreeExtension {b} {ℓ₂}}
+  (M : Model {a} {ℓ₁})
+  (n : ℕ)
   where
 
-  open Setoid ∥ M ∥/≈
-  open Setoid ∥ FX ∥/≈ using () renaming (_≈_ to _≈ₓ_)
+  open FreeExtension FX
 
-  open IsCoproduct isFrex
+  open Setoid ∥ M ∥/≈
+  open Setoid ∥ M [ n ] ∥/≈ using () renaming (_≈_ to _≈ₓ_)
+
+  open IsCoproduct (M [ n ]-isFrex)
 
   -- The following make the macro implementation slightly less painful
 
-  FX-inl : ∥ M ∥ → ∥ FX ∥
+  FX-inl : ∥ M ∥ → ∥ M [ n ] ∥
   FX-inl = ∥ inl ∥ₕ
 
-  FX-inr : Fin n → ∥ FX ∥
+  FX-inr : Fin n → ∥ M [ n ] ∥
   FX-inr n = ∥ inr ∥ₕ (term₂ n)
 
   ∥FX∥ : Set _
-  ∥FX∥ = ∥ FX ∥
+  ∥FX∥ = ∥ M [ n ] ∥
 
   ∥FX∥ₐ : Algebra
-  ∥FX∥ₐ = ∥ FX ∥ₐ
+  ∥FX∥ₐ = ∥ M [ n ] ∥ₐ
 
-  reduceₕ : (θ : Environment n ∥ M ∥ₐ) → ∥ FX ∥ₐ →ₕ ∥ M ∥ₐ
+  reduceₕ : (θ : Environment n ∥ M ∥ₐ) → ∥ M [ n ] ∥ₐ →ₕ ∥ M ∥ₐ
   reduceₕ θ = ([_,_] {W = M} (idₕ ∥ M ∥ₐ) (substₕ M θ))
 
-  reduce : (θ : Environment n ∥ M ∥ₐ) → ∥ FX ∥ → ∥ M ∥
-  reduce θ x = ∥ reduceₕ θ ∥ₕ x
+  reduce : (θ : Environment n ∥ M ∥ₐ) → ∥ M [ n ] ∥ → ∥ M ∥
+  reduce θ = ∥ reduceₕ θ ∥ₕ
 
   open import Relation.Binary.Reasoning.Setoid ∥ M ∥/≈
 
   mutual
     factor-args : ∀ {arity m}
                   → (θ : Environment m ∥ M ∥ₐ)
-                  → (η : Environment m ∥ FX ∥ₐ)
+                  → (η : Environment m ∥ M [ n ] ∥ₐ)
                   → (ψ : Environment n ∥ M ∥ₐ)
                   → (∀ {k} → reduce ψ (η k) ≈ θ k)
                   → ∀ {xs : Vec (Expr ((Σ Θ) ⦉ m ⦊)) arity}
-                  → Pointwise _≈_ (map (reduce ψ) (subst-args ∥ FX ∥ₐ η xs)) (subst-args ∥ M ∥ₐ θ xs)
+                  → Pointwise _≈_ (map (reduce ψ) (subst-args ∥ M [ n ] ∥ₐ η xs))
+                                  (subst-args ∥ M ∥ₐ θ xs)
     factor-args θ η ψ p {[]}     = []
-    factor-args θ η ψ p {x ∷ xs} = (factor θ η ψ p {x = x}) ∷ (factor-args θ η ψ p {xs = xs})
+    factor-args θ η ψ p {x ∷ xs} =
+      (factor θ η ψ p {x = x}) ∷ (factor-args θ η ψ p {xs = xs})
 
     factor : ∀ {m}
              → (θ : Environment m ∥ M ∥ₐ)
-             → (η : Environment m ∥ FX ∥ₐ)
+             → (η : Environment m ∥ M [ n ] ∥ₐ)
              → (ψ : Environment n ∥ M ∥ₐ)
              → (∀ {k} → reduce ψ (η k) ≈ θ k)
-             → reduceₕ ψ ∘ₕ (substₕ FX η) ≡ₕ substₕ M θ
+             → reduceₕ ψ ∘ₕ (substₕ (M [ n ]) η) ≡ₕ substₕ M θ
     factor θ η ψ p {term₂ k} = p
     factor θ η ψ p {term₁ f} = sym (∥ reduceₕ ψ ∥ₕ-hom f [])
     factor θ η ψ p {term f (x ∷ xs)}  = begin
-        reduce ψ ((FX ⟦ f ⟧) (subst-args ∥ FX ∥ₐ η (x ∷ xs)))
-      ≈⟨ sym (∥ reduceₕ ψ ∥ₕ-hom f (subst-args ∥ FX ∥ₐ η (x ∷ xs))) ⟩
-        (M ⟦ f ⟧) (map (reduce ψ) (subst-args ∥ FX ∥ₐ η (x ∷ xs)))
+        reduce ψ ((M [ n ] ⟦ f ⟧) (subst-args ∥ M [ n ] ∥ₐ η (x ∷ xs)))
+      ≈⟨ sym (∥ reduceₕ ψ ∥ₕ-hom f (subst-args ∥ M [ n ] ∥ₐ η (x ∷ xs))) ⟩
+        (M ⟦ f ⟧) (map (reduce ψ) (subst-args ∥ M [ n ] ∥ₐ η (x ∷ xs)))
       ≈⟨ (M ⟦⟧-cong) f (factor-args θ η ψ p {xs = x ∷ xs}) ⟩
         (M ⟦ f ⟧) (subst-args ∥ M ∥ₐ θ (x ∷ xs))
       ∎
 
-  fundamental : ∀ {x y : ∥ M ∥} {x' y' : ∥ FX ∥}
+  fundamental : ∀ {x y : ∥ M ∥} {x' y' : ∥ M [ n ] ∥}
                 → (θ : Environment n ∥ M ∥ₐ)
                 → reduce θ x' ≈ x
                 → reduce θ y' ≈ y
