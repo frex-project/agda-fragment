@@ -1,9 +1,9 @@
 {-# OPTIONS --without-K --safe #-}
 
-module Fragment.Equational.Bundles where
+module Fragment.Equational.Theory.Bundles where
 
 open import Fragment.Algebra.Signature
-open import Fragment.Equational.Theory
+open import Fragment.Equational.Theory.Base
 
 open import Data.Nat using (ℕ)
 open import Data.List using (List; []; _∷_)
@@ -16,7 +16,7 @@ module _ where
   Σ-magma : Signature
   Σ-magma = record { ops = MagmaOp }
 
-  import Fragment.Equational.Laws Σ-magma as L
+  import Fragment.Equational.Theory.Laws Σ-magma as L
 
   data MagmaEq : ℕ → Set where
 
@@ -46,7 +46,7 @@ module _ where
   Σ-monoid : Signature
   Σ-monoid = record { ops = MonoidOp }
 
-  import Fragment.Equational.Laws Σ-monoid as L
+  import Fragment.Equational.Theory.Laws Σ-monoid as L
 
   data MonoidEq : ℕ → Set where
     idₗ   : MonoidEq 1
@@ -80,7 +80,7 @@ module _ where
   Σ-group : Signature
   Σ-group = record { ops = GroupOp }
 
-  import Fragment.Equational.Laws Σ-group as L
+  import Fragment.Equational.Theory.Laws Σ-group as L
 
   data GroupEq : ℕ → Set where
     idₗ   : GroupEq 1

@@ -2,9 +2,9 @@
 
 open import Fragment.Algebra.Signature
 
-module Fragment.Equational.Laws (Σ : Signature) where
+module Fragment.Equational.Theory.Laws (Σ : Signature) where
 
-open import Fragment.Equational.Theory using (Eq)
+open import Fragment.Equational.Theory.Base using (Eq)
 
 open import Data.Fin using (#_)
 open import Data.Sum using (inj₁; inj₂)
