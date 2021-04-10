@@ -2,9 +2,9 @@
 
 module Fragment.Equational.Structures where
 
-import Fragment.Equational.Laws as L
-open import Fragment.Equational.Bundles
+import Fragment.Equational.Theory.Laws as L
 open import Fragment.Equational.Theory
+open import Fragment.Equational.Theory.Bundles
 open import Fragment.Equational.Model
 
 open import Fragment.Algebra.Algebra
@@ -117,49 +117,4 @@ module _ (S : Setoid a ℓ) where
     isModel→semigroup =
       record { isMagma = isModel→magma (isAlgebra→isModel (isAlgebra M))
              ; assoc   = isModel→assoc
-             }
-
-  module _ {∙ : Op₂ A} (M : IsCommutativeSemigroup ∙) where
-
-    open IsCommutativeSemigroup M
-
-    csemigroup→models : Models Θ-csemigroup (magma→algebra isMagma)
-    csemigroup→models comm {θ} =
-      (IsCommutativeSemigroup.comm M) (θ (# 0)) (θ (# 1))
-    csemigroup→models assoc {θ} =
-      (IsCommutativeSemigroup.assoc M) (θ (# 0)) (θ (# 1)) (θ (# 2))
-
-    csemigroup→isModel : IsModel Θ-csemigroup S
-    csemigroup→isModel = record { isAlgebra = magma→isAlgebra isMagma
-                                ; models    = csemigroup→models
-                                }
-
-    csemigroup→model : Model Θ-csemigroup
-    csemigroup→model = record { ∥_∥/≈    = S
-                              ; isModel  = csemigroup→isModel
-                              }
-
-  module _ (M : IsModel Θ-csemigroup S) where
-
-    open IsModel M
-
-    isModel→models-semigroup : Models Θ-semigroup (algebra S (isAlgebra M))
-    isModel→models-semigroup assoc {θ} = models assoc {θ}
-
-    isModel→isModel-semigroup : IsModel Θ-semigroup S
-    isModel→isModel-semigroup = record { isAlgebra = isAlgebra M
-                                       ; models    = isModel→models-semigroup
-                                       }
-
-    isModel→comm : Commutative (isModel→∙ (isAlgebra→isModel (isAlgebra M)))
-    isModel→comm x y = models comm {θ}
-      where θ : Fin 2 → A
-            θ zero       = x
-            θ (suc zero) = y
-
-    isModel→csemigroup : IsCommutativeSemigroup
-                           (isModel→∙ (isAlgebra→isModel (isAlgebra M)))
-    isModel→csemigroup =
-      record { isSemigroup = isModel→semigroup isModel→isModel-semigroup
-             ; comm        = isModel→comm
              }

@@ -11,6 +11,7 @@ open import Fragment.Algebra.FreeAlgebra
 open import Function using (_∘_)
 
 open import Data.Nat using (ℕ)
+open import Data.Fin using (#_)
 open import Data.Sum using (inj₁; inj₂)
 open import Data.Vec using (Vec; []; _∷_)
 open import Data.Product using (_,_)
@@ -40,3 +41,22 @@ _⦉_⦊ₜ : (Θ : Theory) → ℕ → Theory
                   ; eqs   = eqs Θ
                   ; _⟦_⟧ₑ = extend ∘ (Θ ⟦_⟧ₑ)
                   }
+
+module _ (Θ : Theory) where
+
+  import Fragment.Equational.Theory.Laws ((Σ Θ) ⦉ 1 ⦊) as L
+
+  data WithIdEq : ℕ → Set where
+    idₗ       : WithIdEq 1
+    idᵣ       : WithIdEq 1
+    inherited : ∀ {n} → eqs Θ n → WithIdEq n
+
+  AddId : (ops (Σ Θ) 2) → Theory
+  AddId • = record { Σ     = (Σ Θ) ⦉ 1 ⦊
+                   ; eqs   = WithIdEq
+                   ; _⟦_⟧ₑ = withId
+                   }
+    where withId : ∀ {arity} → WithIdEq arity → Eq ((Σ Θ) ⦉ 1 ⦊) arity
+          withId idₗ           = L.idₗ (inj₂ (# 0)) •
+          withId idᵣ           = L.idᵣ (inj₂ (# 0)) •
+          withId (inherited e) = extend (Θ ⟦ e ⟧ₑ)

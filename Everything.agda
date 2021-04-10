@@ -17,14 +17,12 @@ import Fragment.Algebra.TermAlgebra
 import Fragment.Algebra.TermAlgebra.Base
 import Fragment.Algebra.TermAlgebra.Properties
 import Fragment.Algebra.TermAlgebra.Syntax
-import Fragment.Equational.Bundles
 import Fragment.Equational.Coproduct
 import Fragment.Equational.FreeExtension
 import Fragment.Equational.FreeModel
 import Fragment.Equational.FreeModel.Base
 import Fragment.Equational.FreeModel.Properties
 import Fragment.Equational.Initial
-import Fragment.Equational.Laws
 import Fragment.Equational.Model
 import Fragment.Equational.Satisfaction
 import Fragment.Equational.Structures
@@ -33,6 +31,10 @@ import Fragment.Equational.TermModel.Base
 import Fragment.Equational.TermModel.Properties
 import Fragment.Equational.TermModel.ProvableEquivalence
 import Fragment.Equational.Theory
+import Fragment.Equational.Theory.Base
+import Fragment.Equational.Theory.Bundles
+import Fragment.Equational.Theory.Combinators
+import Fragment.Equational.Theory.Laws
 import Fragment.Examples
 import Fragment.Extensions.Base
 import Fragment.Extensions.Semigroup

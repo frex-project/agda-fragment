@@ -1,6 +1,7 @@
 {-# OPTIONS --without-K --safe #-}
 
-open import Fragment.Equational.Bundles
+open import Fragment.Extensions.Base
+open import Fragment.Equational.Theory.Bundles
   using (Θ-semigroup; Σ-magma; MagmaOp; SemigroupEq)
 open import Fragment.Equational.Model Θ-semigroup
 
@@ -47,13 +48,13 @@ private
   x • y = (Model._⟦_⟧ M MagmaOp.•) (x ∷ y ∷ [])
 
 data Semigroup : Set a where
-  leaf : A ⊎ Fin n → Semigroup
-  cons : A ⊎ Fin n → Semigroup → Semigroup
+  leaf : BT n A → Semigroup
+  cons : BT n A → Semigroup → Semigroup
 
-pattern leaf₁ x = leaf (inj₁ x)
-pattern leaf₂ x = leaf (inj₂ x)
-pattern cons₁ x xs = cons (inj₁ x) xs
-pattern cons₂ x ys = cons (inj₂ x) ys
+pattern leaf₁ x = leaf (sta x)
+pattern leaf₂ x = leaf (dyn x)
+pattern cons₁ x xs = cons (sta x) xs
+pattern cons₂ x ys = cons (dyn x) ys
 
 consS : A → Semigroup → Semigroup
 consS a (leaf₁ x)    = leaf₁ (a • x)
@@ -83,11 +84,11 @@ canonicity {x = cons₂ x xs} (Dcons p) (Dcons q)             =
   PE.cong Dcons (canonicity p q)
 
 consS-preserves : ∀ {x xs} → Normal xs → Normal (consS x xs)
-consS-preserves (isleaf {x = inj₁ y}) = isleaf
-consS-preserves (isleaf {x = inj₂ y}) = SDleaf
-consS-preserves SDleaf                = SDleaf
-consS-preserves (Dcons p)             = SDcons p
-consS-preserves (SDcons p)            = SDcons p
+consS-preserves (isleaf {x = sta y}) = isleaf
+consS-preserves (isleaf {x = dyn y}) = SDleaf
+consS-preserves SDleaf               = SDleaf
+consS-preserves (Dcons p)            = SDcons p
+consS-preserves (SDcons p)           = SDcons p
 
 normalise-reduction : ∀ {x} → Normal (normalise x)
 normalise-reduction {x = leaf x}     = isleaf
