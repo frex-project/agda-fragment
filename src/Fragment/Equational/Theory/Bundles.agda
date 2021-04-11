@@ -9,13 +9,21 @@ open import Fragment.Equational.Theory.Combinators
 open import Data.Nat using (ℕ)
 open import Data.List using (List; []; _∷_)
 
+open import Relation.Nullary using (yes ; no)
+open import Relation.Binary.Definitions using (Decidable)
+open import Relation.Binary.PropositionalEquality as PE using (_≡_)
+
 module _ where
 
   data MagmaOp : ℕ → Set where
     • : MagmaOp 2
 
   Σ-magma : Signature
-  Σ-magma = record { ops = MagmaOp }
+  Σ-magma = record { ops = MagmaOp
+                   ; _≟_ = λ {k} → _≟_ {k}
+                   }
+    where _≟_ : ∀ {k} → Decidable {A = MagmaOp k} _≡_
+          • ≟ • = yes (PE.refl)
 
   import Fragment.Equational.Theory.Laws Σ-magma as L
 

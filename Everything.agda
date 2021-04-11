@@ -1,4 +1,5 @@
 import Fragment.Algebra.Algebra
+import Fragment.Algebra.Combinators
 import Fragment.Algebra.Coproduct
 import Fragment.Algebra.FreeAlgebra
 import Fragment.Algebra.FreeAlgebra.Base
