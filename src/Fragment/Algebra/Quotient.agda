@@ -60,8 +60,8 @@ S / ≈ -isAlgebra = record { ⟦_⟧     = S ⟦_⟧
 _/_ : (S : Algebra {a} {ℓ₁})
     → CompatibleEquivalence S
     → Algebra {a} {ℓ₂}
-S / ≈ = record { ∥_∥/≈     = setoid ≈
-               ; isAlgebra = S / ≈ -isAlgebra
+S / ≈ = record { ∥_∥/≈           = setoid ≈
+               ; ∥_∥/≈-isAlgebra = S / ≈ -isAlgebra
                }
 
 module _ {n}

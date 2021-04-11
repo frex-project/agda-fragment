@@ -29,10 +29,10 @@ pattern term₂ x = term (inj₂ x) []
 
 |T|⦉_⦊-isAlgebra : IsAlgebra Herbrand
 |T|⦉_⦊-isAlgebra = record { ⟦_⟧     = |T|⦉_⦊-⟦_⟧
-                           ; ⟦⟧-cong = |T|⦉_⦊-⟦⟧-cong
-                           }
+                          ; ⟦⟧-cong = |T|⦉_⦊-⟦⟧-cong
+                          }
 
 |T|⦉_⦊ : Algebra
-|T|⦉_⦊ = record { ∥_∥/≈     = Herbrand
-                ; isAlgebra = |T|⦉_⦊-isAlgebra
+|T|⦉_⦊ = record { ∥_∥/≈           = Herbrand
+                ; ∥_∥/≈-isAlgebra = |T|⦉_⦊-isAlgebra
                 }

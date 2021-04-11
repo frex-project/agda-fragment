@@ -2,6 +2,8 @@
 
 module Fragment.Equational.Structures where
 
+{-
+
 import Fragment.Equational.Theory.Laws as L
 open import Fragment.Equational.Theory
 open import Fragment.Equational.Theory.Bundles
@@ -118,3 +120,4 @@ module _ (S : Setoid a ℓ) where
       record { isMagma = isModel→magma (isAlgebra→isModel (isAlgebra M))
              ; assoc   = isModel→assoc
              }
+-}

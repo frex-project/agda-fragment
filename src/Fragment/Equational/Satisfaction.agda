@@ -4,7 +4,7 @@ open import Fragment.Algebra.Signature
 
 module Fragment.Equational.Satisfaction {Σ : Signature} where
 
-open import Fragment.Equational.Theory hiding (Σ)
+open import Fragment.Equational.Theory.Base hiding (Σ)
 open import Fragment.Algebra.Algebra Σ
 open import Fragment.Algebra.FreeAlgebra Σ
 

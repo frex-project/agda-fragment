@@ -26,6 +26,6 @@ term-cong f p = PE.cong (term f) (≋⇒≡ p)
                        }
 
 |T| : Algebra
-|T| = record { ∥_∥/≈     = Herbrand
-             ; isAlgebra = |T|-isAlgebra
+|T| = record { ∥_∥/≈           = Herbrand
+             ; ∥_∥/≈-isAlgebra = |T|-isAlgebra
              }

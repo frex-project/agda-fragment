@@ -36,8 +36,8 @@ module _ (S : Setoid a ℓ) where
 record Algebra : Set (suc a ⊔ suc ℓ) where
   constructor algebra
   field
-    ∥_∥/≈     : Setoid a ℓ
-    isAlgebra : IsAlgebra ∥_∥/≈
+    ∥_∥/≈           : Setoid a ℓ
+    ∥_∥/≈-isAlgebra : IsAlgebra ∥_∥/≈
 
   ∥_∥ : Set a
   ∥_∥ = Setoid.Carrier ∥_∥/≈
@@ -45,10 +45,10 @@ record Algebra : Set (suc a ⊔ suc ℓ) where
   infix 10 _⟦_⟧
 
   _⟦_⟧ : Interpretation (∥_∥/≈)
-  _⟦_⟧ = IsAlgebra.⟦_⟧ isAlgebra
+  _⟦_⟧ = IsAlgebra.⟦_⟧ ∥_∥/≈-isAlgebra
 
   _⟦⟧-cong : Congruence (∥_∥/≈) (_⟦_⟧)
-  _⟦⟧-cong = IsAlgebra.⟦⟧-cong isAlgebra
+  _⟦⟧-cong = IsAlgebra.⟦⟧-cong ∥_∥/≈-isAlgebra
 
   ≈[_] : Rel ∥_∥ ℓ
   ≈[_] = Setoid._≈_ ∥_∥/≈

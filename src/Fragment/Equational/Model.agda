@@ -5,7 +5,7 @@ open import Fragment.Equational.Theory
 module Fragment.Equational.Model (Θ : Theory) where
 
 open import Fragment.Equational.Satisfaction {Σ Θ}
-open import Fragment.Algebra.Algebra (Σ Θ) hiding (isAlgebra; ∥_∥/≈)
+open import Fragment.Algebra.Algebra (Σ Θ) hiding (∥_∥/≈)
 
 open import Level using (Level; _⊔_; suc)
 open import Relation.Binary using (Setoid)
@@ -38,6 +38,6 @@ record Model : Set (suc a ⊔ suc ℓ) where
   ∥_∥ₐ-models : Models ∥_∥ₐ
   ∥_∥ₐ-models = IsModel.models isModel
 
-  open Algebra (algebra ∥_∥/≈ (IsModel.isAlgebra isModel)) hiding (∥_∥/≈)public
+  open Algebra (algebra ∥_∥/≈ (IsModel.isAlgebra isModel)) hiding (∥_∥/≈) public
 
 open Model public
