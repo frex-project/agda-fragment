@@ -32,20 +32,19 @@ private
   variable
     a ℓ : Level
 
-private
-  mutual
-    extend-expr-args : ∀ {Σ n m arity}
-                       → Vec (Expr (Σ ⦉ m ⦊)) arity
-                       → Vec (Expr ((Σ ⦉ n ⦊) ⦉ m ⦊)) arity
-    extend-expr-args []       = []
-    extend-expr-args (x ∷ xs) = extend-expr x ∷ extend-expr-args xs
+mutual
+  extend-expr-args : ∀ {Σ n m arity}
+                     → Vec (Expr (Σ ⦉ m ⦊)) arity
+                     → Vec (Expr ((Σ ⦉ n ⦊) ⦉ m ⦊)) arity
+  extend-expr-args []       = []
+  extend-expr-args (x ∷ xs) = extend-expr x ∷ extend-expr-args xs
 
-    extend-expr : ∀ {Σ n m}
-                  → Expr (Σ ⦉ m ⦊)
-                  → Expr ((Σ ⦉ n ⦊) ⦉ m ⦊)
-    extend-expr (term₂ k)         = term₂ k
-    extend-expr (term₁ f)         = term₁ (inj₁ f)
-    extend-expr (term f (x ∷ xs)) = term f (extend-expr-args (x ∷ xs))
+  extend-expr : ∀ {Σ n m}
+                → Expr (Σ ⦉ m ⦊)
+                → Expr ((Σ ⦉ n ⦊) ⦉ m ⦊)
+  extend-expr (term₂ k)         = term₂ k
+  extend-expr (term₁ f)         = term₁ (inj₁ f)
+  extend-expr (term f (x ∷ xs)) = term f (extend-expr-args (x ∷ xs))
 
 extend : ∀ {Σ n arity}
          → Eq Σ arity
