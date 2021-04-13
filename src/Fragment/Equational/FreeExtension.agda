@@ -67,6 +67,9 @@ module _
   ∥FX∥ : Set _
   ∥FX∥ = ∥ M [ n ] ∥
 
+  ∥FX∥/≈ : Setoid _ _
+  ∥FX∥/≈ = ∥ M [ n ] ∥/≈
+
   ∥FX∥ₐ : Algebra
   ∥FX∥ₐ = ∥ M [ n ] ∥ₐ
 

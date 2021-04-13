@@ -2,8 +2,6 @@
 
 module Fragment.Equational.Structures where
 
-{-
-
 import Fragment.Equational.Theory.Laws as L
 open import Fragment.Equational.Theory
 open import Fragment.Equational.Theory.Bundles
@@ -15,8 +13,7 @@ open import Level using (Level)
 open import Data.Fin using (Fin; #_; suc; zero)
 open import Data.Vec using ([]; _∷_)
 open import Data.Vec.Relation.Binary.Pointwise.Inductive using ([]; _∷_)
-open import Data.List.Relation.Unary.All using (All; []; _∷_; head)
-open import Relation.Binary using (Setoid)
+open import Relation.Binary using (Setoid; Rel)
 
 open import Algebra.Core
 
@@ -24,100 +21,66 @@ private
   variable
     a ℓ : Level
 
-module _ (S : Setoid a ℓ) where
-
-  open Setoid S renaming (Carrier to A)
+module _ {A : Set a} {_≈_ : Rel A ℓ} where
 
   open import Algebra.Definitions _≈_
   open import Algebra.Structures _≈_
 
-  magma→⟦⟧ : Op₂ A → Interpretation Σ-magma S
-  magma→⟦⟧ f MagmaOp.• (x ∷ y ∷ []) = f x y
+  module _ {_•_ : Op₂ A} where
 
-  magma→⟦⟧-cong : ∀ {∙} → Congruent₂ ∙
-                  → Congruence Σ-magma S (magma→⟦⟧ ∙)
-  magma→⟦⟧-cong cong MagmaOp.• (x₁≈x₂ ∷ y₁≈y₂ ∷ []) = cong x₁≈x₂ y₁≈y₂
+    module _ (isMagma : IsMagma _•_) where
 
-  isAlgebra→isModel : IsAlgebra Σ-magma S → IsModel Θ-magma S
-  isAlgebra→isModel isAlgebra =
-    record { isAlgebra = isAlgebra
-           ; models    = λ ()
-           }
+      open IsMagma isMagma
 
-  module _ {∙ : Op₂ A} (M : IsMagma ∙) where
+      magma→setoid : Setoid a ℓ
+      magma→setoid = record { Carrier       = A
+                            ; _≈_           = _≈_
+                            ; isEquivalence = isEquivalence
+                            }
 
-    open IsMagma M
+      magma→⟦_⟧ : Interpretation Σ-magma magma→setoid
+      magma→⟦ MagmaOp.• ⟧ (x ∷ y ∷ []) = _•_ x y
 
-    magma→isAlgebra : IsAlgebra Σ-magma S
-    magma→isAlgebra = record { ⟦_⟧     = magma→⟦⟧ ∙
-                             ; ⟦⟧-cong = magma→⟦⟧-cong ∙-cong
-                             }
+      magma→⟦⟧-cong : Congruent₂ _•_ → Congruence Σ-magma magma→setoid magma→⟦_⟧
+      magma→⟦⟧-cong cong MagmaOp.• (x₁≈x₂ ∷ y₁≈y₂ ∷ []) = cong x₁≈x₂ y₁≈y₂
 
-    magma→algebra : Algebra Σ-magma
-    magma→algebra = record { ∥_∥/≈     = S
-                           ; isAlgebra = magma→isAlgebra
-                           }
-
-    magma→models : Models Θ-magma magma→algebra
-    magma→models ()
-
-    magma→isModel : IsModel Θ-magma S
-    magma→isModel = record { isAlgebra = magma→isAlgebra
-                           ; models    = magma→models
-                           }
-
-    magma→model : Model Θ-magma
-    magma→model = record { ∥_∥/≈    = S
-                         ; isModel  = magma→isModel
-                         }
-
-  module _ (M : IsModel Θ-magma S) where
-
-    open IsModel M
-
-    isModel→∙ : Op₂ A
-    isModel→∙ x y = ⟦ MagmaOp.• ⟧ (x ∷ y ∷ [])
-
-    isModel→∙-cong : Congruent₂ isModel→∙
-    isModel→∙-cong x₁≈x₂ y₁≈y₂ = ⟦⟧-cong MagmaOp.• (x₁≈x₂ ∷ y₁≈y₂ ∷ [])
-
-    isModel→magma : IsMagma isModel→∙
-    isModel→magma = record { isEquivalence = isEquivalence
-                           ; ∙-cong        = isModel→∙-cong
-                           }
-
-  module _ {∙ : Op₂ A} (M : IsSemigroup ∙) where
-
-    open IsSemigroup M
-
-    semigroup→models : Models Θ-semigroup (magma→algebra isMagma)
-    semigroup→models assoc {θ} =
-      (IsSemigroup.assoc M) (θ (# 0)) (θ (# 1)) (θ (# 2))
-
-    semigroup→isModel : IsModel Θ-semigroup S
-    semigroup→isModel = record { isAlgebra = magma→isAlgebra isMagma
-                               ; models    = semigroup→models
+      magma→isAlgebra : IsAlgebra Σ-magma magma→setoid
+      magma→isAlgebra = record { ⟦_⟧     = magma→⟦_⟧
+                               ; ⟦⟧-cong = magma→⟦⟧-cong ∙-cong
                                }
 
-    semigroup→model : Model Θ-semigroup
-    semigroup→model = record { ∥_∥/≈    = S
-                             ; isModel  = semigroup→isModel
+      magma→algebra : Algebra Σ-magma
+      magma→algebra = record { ∥_∥/≈           = magma→setoid
+                             ; ∥_∥/≈-isAlgebra = magma→isAlgebra
                              }
 
-  module _ (M : IsModel Θ-semigroup S) where
+      magma→models : Models Θ-magma magma→algebra
+      magma→models ()
 
-    open IsModel M
+      magma→isModel : IsModel Θ-magma magma→setoid
+      magma→isModel = record { isAlgebra = magma→isAlgebra
+                             ; models    = magma→models
+                             }
 
-    isModel→assoc : Associative (isModel→∙ (isAlgebra→isModel (isAlgebra M)))
-    isModel→assoc x y z = models assoc {θ}
-      where θ : Fin 3 → A
-            θ zero             = x
-            θ (suc zero)       = y
-            θ (suc (suc zero)) = z
+      magma→model : Model Θ-magma
+      magma→model = record { ∥_∥/≈   = magma→setoid
+                           ; isModel = magma→isModel
+                           }
 
-    isModel→semigroup : IsSemigroup (isModel→∙ (isAlgebra→isModel (isAlgebra M)))
-    isModel→semigroup =
-      record { isMagma = isModel→magma (isAlgebra→isModel (isAlgebra M))
-             ; assoc   = isModel→assoc
-             }
--}
+    module _ (isSemigroup : IsSemigroup _•_) where
+
+      open IsSemigroup isSemigroup renaming (assoc to •-assoc)
+
+      semigroup→models : Models Θ-semigroup (magma→algebra isMagma)
+      semigroup→models assoc {θ} =
+        •-assoc (θ (# 0)) (θ (# 1)) (θ (# 2))
+
+      semigroup→isModel : IsModel Θ-semigroup (magma→setoid isMagma)
+      semigroup→isModel = record { isAlgebra = magma→isAlgebra isMagma
+                                 ; models    = semigroup→models
+                                 }
+
+      semigroup→model : Model Θ-semigroup
+      semigroup→model = record { ∥_∥/≈   = magma→setoid isMagma
+                               ; isModel = semigroup→isModel
+                               }

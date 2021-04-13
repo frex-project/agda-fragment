@@ -21,6 +21,7 @@ open import Level using (Level; _⊔_)
 open import Function using (_∘_)
 open import Algebra.Structures using (IsSemigroup)
 
+open import Data.Empty using (⊥; ⊥-elim)
 open import Data.Nat using (ℕ)
 open import Data.Sum using (_⊎_; inj₁; inj₂)
 open import Data.Product using (Σ-syntax; _,_; proj₁; proj₂)
@@ -29,6 +30,7 @@ open import Data.Vec using (Vec; []; _∷_; map)
 open import Data.Vec.Relation.Binary.Pointwise.Inductive using ([]; _∷_)
 open import Data.Vec.Relation.Binary.Equality.Propositional using (≋⇒≡)
 
+open import Relation.Nullary using (Dec; yes; no; recompute)
 open import Relation.Binary using (Setoid; IsEquivalence)
 open import Relation.Binary.PropositionalEquality as PE using (_≡_)
 
@@ -133,6 +135,29 @@ module _ (M : Model {a} {ℓ}) (n : ℕ) where
   pattern Scons p  = snorm (shead p)
   pattern Dcons p  = dnorm (dhead p)
 
+  normal? : ∀ x → Dec (Normal x)
+  normal? (leaf₁ x)              = yes Sleaf
+  normal? (leaf₂ x)              = yes Dleaf
+  normal? (cons₁ x (leaf₁ y))    = no lemma
+    where lemma : ∀ {x y} → Normal (cons₁ x (leaf₁ y)) → ⊥
+          lemma (Scons ())
+  normal? (cons₁ x (leaf₂ y))    = yes SDleaf
+  normal? (cons₁ x (cons₁ y ys)) = no lemma
+    where lemma : ∀ {x y xs} → Normal (cons₁ x (cons₁ y xs)) → ⊥
+          lemma (Scons ())
+  normal? (cons₁ x (cons₂ y ys))
+    with normal? ys
+  ...  | yes p = yes (SDcons p)
+  ...  | no ¬p = no (lemma ¬p)
+    where lemma : ∀ {x y xs} → (Normal xs → ⊥) → Normal (cons₁ x (cons₂ y xs)) → ⊥
+          lemma ¬p (SDcons q) = ¬p q
+  normal? (cons₂ _ xs)
+    with normal? xs
+  ...  | yes p = yes (Dcons p)
+  ...  | no ¬p  = no (lemma ¬p)
+    where lemma : ∀ {x xs} → (Normal xs → ⊥) → Normal (cons₂ x xs) → ⊥
+          lemma ¬p (Dcons q) = ¬p q
+
   consS-preserves : ∀ {x xs} → Normal xs → Normal (consS x xs)
   consS-preserves Sleaf      = Sleaf
   consS-preserves SDleaf     = SDleaf
@@ -228,13 +253,11 @@ module _ (M : Model {a} {ℓ}) (n : ℕ) where
   consSD-lemma dleaf     = PE.refl
   consSD-lemma (dhead x) = PE.refl
 
-  NormalSemigroup : Set a
-  NormalSemigroup = Σ[ x ∈ Semigroup ] (Normal x)
-
-  pattern nleaf₁ x = leaf₁ x , Sleaf
-  pattern nleaf₂ x = leaf₂ x , Dleaf
-  pattern nScons x xs p = cons₁ x xs , Scons p
-  pattern nDcons x xs p = cons₂ x xs , Dcons p
+  record NormalSemigroup : Set a where
+    constructor _,_
+    field
+      x       : Semigroup
+      .normal : Normal x
 
   infix 6 _≈ₙ_
 
@@ -256,7 +279,7 @@ module _ (M : Model {a} {ℓ}) (n : ℕ) where
   open module N = Setoid ≈ₙ-setoid hiding (_≈_)
 
   _++_ : NormalSemigroup → NormalSemigroup → NormalSemigroup
-  ( x , p ) ++ ( y , q ) =  x ++-raw y , p ++ₙ q
+  (x , p) ++ (y , q) = x ++-raw y , p ++ₙ q
 
   ++-assoc : ∀ (x y z : NormalSemigroup)
              → (x ++ y) ++ z ≈ₙ x ++ (y ++ z)
@@ -290,7 +313,7 @@ module _ (M : Model {a} {ℓ}) (n : ℕ) where
                     }
 
   ++-inl : ∥ M ∥ → NormalSemigroup
-  ++-inl a = nleaf₁ a
+  ++-inl a = leaf₁ a , Sleaf
 
   ++-inl-hom : Homomorphic ∥ M ∥ₐ ++-algebra ++-inl
   ++-inl-hom • (x ∷ y ∷ []) = N.refl {x = _ , Sleaf}
@@ -302,7 +325,7 @@ module _ (M : Model {a} {ℓ}) (n : ℕ) where
                    }
 
   ++-inr-θ : Fin n → NormalSemigroup
-  ++-inr-θ k = nleaf₂ k
+  ++-inr-θ k = leaf₂ k , Dleaf
 
   ++-inrₕ : ∥ |T|⦉ n ⦊/≈ₘ ∥ₐ →ₕ ++-algebra
   ++-inrₕ = substₕ ++-model ++-inr-θ
@@ -353,39 +376,47 @@ module _ (M : Model {a} {ℓ}) (n : ℕ) where
 
       open import Relation.Binary.Reasoning.Setoid ∥ W ∥/≈
 
-      ++-[_,_]-hom : ∀ (x y : NormalSemigroup)
-                     → (++-[_,_] x ⊕ ++-[_,_] y) ≈W ++-[_,_] (x ++ y)
-      ++-[_,_]-hom (nleaf₁ x) (nleaf₁ y)     = ∥ f ∥ₕ-hom • (x ∷ y ∷ [])
-      ++-[_,_]-hom (nleaf₁ x) (nleaf₂ _)     = W.refl
-      ++-[_,_]-hom (nleaf₁ x) (nScons y z p) = begin
+      ++-[_,_]-raw-hom : ∀ (x y : Σ[ x ∈ Semigroup ] (Normal x))
+                         → (++-[_,_]-raw (proj₁ x) ⊕ ++-[_,_]-raw (proj₁ y))
+                            ≈W ++-[_,_]-raw (proj₁ x ++-raw proj₁ y)
+      ++-[_,_]-raw-hom (leaf₁ x , _) (leaf₁ y , _)   = ∥ f ∥ₕ-hom • (x ∷ y ∷ [])
+      ++-[_,_]-raw-hom (leaf₁ _ , _) (leaf₂ _ , _)   = W.refl
+      ++-[_,_]-raw-hom (leaf₁ x , _) (cons₁ y z , _) = begin
           ∥ f ∥ₕ x ⊕ (∥ f ∥ₕ y ⊕ ++-[_,_]-raw z)
         ≈⟨ W.sym (⊕-assoc (∥ f ∥ₕ x) (∥ f ∥ₕ y) (++-[_,_]-raw z)) ⟩
           (∥ f ∥ₕ x ⊕ ∥ f ∥ₕ y) ⊕ ++-[_,_]-raw z
         ≈⟨ ⊕-cong (∥ f ∥ₕ-hom • (x ∷ y ∷ [])) W.refl ⟩
           ∥ f ∥ₕ (x · y) ⊕ ++-[_,_]-raw z
         ∎
-      ++-[_,_]-hom (nleaf₁ x) (nDcons _ _ _) = ⊕-cong W.refl W.refl
-      ++-[_,_]-hom (nleaf₂ _) _              = W.refl
-      ++-[_,_]-hom (nScons x y p) z          = begin
-          (∥ f ∥ₕ x ⊕ ++-[_,_]-raw y) ⊕ ++-[_,_] z
-        ≈⟨ ⊕-assoc (∥ f ∥ₕ x) (++-[_,_]-raw y) (++-[_,_] z) ⟩
-          ∥ f ∥ₕ x ⊕ (++-[_,_]-raw y ⊕ ++-[_,_] z)
-        ≈⟨ ⊕-cong W.refl (++-[_,_]-hom (y , dnorm p) z) ⟩
-          ∥ f ∥ₕ x ⊕ ++-[_,_] ((y , dnorm p) ++ z)
-        ≈⟨ ++-[_,_]-raw-cong (S.reflexive (consSD-lemma (++-D p (proj₂ z)))) ⟩
-          ++-[_,_]-raw (consS x (y ++-raw (proj₁ z)))
-        ≈⟨ W.sym (++-[_,_]-raw-cong (consS-++ {a = x} y (proj₁ z))) ⟩
-          ++-[_,_]-raw ((consS x y) ++-raw (proj₁ z))
-        ≈⟨ W.sym (++-[_,_]-raw-cong (++-raw-cong (S.reflexive (consSD-lemma p)) S.refl)) ⟩
-          ++-[_,_]-raw ((cons₁ x y) ++-raw (proj₁ z))
+      ++-[_,_]-raw-hom (leaf₁ x , _) (cons₂ _ _ , _) = ⊕-cong W.refl W.refl
+      ++-[_,_]-raw-hom (leaf₂ _ , _) _               = W.refl
+      ++-[_,_]-raw-hom (cons₁ x y , Scons q) (z , r) = begin
+          (∥ f ∥ₕ x ⊕ ++-[_,_]-raw y) ⊕ ++-[_,_] (z , r)
+        ≈⟨ ⊕-assoc (∥ f ∥ₕ x) (++-[_,_]-raw y) (++-[_,_] (z , r)) ⟩
+          ∥ f ∥ₕ x ⊕ (++-[_,_]-raw y ⊕ ++-[_,_] (z , r))
+        ≈⟨ ⊕-cong W.refl (++-[_,_]-raw-hom (y , dnorm q) (z , r)) ⟩
+          ∥ f ∥ₕ x ⊕ ++-[_,_] ((y , dnorm q) ++ (z , r))
+        ≈⟨ ++-[_,_]-raw-cong (S.reflexive (consSD-lemma (++-D q (recompute (normal? z) r)))) ⟩
+          ++-[_,_]-raw (consS x (y ++-raw z))
+        ≈⟨ W.sym (++-[_,_]-raw-cong (consS-++ {a = x} y z)) ⟩
+          ++-[_,_]-raw ((consS x y) ++-raw z)
+        ≈⟨ W.sym (++-[_,_]-raw-cong (++-raw-cong (S.reflexive (consSD-lemma q)) S.refl)) ⟩
+          ++-[_,_]-raw ((cons₁ x y) ++-raw z)
         ∎
-      ++-[_,_]-hom (nDcons x xs p) y         = begin
-          (∥ g ∥ₕ (term₂ x) ⊕ ++-[_,_] (xs , p)) ⊕ ++-[_,_] y
-        ≈⟨ ⊕-assoc (∥ g ∥ₕ (term₂ x)) (++-[_,_]-raw xs) (++-[_,_] y) ⟩
-          ∥ g ∥ₕ (term₂ x) ⊕ (++-[_,_] (xs , p) ⊕ ++-[_,_] y)
-        ≈⟨ ⊕-cong W.refl (++-[_,_]-hom (xs , p) y) ⟩
-          ∥ g ∥ₕ (term₂ x) ⊕ ++-[_,_] ((xs , p) ++ y)
+      ++-[_,_]-raw-hom (cons₂ x xs , Dcons p) (y , q)       = begin
+          (∥ g ∥ₕ (term₂ x) ⊕ ++-[_,_]-raw xs) ⊕ ++-[_,_]-raw y
+        ≈⟨ ⊕-assoc (∥ g ∥ₕ (term₂ x)) (++-[_,_]-raw xs) (++-[_,_]-raw y) ⟩
+          ∥ g ∥ₕ (term₂ x) ⊕ (++-[_,_]-raw xs ⊕ ++-[_,_]-raw y)
+        ≈⟨ ⊕-cong W.refl (++-[_,_]-raw-hom (xs , p) (y , q)) ⟩
+          ∥ g ∥ₕ (term₂ x) ⊕ ++-[_,_]-raw (xs ++-raw y)
         ∎
+
+      ++-[_,_]-hom : ∀ (x y : NormalSemigroup)
+                     → (++-[_,_] x ⊕ ++-[_,_] y) ≈W ++-[_,_] (x ++ y)
+      ++-[_,_]-hom (x , p) (y , q)
+        with recompute (normal? x) p
+           | recompute (normal? y) q
+      ...  | r | s  = ++-[_,_]-raw-hom (x , r) (y , s)
 
       ++-[_,_]ₕ : ++-algebra →ₕ ∥ W ∥ₐ
       ++-[_,_]ₕ = record { ∥_∥ₕ      = ++-[_,_]
@@ -400,7 +431,7 @@ module _ (M : Model {a} {ℓ}) (n : ℕ) where
 
       ++-[_,_]-commute₂ : ++-[_,_]ₕ ∘ₕ ++-inrₕ ≡ₕ g
       ++-[_,_]-commute₂ {x = term₂ k} =
-        ++-[_,_]-raw-cong (S.refl {x = proj₁ (++-inr-θ k)})
+        ++-[_,_]-raw-cong (S.refl {x = leaf₂ k})
       ++-[_,_]-commute₂ {x = t@(term • (x ∷ y ∷ []))} = begin
           ++-[_,_] (subst ++-algebra ++-inr-θ t)
         ≈⟨ ++-[_,_]-raw-cong (subst-hom ++-model ++-inr-θ • (x ∷ y ∷ [])) ⟩
@@ -417,26 +448,32 @@ module _ (M : Model {a} {ℓ}) (n : ℕ) where
 
       module _ {h : ++-algebra →ₕ ∥ W ∥ₐ} where
 
-        ++-[_,_]-universal : h ∘ₕ ++-inlₕ ≡ₕ f → h ∘ₕ ++-inrₕ ≡ₕ g
-                             → ++-[_,_]ₕ ≡ₕ h
-        ++-[_,_]-universal c₁ c₂ {nleaf₁ x}     = W.sym c₁
-        ++-[_,_]-universal c₁ c₂ {nleaf₂ x}     = W.sym c₂
-        ++-[_,_]-universal c₁ c₂ {nScons x y p} = begin
+        ++-[_,_]-raw-universal : h ∘ₕ ++-inlₕ ≡ₕ f → h ∘ₕ ++-inrₕ ≡ₕ g
+                                 → ∀ {x : Σ[ x ∈ Semigroup ] (Normal x)}
+                                 → ∥ ++-[_,_]ₕ ∥ₕ (proj₁ x , proj₂ x) ≈W ∥ h ∥ₕ (proj₁ x , proj₂ x)
+        ++-[_,_]-raw-universal c₁ c₂ {leaf₁ x , _} = W.sym c₁
+        ++-[_,_]-raw-universal c₁ c₂ {leaf₂ x , _} = W.sym c₂
+        ++-[_,_]-raw-universal c₁ c₂ {cons₁ x y , Scons p} = begin
             ∥ f ∥ₕ x ⊕ ++-[_,_] (y , dnorm p)
-          ≈⟨ ⊕-cong (W.sym c₁) (++-[_,_]-universal c₁ c₂) ⟩
-            ∥ h ∥ₕ (nleaf₁ x) ⊕ ∥ h ∥ₕ (y , dnorm p)
-          ≈⟨ ∥ h ∥ₕ-hom • (nleaf₁ x ∷ (y , dnorm p) ∷ []) ⟩
+          ≈⟨ ⊕-cong (W.sym c₁) (++-[_,_]-raw-universal c₁ c₂ {y , dnorm p}) ⟩
+            ∥ h ∥ₕ (leaf₁ x , _) ⊕ ∥ h ∥ₕ (y , dnorm p)
+          ≈⟨ ∥ h ∥ₕ-hom • ((leaf₁ x , _) ∷ (y , dnorm p) ∷ []) ⟩
             ∥ h ∥ₕ (consS x y , consS-preserves (dnorm p))
           ≈⟨ W.sym (∥ h ∥ₕ-cong (S.reflexive (consSD-lemma p))) ⟩
-            ∥ h ∥ₕ (nScons x y p)
+            ∥ h ∥ₕ (cons₁ x y , Scons p)
           ∎
-        ++-[_,_]-universal c₁ c₂ {nDcons x y p} = begin
-            ∥ g ∥ₕ (term₂ x) ⊕ ++-[_,_] (y , p)
-          ≈⟨ ⊕-cong (W.sym c₂) (++-[_,_]-universal c₁ c₂) ⟩
-            ∥ h ∥ₕ (nleaf₂ x) ⊕ ∥ h ∥ₕ (y , p)
-          ≈⟨ ∥ h ∥ₕ-hom • (nleaf₂ x ∷ (y , p) ∷ []) ⟩
-            ∥ h ∥ₕ ((nleaf₂ x) ++ (y , p))
+        ++-[_,_]-raw-universal c₁ c₂ {cons₂ x y , Dcons q} = begin
+            ∥ g ∥ₕ (term₂ x) ⊕ ++-[_,_] (y , q)
+          ≈⟨ ⊕-cong (W.sym c₂) (++-[_,_]-raw-universal c₁ c₂ {x = (y , q)}) ⟩
+            ∥ h ∥ₕ (leaf₂ x , _) ⊕ ∥ h ∥ₕ (y , q)
+          ≈⟨ ∥ h ∥ₕ-hom • ((leaf₂ x , _) ∷ (y , q) ∷ []) ⟩
+            ∥ h ∥ₕ ((leaf₂ x , Dleaf) ++ (y , q))
           ∎
+
+        ++-[_,_]-universal : h ∘ₕ ++-inlₕ ≡ₕ f → h ∘ₕ ++-inrₕ ≡ₕ g → ++-[_,_]ₕ ≡ₕ h
+        ++-[_,_]-universal c₁ c₂ {x = x , p}
+          with recompute (normal? x) p
+        ...  | q = ++-[_,_]-raw-universal c₁ c₂ {x = x , q}
 
 ++-model-isFrex : IsFreeExtension ++-model
 ++-model-isFrex M n =

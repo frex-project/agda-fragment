@@ -9,7 +9,7 @@ open import Data.Nat using (ℕ; zero; suc)
 open import Data.Fin using (Fin; zero; suc)
 open import Data.List using ([]; _∷_; upTo; map)
 open import Data.Unit using (⊤)
-open import Relation.Binary.PropositionalEquality as PE using (_≡_)
+open import Relation.Binary using (Setoid)
 
 fin : ℕ → Term
 fin zero    = con (quote Fin.zero) []
@@ -33,14 +33,15 @@ fin-def n τ
        declareDef (vra η) τ'
        return η
 
-fin-refl : (n : ℕ) → Term → Term → TC Term
-fin-refl n f g
-  = do let prop = def (quote PE._≡_) ( vra (apply f (vra (var 0 []) ∷ []))
-                                     ∷ vra (apply g (vra (var 0 []) ∷ []))
-                                     ∷ [])
+fin-refl : Term → (n : ℕ) → Term → Term → TC Term
+fin-refl s n f g
+  = do let prop = def (quote Setoid._≈_) ( vra s
+                                         ∷ vra (apply f (vra (var 0 []) ∷ []))
+                                         ∷ vra (apply g (vra (var 0 []) ∷ []))
+                                         ∷ [])
        fin ← quoteTC (Fin n)
        let τ = pi (hra fin) (abs "x" prop)
        η ← freshName "_"
        declareDef (vra η) τ
-       defineFun η (map (λ m → fin-hclause m (con (quote PE.refl) [])) (upTo n))
+       defineFun η (map (λ m → fin-hclause m (def (quote Setoid.refl) (vra s ∷ []))) (upTo n))
        return (def η [])

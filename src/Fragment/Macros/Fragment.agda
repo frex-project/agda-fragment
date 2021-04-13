@@ -4,7 +4,9 @@ module Fragment.Macros.Fragment where
 
 open import Reflection hiding (name; Type; _≟_; reduce)
 open import Reflection.Term using (_≟_)
-open import Relation.Binary.PropositionalEquality as PE using (_≡_)
+
+open import Relation.Binary using (Setoid)
+open import Relation.Binary.PropositionalEquality using (_≡_)
 
 open import Function using (_∘_)
 
@@ -93,11 +95,23 @@ mk-atom : Term → Term → Term
 mk-atom Σ t =
   con (quote term) (hra Σ ∷ hra (lit (nat 0)) ∷ vra t ∷ vra (vec []) ∷ [])
 
-mk-injection : Term → Term → Environment ℕ → Term → Term
-mk-injection frex Θ env t
+mk-injection : Term → Term → ℕ → Term → Environment ℕ → Term → Term
+mk-injection m frex n Θ env t
   with lookup t env
-...  | just n  = def (quote FX-inr) ((vra Θ) ∷ vra frex ∷ (vra (fin n)) ∷ [])
-...  | nothing = def (quote FX-inl) ((vra Θ) ∷ vra frex ∷ vra t ∷ [])
+...  | just k  = def (quote FX-inr) ( vra Θ
+                                    ∷ vra frex
+                                    ∷ vra m
+                                    ∷ vra (lit (nat n))
+                                    ∷ vra (fin k)
+                                    ∷ []
+                                    )
+...  | nothing = def (quote FX-inl) ( vra Θ
+                                    ∷ vra frex
+                                    ∷ vra m
+                                    ∷ vra (lit (nat n))
+                                    ∷ vra t
+                                    ∷ []
+                                    )
 
 mutual
   fold-args : ∀ {a b} {A : Set a} {B : Set b}
@@ -216,24 +230,38 @@ direct-subst m t τ count
        defineFun η clauses
        return (def η [])
 
-indirect-subst : Term → Term → Term → Environment ℕ → Term → ℕ → TC Term
-indirect-subst m frex Θ env t count
-  = do let carrier = def (quote ∥FX∥) (vra Θ ∷ vra frex ∷ [])
+indirect-subst : Term → Term → ℕ → Term → Environment ℕ → Term → ℕ → TC Term
+indirect-subst m frex n Θ env t count
+  = do let carrier = def (quote ∥FX∥) (vra Θ ∷ vra frex ∷ vra m ∷ vra (lit (nat n)) ∷ [])
        η ← fin-def count carrier
-       (clauses , _) ← fold (λ x → λ n → (fin-vclause n (mk-injection frex Θ env x) ∷ [] , n + 1))
+       (clauses , _) ← fold (λ x → λ k → (fin-vclause k (mk-injection m frex n Θ env x) ∷ [] , k + 1))
                             (λ _ → concat)
                             m t 0
        defineFun η clauses
        return (def η [])
 
-auto-factor : Term → Term → Term → Term → Environment ℕ → Term → Term → Term → TC (Term × Term)
-auto-factor m frex Σ Θ env θ t τ
+auto-factor : Term
+            → Term
+            → ℕ
+            → Term
+            → Term
+            → Environment ℕ
+            → Term
+            → Term
+            → Term
+            → TC (Term × Term)
+auto-factor m frex n Σ Θ env θ t τ
   = do count ← leaves m t
        structure ← destruct m t count
        direct ← direct-subst m t τ count
-       indirect ← indirect-subst m frex Θ env t count
+       indirect ← indirect-subst m frex n Θ env t count
        η ← freshName "_"
-       let algebra = def (quote ∥FX∥ₐ) (vra Θ ∷ vra frex ∷ [])
+       let algebra = def (quote ∥FX∥ₐ) ( vra Θ
+                                       ∷ vra frex
+                                       ∷ vra m
+                                       ∷ vra (lit (nat n))
+                                       ∷ []
+                                       )
        let substitution = def (quote subst) ( vra Σ
                                             ∷ vra algebra
                                             ∷ vra indirect
@@ -242,26 +270,34 @@ auto-factor m frex Σ Θ env θ t τ
                                             )
        let reduction = def (quote reduce) ( vra Θ
                                           ∷ vra frex
+                                          ∷ vra m
+                                          ∷ vra (lit (nat n))
                                           ∷ vra θ
                                           ∷ vra substitution
                                           ∷ []
                                           )
-       let prop = def (quote _≡_) ( vra reduction
-                                  ∷ vra t
-                                  ∷ []
-                                  )
+       let setoid = def (quote Model.∥_∥/≈) (vra m ∷ [])
+       let prop = def (quote Setoid._≈_) ( vra setoid
+                                         ∷ vra reduction
+                                         ∷ vra t
+                                         ∷ []
+                                         )
        declareDef (vra η) prop
        let f = def (quote _∘_) ( vra (def (quote reduce)
                                           ( vra Θ
                                           ∷ vra frex
+                                          ∷ vra m
+                                          ∷ vra (lit (nat n))
                                           ∷ vra θ
                                           ∷ []))
                                ∷ vra indirect
                                ∷ []
                                )
-       proof ← fin-refl count f direct
+       proof ← fin-refl setoid count f direct
        let factorisation = def (quote factor) ( vra Θ
                                               ∷ vra frex
+                                              ∷ vra m
+                                              ∷ vra (lit (nat n))
                                               ∷ vra direct
                                               ∷ vra indirect
                                               ∷ vra θ
@@ -272,34 +308,43 @@ auto-factor m frex Σ Θ env θ t τ
        defineFun η (Clause.clause [] factorisation ∷ [])
        return (substitution , def η [])
 
+fragment-core : Name → Term → Term → Term → TC Term
+fragment-core frex m lhs rhs
+  = do Θ ← extract-theory m
+       Σ ← extract-sig m
+       carrier ← extract-carrier m
+       env ← open-env m lhs empty
+       env ← open-env m rhs env
+       let n = keys env
+       let frex = def frex []
+       θ ← environment m env carrier
+       (s , p) ← auto-factor m frex n Σ Θ env θ lhs carrier
+       (t , q) ← auto-factor m frex n Σ Θ env θ rhs carrier
+       let setoid = def (quote ∥FX∥/≈) (vra Θ ∷ vra frex ∷ vra m ∷ vra (lit (nat n)) ∷ [])
+       let frag = def (quote fundamental)
+                      ( vra Θ
+                      ∷ vra frex
+                      ∷ vra m
+                      ∷ vra (lit (nat n))
+                      ∷ hra lhs
+                      ∷ hra rhs
+                      ∷ hra s
+                      ∷ hra t
+                      ∷ vra θ
+                      ∷ vra p
+                      ∷ vra q
+                      ∷ vra (def (quote Setoid.refl) (vra setoid ∷ hra s ∷ []))
+                      ∷ []
+                      )
+       normalise frag
+
 macro
   fragment : Name → Term → Term → Term → Term → TC ⊤
   fragment frex m lhs rhs goal
-    = do Θ ← extract-theory m
-         Σ ← extract-sig m
-         carrier ← extract-carrier m
-         env ← open-env m lhs empty
-         env' ← open-env m rhs env
-         θ ← environment m env' carrier
-         let model = def (quote Model.isModel) (vra m ∷ [])
-         let frex = def frex ( vra model
-                             ∷ vra (lit (nat (keys env')))
-                             ∷ []
-                             )
-         (s , p) ← auto-factor m frex Σ Θ env' θ lhs carrier
-         (t , q) ← auto-factor m frex Σ Θ env' θ rhs carrier
-         let frag = def (quote fundamental)
-                        ( vra Θ
-                        ∷ vra frex
-                        ∷ hra lhs
-                        ∷ hra rhs
-                        ∷ hra s
-                        ∷ hra t
-                        ∷ vra θ
-                        ∷ vra p
-                        ∷ vra q
-                        ∷ vra (con (quote PE.refl) [])
-                        ∷ []
-                        )
-         frag ← normalise frag
-         unify goal frag
+    = do frag ← fragment-core frex m lhs rhs
+         unify frag goal
+
+  fragmentShow : Name → Term → Term → Term → Term → TC ⊤
+  fragmentShow frex m lhs rhs goal
+    = do frag ← fragment-core frex m lhs rhs
+         panic frag
