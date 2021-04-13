@@ -249,6 +249,7 @@ module _
 
       open import Relation.Binary.Reasoning.Setoid ≈ₙ-setoid
 
+{-
       id-models : Models (AddId Θ •) id-algebra
       id-models idₗ {θ} = begin
           id-⟦ • ⟧ (idₙ ∷ (θ (# 0)) ∷ [])
@@ -273,6 +274,7 @@ module _
         ≈⟨ {!!} ⟩
           subst _ id-algebra θ (extend-expr (proj₂ (Θ ⟦ eq ⟧ₑ)))
         ∎
+-}
 
 {-
   AddIdFrex : FreeExtension (AddId Θ •)
