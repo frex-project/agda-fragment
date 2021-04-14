@@ -212,6 +212,11 @@ fold-s f m t ε
 leaves : Term → Term → TC ℕ
 leaves = fold-⊤ (λ _ → 1) (λ _ → sum)
 
+hasType : Term → Term → TC Bool
+hasType τ t = runSpeculative inner
+  where inner = do τ' ← inferType t
+                   return (equalTypes τ τ' , false)
+
 mutual
   isOpen-args : Term → List (Arg Term) → TC Bool
   isOpen-args τ []       = return false
@@ -222,16 +227,11 @@ mutual
   isOpen-args τ (_ ∷ xs) = isOpen-args τ xs
 
   isOpen : Term → Term → TC Bool
-  isOpen τ (var x args)
-    = do τ' ← inferType (var x args)
-         if equalTypes τ τ' then return true
-                            else return false
-  isOpen τ (meta x args)
-    = do τ' ← inferType (meta x args)
-         if equalTypes τ τ' then return true
-                            else return false
+  isOpen τ (var x args)  = hasType τ (var x args)
+  isOpen τ (meta x args) = hasType τ (meta x args)
   isOpen τ (con c args)  = isOpen-args τ args
   isOpen τ (def f args)  = isOpen-args τ args
+  isOpen τ unknown       = return true
   isOpen τ _             = return false
 
 open-env : Term → Term → Environment ℕ → TC (Environment ℕ)
