@@ -124,6 +124,15 @@ module _
       ... | yes _ = id
       ... | no _  = inherit x
 
+      normal? : ∀ {x} → Dec (Normal x)
+      normal? {id} = yes id
+      normal? {inherit x}
+        with x ≟e
+      ...  | yes p = no (lemma p)
+        where lemma : ∀ {x} → x ≈ₓ ∥ inl ∥ₕ e → Normal (inherit x) → ⊥
+              lemma p (inherit ¬p) = ¬p p
+      ...  | no ¬p = yes (inherit ¬p)
+
       normalise-cong : ∀ {x y} → x ≈ₓ y
                        → normalise (inherit x) ≈ normalise (inherit y)
       normalise-cong {x} {y} p
@@ -152,17 +161,23 @@ module _
       (inherit p) ++ₙ id          = inherit p
       (inherit p) ++ₙ (inherit q) = normalise-reduction
 
-      NormalId : Set (a ⊔ ℓ)
-      NormalId = Σ[ x ∈ Id ] (Normal x)
+      record NormalId : Set (a ⊔ ℓ) where
+        constructor _,_
+        field
+          x       : Id
+          .normal : Normal x
 
       pattern idₙ = (id , id)
 
       take : ∥ (forgetId M) [ n ] ∥ → NormalId
       take x = normalise (inherit x) , normalise-reduction
 
+      drop-raw : Id → ∥ (forgetId M) [ n ] ∥
+      drop-raw id          = ∥ inl ∥ₕ e
+      drop-raw (inherit x) = x
+
       drop : NormalId → ∥ (forgetId M) [ n ] ∥
-      drop idₙ             = ∥ inl ∥ₕ e
-      drop (inherit x , _) = x
+      drop (x , _) = drop-raw x
 
       infix 6 _≈ₙ_
 
@@ -211,9 +226,12 @@ module _
                 → x ++ z ≈ₙ y ++ w
       ++-cong = ++-raw-cong
 
+      drop-raw-cong : ∀ {x y} → x ≈ y → drop-raw x ≈ₓ drop-raw y
+      drop-raw-cong id-refl     = X.refl
+      drop-raw-cong (≈ₓ-pres r) = r
+
       drop-cong : ∀ {x y} → x ≈ₙ y → drop x ≈ₓ drop y
-      drop-cong {idₙ} {idₙ} id-refl                         = X.refl
-      drop-cong {inherit x , p} {inherit y , q} (≈ₓ-pres r) = r
+      drop-cong = drop-raw-cong
 
       id-⟦_⟧ : Interpretation (Σ (AddId Θ •)) ≈ₙ-setoid
       id-⟦ inj₁ f ⟧ []    = take (⟦ f ⟧ₓ [])
@@ -230,10 +248,18 @@ module _
       id-⟦⟧-cong f (p ∷ q ∷ [])
         with _≟_ {n = 2} f •
       ...  | yes _ = ++-raw-cong p q
-      ...  | no _  = normalise-cong (⟦⟧ₓ-cong f (drop-cong p ∷ drop-cong q ∷ []))
-      id-⟦⟧-cong f (p ∷ [])         = normalise-cong (⟦⟧ₓ-cong f (drop-cong p ∷ []))
+      ...  | no _  = normalise-cong (⟦⟧ₓ-cong f ( drop-raw-cong p
+                                                ∷ drop-raw-cong q
+                                                ∷ []
+                                                ))
+      id-⟦⟧-cong f (p ∷ [])         =
+        normalise-cong (⟦⟧ₓ-cong f (drop-raw-cong p ∷ []))
       id-⟦⟧-cong f (p ∷ q ∷ r ∷ ps) =
-        normalise-cong (⟦⟧ₓ-cong f (PW.map⁺ drop-cong (p ∷ q ∷ r ∷ ps)))
+        normalise-cong (⟦⟧ₓ-cong f ( drop-raw-cong p
+                                   ∷ drop-raw-cong q
+                                   ∷ drop-raw-cong r
+                                   ∷ PW.map⁺ drop-raw-cong ps
+                                   ))
 
       id-isAlgebra : IsAlgebra (Σ (AddId Θ •)) ≈ₙ-setoid
       id-isAlgebra = record { ⟦_⟧     = id-⟦_⟧

@@ -69,6 +69,23 @@ extract-sig m
 extract-carrier : Term → TC Term
 extract-carrier m = normalise (def (quote ∥_∥) (vra m ∷ []))
 
+read-goal : List (Arg Term) → TC (Term × List (Arg Term))
+read-goal (vArg x ∷ xs) = return (x , xs)
+read-goal (_ ∷ xs)      = read-goal xs
+read-goal []            = typeError (strErr "failed to read goal" ∷ [])
+
+read-goals : List (Arg Term) → TC (Term × Term)
+read-goals xs = do (fst , xs) ← read-goal xs
+                   (snd , _) ← read-goal xs
+                   return (fst , snd)
+
+extract-goals : Term → TC (Term × Term)
+extract-goals (var _ args)  = read-goals args
+extract-goals (con _ args)  = read-goals args
+extract-goals (def _ args)  = read-goals args
+extract-goals (meta _ args) = read-goals args
+extract-goals t             = typeError (strErr "can't read goals from" ∷ termErr t ∷ [])
+
 record Operator : Set where
   constructor operator
   field
@@ -339,12 +356,16 @@ fragment-core frex m lhs rhs
        normalise frag
 
 macro
-  fragment : Name → Term → Term → Term → Term → TC ⊤
-  fragment frex m lhs rhs goal
-    = do frag ← fragment-core frex m lhs rhs
+  fragment : Name → Term → Term → TC ⊤
+  fragment frex m goal
+    = do τ ← inferType goal
+         (lhs , rhs) ← extract-goals τ
+         frag ← fragment-core frex m lhs rhs
          unify frag goal
 
-  fragmentShow : Name → Term → Term → Term → Term → TC ⊤
-  fragmentShow frex m lhs rhs goal
-    = do frag ← fragment-core frex m lhs rhs
+  fragmentShow : Name → Term → Term → TC ⊤
+  fragmentShow frex m goal
+    = do τ ← inferType goal
+         (lhs , rhs) ← extract-goals τ
+         frag ← fragment-core frex m lhs rhs
          panic frag
