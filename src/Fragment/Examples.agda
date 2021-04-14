@@ -75,16 +75,15 @@ left-isSemigroup =
          }
 
 left-test : ∀ {m n} → left (left m n) (left m n) ≈ left m (left n (left m n))
-left-test {m} {n} =
-  fragment SemigroupFrex (semigroup→model left-isSemigroup)
+left-test = fragment SemigroupFrex (semigroup→model left-isSemigroup)
 
 simple : ∀ {m n} → (m + 2) + (3 + n) ≡ (m + 5) + n
-simple {m} {n} =
-  fragment SemigroupFrex (semigroup→model +-isSemigroup)
+simple = fragment SemigroupFrex (semigroup→model +-isSemigroup)
 
 open import Data.List using (List; []; _∷_; _++_)
 open import Data.List.Properties using (++-isSemigroup)
 
-lists : ∀ {m n x y} → ((0 ∷ m) ++ (x ∷ [])) ++ ((y ∷ []) ++ n) ≡ (0 ∷ m) ++ (x ∷ y ∷ []) ++ n
-lists {m} {n} {x} {y} =
-  fragment SemigroupFrex (semigroup→model (++-isSemigroup {A = ℕ}))
+lists : ∀ {m n x y}
+        → ((0 ∷ m) ++ (x ∷ [])) ++ ((y ∷ []) ++ n)
+          ≡ (0 ∷ m) ++ (x ∷ y ∷ []) ++ n
+lists = fragment SemigroupFrex (semigroup→model (++-isSemigroup {A = ℕ}))

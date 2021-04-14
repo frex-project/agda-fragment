@@ -19,6 +19,7 @@ open import Data.Maybe using (just; nothing)
 open import Data.Sum using (inj₂)
 open import Data.Product using (_×_; _,_; proj₁; proj₂)
 open import Data.Fin using (Fin)
+open import Data.String using (String)
 
 open import Fragment.Equational.Theory
 open import Fragment.Equational.Model
@@ -85,6 +86,27 @@ extract-goals (con _ args)  = read-goals args
 extract-goals (def _ args)  = read-goals args
 extract-goals (meta _ args) = read-goals args
 extract-goals t             = typeError (strErr "can't read goals from" ∷ termErr t ∷ [])
+
+strip-telescope : Term → TC (Term × List (Arg String))
+strip-telescope (pi (vArg _) (abs s x))
+  = do (τ , acc) ← strip-telescope x
+       return (τ , vra s ∷ acc)
+strip-telescope (pi (hArg _) (abs s x))
+  = do (τ , acc) ← strip-telescope x
+       return (τ , hra s ∷ acc)
+strip-telescope (pi _ _) = typeError (strErr "no support for irrelevant goals" ∷ [])
+strip-telescope t        = return (t , [])
+
+restore-telescope : List (Arg String) → Term → TC Term
+restore-telescope [] t = return t
+restore-telescope (vArg x ∷ xs) t
+  = do t ← restore-telescope xs t
+       return (λ⦅ x ⦆→ t)
+restore-telescope (hArg x ∷ xs) t
+  = do t ← restore-telescope xs t
+       return (λ⦃ x ⦄→ t)
+restore-telescope (_ ∷ _) _ =
+  typeError (strErr "no support for irrelevant goals" ∷ [])
 
 record Operator : Set where
   constructor operator
@@ -338,34 +360,29 @@ fragment-core frex m lhs rhs
        (s , p) ← auto-factor m frex n Σ Θ env θ lhs carrier
        (t , q) ← auto-factor m frex n Σ Θ env θ rhs carrier
        let setoid = def (quote ∥FX∥/≈) (vra Θ ∷ vra frex ∷ vra m ∷ vra (lit (nat n)) ∷ [])
-       let frag = def (quote fundamental)
-                      ( vra Θ
-                      ∷ vra frex
-                      ∷ vra m
-                      ∷ vra (lit (nat n))
-                      ∷ hra lhs
-                      ∷ hra rhs
-                      ∷ hra s
-                      ∷ hra t
-                      ∷ vra θ
-                      ∷ vra p
-                      ∷ vra q
-                      ∷ vra (def (quote Setoid.refl) (vra setoid ∷ hra s ∷ []))
-                      ∷ []
-                      )
-       normalise frag
+       return (def (quote fundamental)
+                 ( vra Θ
+                 ∷ vra frex
+                 ∷ vra m
+                 ∷ vra (lit (nat n))
+                 ∷ hra lhs
+                 ∷ hra rhs
+                 ∷ hra s
+                 ∷ hra t
+                 ∷ vra θ
+                 ∷ vra p
+                 ∷ vra q
+                 ∷ vra (def (quote Setoid.refl) (vra setoid ∷ hra s ∷ []))
+                 ∷ []
+                 ))
 
 macro
   fragment : Name → Term → Term → TC ⊤
   fragment frex m goal
     = do τ ← inferType goal
+         (τ , binders) ← strip-telescope τ
          (lhs , rhs) ← extract-goals τ
          frag ← fragment-core frex m lhs rhs
+         frag ← restore-telescope binders frag
+         frag ← normalise frag
          unify frag goal
-
-  fragmentShow : Name → Term → Term → TC ⊤
-  fragmentShow frex m goal
-    = do τ ← inferType goal
-         (lhs , rhs) ← extract-goals τ
-         frag ← fragment-core frex m lhs rhs
-         panic frag
