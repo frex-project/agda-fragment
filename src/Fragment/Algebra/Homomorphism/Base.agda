@@ -33,7 +33,7 @@ module _
 
 open _→ₕ_ public
 
-module _ (S : Algebra {a} {ℓ₁}) where
+module _ {S : Algebra {a} {ℓ₁}} where
 
   open import Data.Vec.Relation.Binary.Equality.Setoid ∥ S ∥/≈
 

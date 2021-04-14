@@ -74,7 +74,7 @@ module _
   ∥FX∥ₐ = ∥ M [ n ] ∥ₐ
 
   reduceₕ : (θ : Environment n ∥ M ∥ₐ) → ∥ M [ n ] ∥ₐ →ₕ ∥ M ∥ₐ
-  reduceₕ θ = ([_,_] {W = M} (idₕ ∥ M ∥ₐ) (substₕ M θ))
+  reduceₕ θ = ([_,_] {W = M} idₕ (substₕ M θ))
 
   reduce : (θ : Environment n ∥ M ∥ₐ) → ∥ M [ n ] ∥ → ∥ M ∥
   reduce θ = ∥ reduceₕ θ ∥ₕ

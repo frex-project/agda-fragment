@@ -32,14 +32,14 @@ module _
       ∥_∥ₑ   : S →ₕ T
       ∥_∥ₑ⁻¹ : T →ₕ S
 
-      ∥_∥ₑ-invˡ : ∥_∥ₑ ∘ₕ ∥_∥ₑ⁻¹ ≡ₕ idₕ T
-      ∥_∥ₑ-invʳ : ∥_∥ₑ⁻¹ ∘ₕ ∥_∥ₑ ≡ₕ idₕ S
+      ∥_∥ₑ-invˡ : ∥_∥ₑ ∘ₕ ∥_∥ₑ⁻¹ ≡ₕ idₕ
+      ∥_∥ₑ-invʳ : ∥_∥ₑ⁻¹ ∘ₕ ∥_∥ₑ ≡ₕ idₕ
 
 open _≅ₕ_ public
 
 idₑ : (S : Algebra {a} {ℓ₁}) → S ≅ₕ S
-idₑ S = record { ∥_∥ₑ      = idₕ S
-               ; ∥_∥ₑ⁻¹    = idₕ S
+idₑ S = record { ∥_∥ₑ      = idₕ
+               ; ∥_∥ₑ⁻¹    = idₕ
                ; ∥_∥ₑ-invˡ = λ {_} → refl
                ; ∥_∥ₑ-invʳ = λ {_} → refl
                }
@@ -53,7 +53,7 @@ flip f = record { ∥_∥ₑ      = ∥ f ∥ₑ⁻¹
                 }
 
 ∘ₑ-inv : ∀ (g : T ≅ₕ U) (f : S ≅ₕ T)
-         → (∥ g ∥ₑ ∘ₕ ∥ f ∥ₑ) ∘ₕ (∥ f ∥ₑ⁻¹ ∘ₕ ∥ g ∥ₑ⁻¹) ≡ₕ idₕ U
+         → (∥ g ∥ₑ ∘ₕ ∥ f ∥ₑ) ∘ₕ (∥ f ∥ₑ⁻¹ ∘ₕ ∥ g ∥ₑ⁻¹) ≡ₕ idₕ
 ∘ₑ-inv {T = T} {U = U} g f = begin
     (∥ g ∥ₑ ∘ₕ ∥ f ∥ₑ) ∘ₕ (∥ f ∥ₑ⁻¹ ∘ₕ ∥ g ∥ₑ⁻¹)
   ≈⟨ ∘ₕ-assoc ∥ g ∥ₑ ∥ f ∥ₑ (∥ f ∥ₑ⁻¹ ∘ₕ ∥ g ∥ₑ⁻¹) ⟩
@@ -65,13 +65,13 @@ flip f = record { ∥_∥ₑ      = ∥ f ∥ₑ⁻¹
     ∥ g ∥ₑ ∘ₕ ((∥ f ∥ₑ ∘ₕ ∥ f ∥ₑ⁻¹) ∘ₕ ∥ g ∥ₑ⁻¹)
   ≈⟨ ∘ₕ-congˡ ∥ g ∥ₑ
               ((∥ f ∥ₑ ∘ₕ ∥ f ∥ₑ⁻¹) ∘ₕ ∥ g ∥ₑ⁻¹)
-              (idₕ T ∘ₕ ∥ g ∥ₑ⁻¹)
-              (∘ₕ-congʳ ∥ g ∥ₑ⁻¹ (∥ f ∥ₑ ∘ₕ ∥ f ∥ₑ⁻¹) (idₕ T) ∥ f ∥ₑ-invˡ) ⟩
-    ∥ g ∥ₑ ∘ₕ (idₕ T ∘ₕ ∥ g ∥ₑ⁻¹)
-  ≈⟨ ∘ₕ-congˡ ∥ g ∥ₑ (idₕ T ∘ₕ ∥ g ∥ₑ⁻¹) ∥ g ∥ₑ⁻¹ (idₕ-unitˡ ∥ g ∥ₑ⁻¹) ⟩
+              (idₕ ∘ₕ ∥ g ∥ₑ⁻¹)
+              (∘ₕ-congʳ ∥ g ∥ₑ⁻¹ (∥ f ∥ₑ ∘ₕ ∥ f ∥ₑ⁻¹) idₕ ∥ f ∥ₑ-invˡ) ⟩
+    ∥ g ∥ₑ ∘ₕ (idₕ ∘ₕ ∥ g ∥ₑ⁻¹)
+  ≈⟨ ∘ₕ-congˡ ∥ g ∥ₑ (idₕ ∘ₕ ∥ g ∥ₑ⁻¹) ∥ g ∥ₑ⁻¹ (idₕ-unitˡ ∥ g ∥ₑ⁻¹) ⟩
     ∥ g ∥ₑ ∘ₕ ∥ g ∥ₑ⁻¹
   ≈⟨ ∥ g ∥ₑ-invˡ ⟩
-    idₕ U
+    idₕ
   ∎
   where open import Relation.Binary.Reasoning.Setoid (≡ₕ-setoid U U)
 
