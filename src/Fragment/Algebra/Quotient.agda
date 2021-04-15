@@ -5,7 +5,6 @@ open import Fragment.Algebra.Signature
 module Fragment.Algebra.Quotient (Σ : Signature) where
 
 open import Fragment.Algebra.Algebra Σ
-open import Fragment.Algebra.FreeAlgebra Σ
 open import Fragment.Algebra.Homomorphism Σ
 
 open import Level using (Level; _⊔_; suc)
@@ -35,7 +34,7 @@ module _ (S : Algebra {a} {ℓ₁}) where
     field
       _≈_           : Rel ∥ S ∥ ℓ₂
       isEquivalence : IsEquivalence _≈_
-      compatible    : Congruence (setoid' _≈_ isEquivalence) (S ⟦_⟧)
+      compatible    : Congruence (setoid' _≈_ isEquivalence) (S ⟦_⟧_)
 
     open IsEquivalence isEquivalence public
 
@@ -45,7 +44,7 @@ module _ (S : Algebra {a} {ℓ₁}) where
   underlyingEquivalence : CompatibleEquivalence
   underlyingEquivalence = record { _≈_           = ≈[ S ]
                                  ; isEquivalence = ≈[ S ]-isEquivalence
-                                 ; compatible    = S ⟦⟧-cong
+                                 ; compatible    = S ⟦_⟧-cong
                                  }
 
 open CompatibleEquivalence using (setoid; compatible)
@@ -53,7 +52,7 @@ open CompatibleEquivalence using (setoid; compatible)
 _/_-isAlgebra : (S : Algebra {a} {ℓ₁})
                 → (≈ : CompatibleEquivalence S {ℓ₂})
                 → IsAlgebra (setoid ≈)
-S / ≈ -isAlgebra = record { ⟦_⟧     = S ⟦_⟧
+S / ≈ -isAlgebra = record { ⟦_⟧     = S ⟦_⟧_
                           ; ⟦⟧-cong = compatible ≈
                           }
 
@@ -63,24 +62,3 @@ _/_ : (S : Algebra {a} {ℓ₁})
 S / ≈ = record { ∥_∥/≈           = setoid ≈
                ; ∥_∥/≈-isAlgebra = S / ≈ -isAlgebra
                }
-
-module _ {n}
-  {S : Algebra {a} {ℓ₁}}
-  {θ : Environment n S}
-  {≈ : CompatibleEquivalence S {ℓ₂}}
-  where
-
-  open import Fragment.Algebra.TermAlgebra (Σ ⦉ n ⦊) using (Expr; term)
-
-  mutual
-    quotient-subst-args : ∀ {arity}
-                          → (xs : Vec Expr arity)
-                          → Pointwise _≡_ (subst-args S θ xs) (subst-args (S / ≈) θ xs)
-    quotient-subst-args []       = []
-    quotient-subst-args (x ∷ xs) = quotient-subst x ∷ quotient-subst-args xs
-
-    quotient-subst : ∀ (x : Expr) → subst S θ x ≡ subst (S / ≈) θ x
-    quotient-subst (term₂ k) = PE.refl
-    quotient-subst (term₁ f) = PE.refl
-    quotient-subst (term f (x ∷ xs))  =
-      PE.cong (S ⟦ f ⟧) (Pointwise-≡⇒≡ (quotient-subst-args (x ∷ xs)))

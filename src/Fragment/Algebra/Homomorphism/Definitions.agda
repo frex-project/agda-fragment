@@ -9,16 +9,15 @@ open import Fragment.Algebra.Algebra Σ
 open import Level using (Level; _⊔_)
 open import Relation.Binary using (Setoid)
 open import Data.Vec using (Vec; map)
-open import Function.Definitions using (Congruent) public
+
+open import Function using (Congruent) public
 
 private
   variable
     a b ℓ₁ ℓ₂ : Level
 
-Homomorphic : (S : Algebra {a} {ℓ₁})
-              → (T : Algebra {b} {ℓ₂})
+Homomorphic : (S : Algebra {a} {ℓ₁}) (T : Algebra {b} {ℓ₂})
               → (∥ S ∥ → ∥ T ∥) → Set (a ⊔ ℓ₂)
 Homomorphic S T h = ∀ {arity} → (f : ops Σ arity)
                     → (xs : Vec ∥ S ∥ arity)
-                    → (T ⟦ f ⟧) (map h xs) ≈ h ((S ⟦ f ⟧) xs)
-  where open Setoid ∥ T ∥/≈ using (_≈_)
+                    → T ⟦ f ⟧ (map h xs) =[ T ] h (S ⟦ f ⟧ xs)

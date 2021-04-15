@@ -6,7 +6,6 @@ module Fragment.Algebra.Coproduct (Σ : Signature) where
 
 open import Fragment.Algebra.Algebra Σ
 open import Fragment.Algebra.Homomorphism Σ
-open import Fragment.Algebra.Homomorphism.Setoid Σ
 
 open import Level using (Level; Setω)
 
@@ -22,22 +21,22 @@ module _
 
   record IsCoproduct : Setω where
     field
-      inl : S →ₕ S+T
-      inr : T →ₕ S+T
+      inl : S ⟿ S+T
+      inr : T ⟿ S+T
 
       [_,_] : ∀ {d ℓ₄} {W : Algebra {d} {ℓ₄}}
-              → S →ₕ W → T →ₕ W → S+T →ₕ W
+              → S ⟿ W → T ⟿ W → S+T ⟿ W
 
       commute₁ : ∀ {d ℓ₄} {W : Algebra {d} {ℓ₄}}
-                 → {f : S →ₕ W} {g : T →ₕ W}
-                 → [ f , g ] ∘ₕ inl ≡ₕ f
+                 → {f : S ⟿ W} {g : T ⟿ W}
+                 → [ f , g ] ⊙ inl ≗ f
 
       commute₂ : ∀ {d ℓ₄} {W : Algebra {d} {ℓ₄}}
-                 → {f : S →ₕ W} {g : T →ₕ W}
-                 → [ f , g ] ∘ₕ inr ≡ₕ g
+                 → {f : S ⟿ W} {g : T ⟿ W}
+                 → [ f , g ] ⊙ inr ≗ g
 
       universal : ∀ {d ℓ₄} {W : Algebra {d} {ℓ₄}}
-                  → {f : S →ₕ W} {g : T →ₕ W} {h : S+T →ₕ W}
-                  → h ∘ₕ inl ≡ₕ f
-                  → h ∘ₕ inr ≡ₕ g
-                  → [ f , g ] ≡ₕ h
+                  → {f : S ⟿ W} {g : T ⟿ W} {h : S+T ⟿ W}
+                  → h ⊙ inl ≗ f
+                  → h ⊙ inr ≗ g
+                  → [ f , g ] ≗ h

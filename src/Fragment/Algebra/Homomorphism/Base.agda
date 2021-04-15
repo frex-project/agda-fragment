@@ -7,9 +7,11 @@ module Fragment.Algebra.Homomorphism.Base (Σ : Signature) where
 open import Fragment.Algebra.Algebra Σ
 open import Fragment.Algebra.Homomorphism.Definitions Σ
 
+open import Fragment.Setoid.Morphism as Morphism
+  hiding (id; ∣_∣; ∣_∣-cong)
+
 open import Level using (Level; _⊔_)
-open import Function using (id; _∘_; _$_)
-open import Function.Construct.Composition using (congruent)
+open import Function using (_∘_; _$_)
 open import Relation.Binary using (IsEquivalence)
 open import Data.Vec using (map)
 open import Data.Vec.Properties using (map-id; map-∘)
@@ -19,67 +21,64 @@ private
     a b c ℓ₁ ℓ₂ ℓ₃ : Level
 
 module _
-  (S : Algebra {a} {ℓ₁})
-  (T : Algebra {b} {ℓ₂})
+  (A : Algebra {a} {ℓ₁})
+  (B : Algebra {b} {ℓ₂})
   where
 
-  infixr 1 _→ₕ_
+  infixr 1 _⟿_
 
-  record _→ₕ_ : Set (a ⊔ b ⊔ ℓ₁ ⊔ ℓ₂) where
+  record _⟿_ : Set (a ⊔ b ⊔ ℓ₁ ⊔ ℓ₂) where
     field
-      ∥_∥ₕ      : ∥ S ∥ → ∥ T ∥
-      ∥_∥ₕ-cong : Congruent ≈[ S ] ≈[ T ] ∥_∥ₕ
-      ∥_∥ₕ-hom  : Homomorphic S T ∥_∥ₕ
+      ∣_∣⃗    : ∥ A ∥/≈ ↝ ∥ B ∥/≈
+      ∣_∣-hom : Homomorphic A B (Morphism.∣_∣ ∣_∣⃗)
 
-open _→ₕ_ public
+    ∣_∣ : ∥ A ∥ → ∥ B ∥
+    ∣_∣ = Morphism.∣_∣ ∣_∣⃗
 
-module _ {S : Algebra {a} {ℓ₁}} where
+    ∣_∣-cong : Congruent ≈[ A ] ≈[ B ] ∣_∣
+    ∣_∣-cong = Morphism.∣_∣-cong ∣_∣⃗
 
-  open import Data.Vec.Relation.Binary.Equality.Setoid ∥ S ∥/≈
+open _⟿_ public
 
-  id-cong : Congruent ≈[ S ] ≈[ S ] id
-  id-cong x≈y = x≈y
+module _ {A : Algebra {a} {ℓ₁}} where
 
-  id-hom : Homomorphic S S id
-  id-hom {n} f xs = (S ⟦⟧-cong) f $ reflexive (map-id xs)
+  open import Data.Vec.Relation.Binary.Equality.Setoid ∥ A ∥/≈
+
+  ∣id∣-hom : Homomorphic A A (λ x → x)
+  ∣id∣-hom {n} f xs = A ⟦ f ⟧-cong $ reflexive (map-id xs)
     where open IsEquivalence (≋-isEquivalence n) using (reflexive)
 
-  idₕ : S →ₕ S
-  idₕ = record { ∥_∥ₕ      = id
-               ; ∥_∥ₕ-cong = id-cong
-               ; ∥_∥ₕ-hom  = id-hom
-               }
+  id : A ⟿ A
+  id = record { ∣_∣⃗    = Morphism.id
+              ; ∣_∣-hom = ∣id∣-hom
+              }
 
 module _
-  {S : Algebra {a} {ℓ₁}}
-  {T : Algebra {b} {ℓ₂}}
-  {U : Algebra {c} {ℓ₃}}
-  (h : T →ₕ U)
-  (g : S →ₕ T)
+  {A : Algebra {a} {ℓ₁}}
+  {B : Algebra {b} {ℓ₂}}
+  {C : Algebra {c} {ℓ₃}}
+  (g : B ⟿ C)
+  (f : A ⟿ B)
   where
 
-  open import Data.Vec.Relation.Binary.Equality.Setoid ∥ U ∥/≈
-  open import Relation.Binary.Reasoning.Setoid ∥ U ∥/≈
+  open import Relation.Binary.Reasoning.Setoid ∥ C ∥/≈
+  open import Data.Vec.Relation.Binary.Equality.Setoid ∥ C ∥/≈
 
-  ∘ₕ-cong : Congruent ≈[ S ] ≈[ U ] (∥ h ∥ₕ ∘ ∥ g ∥ₕ)
-  ∘ₕ-cong = congruent ≈[ S ] ≈[ T ] ≈[ U ] ∥ g ∥ₕ-cong ∥ h ∥ₕ-cong
-
-  ∘ₕ-hom : Homomorphic S U (∥ h ∥ₕ ∘ ∥ g ∥ₕ)
-  ∘ₕ-hom {n} f xs = begin
-      (U ⟦ f ⟧) (map (∥ h ∥ₕ ∘ ∥ g ∥ₕ) xs)
-    ≈⟨ (U ⟦⟧-cong) f $ reflexive (map-∘ ∥ h ∥ₕ ∥ g ∥ₕ xs) ⟩
-      (U ⟦ f ⟧) (map ∥ h ∥ₕ (map ∥ g ∥ₕ xs))
-    ≈⟨ ∥ h ∥ₕ-hom f (map ∥ g ∥ₕ xs) ⟩
-      ∥ h ∥ₕ ((T ⟦ f ⟧) (map ∥ g ∥ₕ xs))
-    ≈⟨ ∥ h ∥ₕ-cong (∥ g ∥ₕ-hom f xs) ⟩
-      ∥ h ∥ₕ (∥ g ∥ₕ (S ⟦ f ⟧ $ xs))
+  ⊙-hom : Homomorphic A C (∣ g ∣ ∘ ∣ f ∣)
+  ⊙-hom {n} op xs = begin
+      C ⟦ op ⟧ (map (∣ g ∣ ∘ ∣ f ∣) xs)
+    ≈⟨ C ⟦ op ⟧-cong $ reflexive (map-∘ ∣ g ∣ ∣ f ∣ xs) ⟩
+      C ⟦ op ⟧ (map ∣ g ∣ (map ∣ f ∣ xs))
+    ≈⟨ ∣ g ∣-hom op (map ∣ f ∣ xs) ⟩
+      ∣ g ∣ (B ⟦ op ⟧ (map ∣ f ∣ xs))
+    ≈⟨ ∣ g ∣-cong (∣ f ∣-hom op xs) ⟩
+      ∣ g ∣ (∣ f ∣ (A ⟦ op ⟧ xs))
     ∎
     where open IsEquivalence (≋-isEquivalence n) using (reflexive)
 
-  infixr 9 _∘ₕ_
+  infixr 9 _⊙_
 
-  _∘ₕ_ : (S →ₕ U)
-  _∘ₕ_ = record { ∥_∥ₕ      = ∥ h ∥ₕ ∘ ∥ g ∥ₕ
-                ; ∥_∥ₕ-cong = ∘ₕ-cong
-                ; ∥_∥ₕ-hom  = ∘ₕ-hom
-                }
+  _⊙_ : A ⟿ C
+  _⊙_ = record { ∣_∣⃗    = ∣ g ∣⃗ · ∣ f ∣⃗
+               ; ∣_∣-hom = ⊙-hom
+               }

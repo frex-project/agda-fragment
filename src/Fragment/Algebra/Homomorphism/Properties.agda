@@ -14,27 +14,27 @@ open import Relation.Binary using (Setoid)
 private
   variable
     a b c d ℓ₁ ℓ₂ ℓ₃ ℓ₄ : Level
-    S : Algebra {a} {ℓ₁}
-    T : Algebra {b} {ℓ₂}
-    U : Algebra {c} {ℓ₃}
-    V : Algebra {d} {ℓ₄}
+    A : Algebra {a} {ℓ₁}
+    B : Algebra {b} {ℓ₂}
+    C : Algebra {c} {ℓ₃}
+    D : Algebra {d} {ℓ₄}
 
-idₕ-unitˡ : ∀ (h : S →ₕ T) → idₕ ∘ₕ h ≡ₕ h
-idₕ-unitˡ {T = T} _ {x} = Setoid.refl ∥ T ∥/≈
+id-unitˡ : ∀ {f : A ⟿ B} → id ⊙ f ≗ f
+id-unitˡ {B = B} {x} = Setoid.refl ∥ B ∥/≈
 
-idₕ-unitʳ : ∀ (h : S →ₕ T) → h ∘ₕ idₕ ≡ₕ h
-idₕ-unitʳ {T = T} _ {x} = Setoid.refl ∥ T ∥/≈
+id-unitʳ : ∀ {f : A ⟿ B} → f ⊙ id ≗ f
+id-unitʳ {B = B} {x} = Setoid.refl ∥ B ∥/≈
 
-∘ₕ-assoc : ∀ (h : U →ₕ V) (g : T →ₕ U) (f : S →ₕ T)
-           → (h ∘ₕ g) ∘ₕ f ≡ₕ h ∘ₕ (g ∘ₕ f)
-∘ₕ-assoc {V = V} _ _ _ {x} = Setoid.refl ∥ V ∥/≈
+⊙-assoc : ∀ (h : C ⟿ D) (g : B ⟿ C) (f : A ⟿ B)
+          → (h ⊙ g) ⊙ f ≗ h ⊙ (g ⊙ f)
+⊙-assoc {D = D} _ _ _ = Setoid.refl ∥ D ∥/≈
 
-∘ₕ-congˡ : ∀ (h : S →ₕ T)
-           → (f : U →ₕ S) → (g : U →ₕ S)
-           → f ≡ₕ g → h ∘ₕ f ≡ₕ h ∘ₕ g
-∘ₕ-congˡ h _ _ f≡ₕh {x} = ∥ h ∥ₕ-cong (f≡ₕh {x})
+⊙-congˡ : ∀ (h : B ⟿ C) (f g : A ⟿ B)
+          → f ≗ g
+          → h ⊙ f ≗ h ⊙ g
+⊙-congˡ h _ _ f≗g = ∣ h ∣-cong f≗g
 
-∘ₕ-congʳ : ∀ (h : S →ₕ T)
-           → (f : T →ₕ U) → (g : T →ₕ U)
-           → f ≡ₕ g → f ∘ₕ h ≡ₕ g ∘ₕ h
-∘ₕ-congʳ h _ _ f≡ₕg {x} = f≡ₕg {∥ h ∥ₕ x}
+⊙-congʳ : ∀ (h : A ⟿ B) (f g : B ⟿ C)
+          → f ≗ g
+          → f ⊙ h ≗ g ⊙ h
+⊙-congʳ _ _ _ f≗g = f≗g

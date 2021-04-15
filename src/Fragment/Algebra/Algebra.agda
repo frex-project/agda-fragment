@@ -42,13 +42,13 @@ record Algebra : Set (suc a ⊔ suc ℓ) where
   ∥_∥ : Set a
   ∥_∥ = Setoid.Carrier ∥_∥/≈
 
-  infix 10 _⟦_⟧
+  infix 10 _⟦_⟧_
 
-  _⟦_⟧ : Interpretation (∥_∥/≈)
-  _⟦_⟧ = IsAlgebra.⟦_⟧ ∥_∥/≈-isAlgebra
+  _⟦_⟧_ : Interpretation (∥_∥/≈)
+  _⟦_⟧_ = IsAlgebra.⟦_⟧ ∥_∥/≈-isAlgebra
 
-  _⟦⟧-cong : Congruence (∥_∥/≈) (_⟦_⟧)
-  _⟦⟧-cong = IsAlgebra.⟦⟧-cong ∥_∥/≈-isAlgebra
+  _⟦_⟧-cong : Congruence (∥_∥/≈) (_⟦_⟧_)
+  _⟦_⟧-cong = IsAlgebra.⟦⟧-cong ∥_∥/≈-isAlgebra
 
   ≈[_] : Rel ∥_∥ ℓ
   ≈[_] = Setoid._≈_ ∥_∥/≈
@@ -57,3 +57,10 @@ record Algebra : Set (suc a ⊔ suc ℓ) where
   ≈[_]-isEquivalence = Setoid.isEquivalence ∥_∥/≈
 
 open Algebra public
+
+infix 5 ≈-syntax
+
+≈-syntax : (A : Algebra {a} {ℓ}) → ∥ A ∥ → ∥ A ∥ → Set ℓ
+≈-syntax A x y = Setoid._≈_ ∥ A ∥/≈ x y
+
+syntax ≈-syntax A x y = x =[ A ] y

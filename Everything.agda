@@ -1,10 +1,6 @@
 import Fragment.Algebra.Algebra
 import Fragment.Algebra.Combinators
 import Fragment.Algebra.Coproduct
-import Fragment.Algebra.FreeAlgebra
-import Fragment.Algebra.FreeAlgebra.Base
-import Fragment.Algebra.FreeAlgebra.Definitions
-import Fragment.Algebra.FreeAlgebra.Properties
 import Fragment.Algebra.Homomorphism
 import Fragment.Algebra.Homomorphism.Base
 import Fragment.Algebra.Homomorphism.Definitions
@@ -12,12 +8,19 @@ import Fragment.Algebra.Homomorphism.Equivalence
 import Fragment.Algebra.Homomorphism.Properties
 import Fragment.Algebra.Homomorphism.Setoid
 import Fragment.Algebra.Initial
-import Fragment.Algebra.Quotient
+-- import Fragment.Algebra.Quotient
 import Fragment.Algebra.Signature
-import Fragment.Algebra.TermAlgebra
-import Fragment.Algebra.TermAlgebra.Base
-import Fragment.Algebra.TermAlgebra.Properties
-import Fragment.Algebra.TermAlgebra.Syntax
+import Fragment.Algebra.Free
+import Fragment.Algebra.Free.Base
+import Fragment.Algebra.Free.Properties
+import Fragment.Algebra.Free.Monad
+import Fragment.Algebra.Free.Evaluation
+import Fragment.Algebra.Free.Substitution
+import Fragment.Setoid.Morphism
+import Fragment.Setoid.Morphism.Base
+import Fragment.Setoid.Morphism.Setoid
+import Fragment.Setoid.Morphism.Properties
+{-
 import Fragment.Equational.Coproduct
 import Fragment.Equational.FreeExtension
 import Fragment.Equational.FreeModel
@@ -45,3 +48,4 @@ import Fragment.Macros.Environment
 import Fragment.Macros.Fin
 import Fragment.Macros.Fragment
 import Fragment.Prelude
+-}
