@@ -4,6 +4,7 @@ open import Fragment.Equational.Theory
 
 module Fragment.Equational.Model.Synthetic (Θ : Theory) where
 
+{-
 open import Fragment.Algebra.Signature
 open import Fragment.Algebra.Algebra (Σ Θ)
 open import Fragment.Algebra.Free (Σ Θ)
@@ -82,3 +83,4 @@ module _ (A : Algebra {a} {ℓ}) where
 
 J : ℕ → Model
 J = Synthetic ∘ F
+-}

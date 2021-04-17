@@ -4,14 +4,16 @@ open import Fragment.Equational.Theory
 
 module Fragment.Equational.FreeExtension.Synthetic (Θ : Theory) where
 
+{-
 open import Fragment.Algebra.Signature
 open import Fragment.Algebra.Algebra (Σ Θ) as Algebra using (Algebra)
-open import Fragment.Equational.FreeExtension.Base Θ
 open import Fragment.Equational.Model Θ
+open import Fragment.Equational.Coproduct Θ
+open import Fragment.Equational.FreeExtension.Base Θ
 open import Fragment.Algebra.Free (Σ Θ)
 open import Fragment.Algebra.Homomorphism (Σ Θ)
 open import Fragment.Algebra.Quotient (Σ Θ)
-open import Fragment.Setoid.Morphism using (lift; _↝_)
+open import Fragment.Setoid.Morphism using (_↝_)
 
 open import Level using (Level; _⊔_)
 open import Function using (_∘_)
@@ -19,17 +21,18 @@ open import Function using (_∘_)
 open import Data.Nat using (ℕ)
 open import Data.Fin using (Fin)
 open import Data.Product using (proj₁; proj₂)
-open import Data.Vec using (map)
-open import Data.Vec.Relation.Binary.Pointwise.Inductive using (Pointwise)
+open import Data.Vec using (Vec; []; _∷_; map)
+open import Data.Vec.Relation.Binary.Pointwise.Inductive as PW
+  using (Pointwise; []; _∷_)
 
 open import Relation.Binary using (Setoid; IsEquivalence)
 import Relation.Binary.PropositionalEquality as PE
 
 private
   variable
-    a ℓ : Level
+    a b ℓ₁ ℓ₂ ℓ₃ : Level
 
-module _ (A : Model {a} {ℓ}) (n : ℕ) where
+module _ (A : Model {a} {ℓ₁}) (n : ℕ) where
 
   private
     Terms : Algebra
@@ -42,12 +45,9 @@ module _ (A : Model {a} {ℓ}) (n : ℕ) where
   ∣inl∣ : ∥ A ∥ → Q
   ∣inl∣ x = atom (sta x)
 
-  ∣inr∣ : ∥ J n ∥ → Q
-  ∣inr∣ = ∣ fold Terms (lift (λ x → atom (dyn x))) ∣
-
   infix 4 _≈_
 
-  data _≈_ : Q → Q → Set (a ⊔ ℓ) where
+  data _≈_ : Q → Q → Set (a ⊔ ℓ₁) where
     refl    : ∀ {x} → x ≈ x
     sym     : ∀ {x y} → x ≈ y → y ≈ x
     trans   : ∀ {x y z} → x ≈ y → y ≈ z → x ≈ z
@@ -114,3 +114,47 @@ module _ (A : Model {a} {ℓ}) (n : ℕ) where
   inl = record { ∣_∣⃗    = ∣inl∣⃗
                ; ∣_∣-hom = ∣inl∣-hom
                }
+
+  inr : ∥ J n ∥ₐ ⟿ ∥ Normals ∥ₐ
+  inr = interp Normals λ n → atom (dyn n)
+
+  module _
+    (X : Model {b} {ℓ₂})
+    (f : ∥ A ∥ₐ ⟿ ∥ X ∥ₐ)
+    (g : ∥ J n ∥ₐ ⟿ ∥ X ∥ₐ)
+    where
+
+    _[_,_] : ∥ Normals ∥ₐ ⟿ ∥ X ∥ₐ
+    _[_,_] = {!subst!}
+-}
+{-
+  module _
+    {X : Model {b} {ℓ₂}}
+    {f : ∥ A ∥ₐ ⟿ ∥ X ∥ₐ}
+    {g : ∥ J n ∥ₐ ⟿ ∥ X ∥ₐ}
+    where
+
+    commute₁ : X [ f , g ] ⊙ inl ≗ f
+    commute₁ = {!!}
+
+    commute₂ : X [ f , g ] ⊙ inr ≗ g
+    commute₂ = {!!}
+
+    module _
+      {h : ∥ Normals ∥ₐ ⟿ ∥ X ∥ₐ}
+      (c₁ : h ⊙ inl ≗ f)
+      (c₁ : h ⊙ inr ≗ g)
+      where
+
+      universal : X [ f , g ] ≗ h
+      universal = {!!}
+
+  isFrex : IsCoproduct A (J n) Normals
+  isFrex = record { inl       = inl
+                  ; inr       = inr
+                  ; _[_,_]    = _[_,_]
+                  ; commute₁  = commute₁
+                  ; commute₂  = commute₂
+                  ; universal = universal
+                  }
+-}

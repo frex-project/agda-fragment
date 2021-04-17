@@ -75,34 +75,56 @@ fold : ∀ {A : Setoid a ℓ₁} (B : Algebra {b} {ℓ₂})
        → (A ↝ ∥ B ∥/≈) → Free A ⟿ B
 fold B f = (eval B) ⊙ bind (unit · f)
 
+∣fold∣-args : ∀ {m} {A : Setoid a ℓ₁} (B : Algebra {b} {ℓ₂})
+              → (A ↝ ∥ B ∥/≈) → Vec ∥ Free A ∥ m → Vec ∥ B ∥ m
+∣fold∣-args B f xs =
+  ∣eval∣-args B (∣bind∣-args Morphism.∣ unit · f ∣ xs)
+
 Env : (A : Algebra {a} {ℓ₁}) → ℕ → Set _
 Env A n = Fin n → ∥ A ∥
-
-∣inst∣-args : ∀ {n m} (A : Algebra {a} {ℓ₁})
-              → Env A n
-              → Vec ∥ F n ∥ m
-              → Vec ∥ A ∥ m
-∣inst∣-args A θ xs =
-  ∣eval∣-args A (∣bind∣-args Morphism.∣ unit · (lift {B = ∥ A ∥/≈} θ) ∣ xs)
 
 inst : ∀ {n} (A : Algebra {a} {ℓ₁})
        → Env A n → F n ⟿ A
 inst A θ = fold A (lift θ)
 
-{-
-subst : ∀ {n} (A : Algebra {a} {ℓ₁})
-        → Env A n → Adjoin A n ⟿ A
-subst {n = n} A θ = fold A sub
-  where ∣sub∣ : BT ∥ A ∥ n → ∥ A ∥
-        ∣sub∣ (sta x) = x
-        ∣sub∣ (dyn n) = θ n
+∣inst∣-args : ∀ {n m} (A : Algebra {a} {ℓ₁})
+              → Env A n
+              → Vec ∥ F n ∥ m
+              → Vec ∥ A ∥ m
+∣inst∣-args A θ = ∣fold∣-args A (lift θ)
 
-        ∣sub∣-cong : ∀ {x y} → x ≑ y → ∣sub∣ x =[ A ] ∣sub∣ y
-        ∣sub∣-cong (sta x≈y) = x≈y
-        ∣sub∣-cong (dyn x≡y) = Setoid.reflexive ∥ A ∥/≈ (PE.cong θ x≡y)
+module _ {n}
+  {S : Setoid a ℓ₁}
+  (T : Setoid b ℓ₂)
+  (f : S ↝ T)
+  (g : Fin n → Setoid.Carrier T)
+  where
 
-        sub : Atoms ∥ A ∥/≈ n ↝ ∥ A ∥/≈
-        sub = record { ∣_∣      = ∣sub∣
-                     ; ∣_∣-cong = ∣sub∣-cong
-                     }
--}
+  open Setoid S renaming (Carrier to A) using ()
+  open Setoid T renaming (Carrier to B)
+
+  ∣sub∣ : BT A n → B
+  ∣sub∣ (sta x) = Morphism.∣ f ∣ x
+  ∣sub∣ (dyn x) = g x
+
+  ∣sub∣-cong : Congruent (_≑_ {S = S}) _≈_ ∣sub∣
+  ∣sub∣-cong (sta p) = Morphism.∣ f ∣-cong p
+  ∣sub∣-cong (dyn q) = reflexive (PE.cong g q)
+
+  sub : Atoms S n ↝ T
+  sub = record { ∣_∣      = ∣sub∣
+               ; ∣_∣-cong = ∣sub∣-cong
+               }
+module _ {n}
+  {A : Algebra {a} {ℓ₁}}
+  (B : Algebra {b} {ℓ₂})
+  (f : ∥ A ∥/≈ ↝ ∥ B ∥/≈)
+  (g : Fin n → ∥ B ∥)
+  where
+
+  subst : Free (Atoms ∥ A ∥/≈ n) ⟿ B
+  subst = fold B (sub ∥ B ∥/≈ f g)
+
+  ∣subst∣-args : ∀ {m} → Vec (Term (BT ∥ A ∥ n)) m
+                 → Vec ∥ B ∥ m
+  ∣subst∣-args = ∣fold∣-args B (sub ∥ B ∥/≈ f g)
