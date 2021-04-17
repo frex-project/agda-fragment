@@ -74,7 +74,6 @@ module _ (A : Model {a} {ℓ₁}) (n : ℕ) where
                        }
 
   open module N = Setoid (∥ Terms ∥/ _≈_) using ()
-  open import Relation.Binary.Reasoning.Setoid (∥ Terms ∥/ _≈_)
 
   Normals-models : Models (Terms / _≈_)
   Normals-models eq θ = begin
@@ -86,8 +85,10 @@ module _ (A : Model {a} {ℓ₁}) (n : ℕ) where
     ≡⟨ ∣inst∣-quot _≈_ {x = rhs} θ ⟩
       ∣ inst (Terms / _≈_) θ ∣ rhs
     ∎
-    where lhs = proj₁ (Θ ⟦ eq ⟧ₑ)
+    where open import Relation.Binary.Reasoning.Setoid (∥ Terms ∥/ _≈_)
+          lhs = proj₁ (Θ ⟦ eq ⟧ₑ)
           rhs = proj₂ (Θ ⟦ eq ⟧ₑ)
+
 
   Normals-isModel : IsModel (∥ Terms ∥/ _≈_)
   Normals-isModel = record { isAlgebra = Terms / _≈_ -isAlgebra
@@ -125,24 +126,58 @@ module _ (A : Model {a} {ℓ₁}) (n : ℕ) where
     where
 
     private
+
       module X = Setoid ∥ X ∥/≈
+      open import Relation.Binary.Reasoning.Setoid ∥ X ∥/≈
 
       s : Terms ⟿ ∥ X ∥ₐ
       s = subst ∥ X ∥ₐ ∣ f ∣⃗ (∣ g ∣ ∘ atom)
 
-      s-cong : Congruent _≈_ ≈[ X ] ∣ s ∣
-      s-cong refl         = X.refl
-      s-cong (sym p)      = X.sym (s-cong p)
-      s-cong (trans p q)  = X.trans (s-cong p) (s-cong q)
-      s-cong (inherit p)  = ∣ s ∣-cong p
-      s-cong (step f)     = {!!}
-      s-cong (cong f ps)  = {!!}
-      s-cong (model eq θ) = {!!}
+      ∣s∣-args : ∀ {m} → Vec ∥ Normals ∥ m → Vec ∥ X ∥ m
+      ∣s∣-args = ∣subst∣-args ∥ X ∥ₐ ∣ f ∣⃗ (∣ g ∣ ∘ atom)
+
+      ∣s∣-map-∣inl∣ : ∀ {m} {xs : Vec ∥ A ∥ m}
+                      → Pointwise ≈[ X ]
+                                  (∣s∣-args (map ∣inl∣ xs))
+                                  (map ∣ f ∣ xs)
+      ∣s∣-map-∣inl∣ {xs = []}     = []
+      ∣s∣-map-∣inl∣ {xs = x ∷ xs} = X.refl ∷ ∣s∣-map-∣inl∣
+
+      mutual
+        ∣s∣-args-cong : ∀ {m} {xs ys : Vec ∥ Normals ∥ m}
+                        → Pointwise _≈_ xs ys
+                        → Pointwise ≈[ X ] (∣s∣-args xs) (∣s∣-args ys)
+        ∣s∣-args-cong []       = []
+        ∣s∣-args-cong (p ∷ ps) = s-cong p ∷ ∣s∣-args-cong ps
+
+        s-cong : Congruent _≈_ ≈[ X ] ∣ s ∣
+        s-cong refl        = X.refl
+        s-cong (sym p)     = X.sym (s-cong p)
+        s-cong (trans p q) = X.trans (s-cong p) (s-cong q)
+        s-cong (inherit p) = ∣ s ∣-cong p
+        s-cong (step {xs = xs} op) = begin
+            X ⟦ op ⟧ ∣s∣-args (map ∣inl∣ xs)
+          ≈⟨ (X ⟦ op ⟧-cong) ∣s∣-map-∣inl∣ ⟩
+            X ⟦ op ⟧ (map ∣ f ∣ xs)
+          ≈⟨ ∣ f ∣-hom op xs ⟩
+            ∣ f ∣ (A ⟦ op ⟧ xs)
+          ∎
+        s-cong (cong f ps)  = (X ⟦ f ⟧-cong) (∣s∣-args-cong ps)
+        s-cong (model eq θ) = begin
+            ∣ s ∣ (∣ inst Terms θ ∣ lhs)
+          ≈⟨ X.sym {!!} ⟩
+            ∣ inst ∥ X ∥ₐ (∣ s ∣ ∘ θ) ∣ lhs
+          ≈⟨ ∥ X ∥ₐ-models eq (∣ s ∣ ∘ θ) ⟩
+            ∣ inst ∥ X ∥ₐ (∣ s ∣ ∘ θ) ∣ rhs
+          ≈⟨ {!!} ⟩
+            ∣ s ∣ (∣ inst Terms θ ∣ rhs)
+          ∎
+          where lhs = proj₁ (Θ ⟦ eq ⟧ₑ)
+                rhs = proj₂ (Θ ⟦ eq ⟧ₑ)
 
     _[_,_] : ∥ Normals ∥ₐ ⟿ ∥ X ∥ₐ
     _[_,_] = factor Terms _≈_ s s-cong
 
-{-
   module _
     {X : Model {b} {ℓ₂}}
     {f : ∥ A ∥ₐ ⟿ ∥ X ∥ₐ}
@@ -152,8 +187,9 @@ module _ (A : Model {a} {ℓ₁}) (n : ℕ) where
     module X = Setoid ∥ X ∥/≈
 
     commute₁ : X [ f , g ] ⊙ inl ≗ f
-    commute₁ {x} = X.refl
+    commute₁ = X.refl
 
+{-
     commute₂ : X [ f , g ] ⊙ inr ≗ g
     commute₂ {x} = {!!}
 
