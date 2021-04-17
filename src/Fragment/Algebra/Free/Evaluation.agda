@@ -89,8 +89,7 @@ inst A θ = fold A (lift θ)
 
 ∣inst∣-args : ∀ {n m} (A : Algebra {a} {ℓ₁})
               → Env A n
-              → Vec ∥ F n ∥ m
-              → Vec ∥ A ∥ m
+              → Vec ∥ F n ∥ m → Vec ∥ A ∥ m
 ∣inst∣-args A θ = ∣fold∣-args A (lift θ)
 
 module _ {n}

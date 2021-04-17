@@ -4,7 +4,6 @@ open import Fragment.Equational.Theory
 
 module Fragment.Equational.Model.Synthetic (Θ : Theory) where
 
-{-
 open import Fragment.Algebra.Signature
 open import Fragment.Algebra.Algebra (Σ Θ)
 open import Fragment.Algebra.Free (Σ Θ)
@@ -50,37 +49,36 @@ module _ (A : Algebra {a} {ℓ}) where
                            ; trans = trans
                            }
 
-  ≊ : CompatibleEquivalence A
-  ≊ = record { _≈_           = _≊_
-             ; isEquivalence = ≊-isEquivalence
-             ; compatible    = cong
-             }
+  instance
+    ≊-isDenom : IsDenominator A _≊_
+    ≊-isDenom = record { isEquivalence = ≊-isEquivalence
+                       ; isCoarser     = inherit
+                       ; isCompatible  = cong
+                       }
 
   Synthetic : Model
-  Synthetic = record { ∥_∥/≈   = setoid ≊
+  Synthetic = record { ∥_∥/≈   = ∥ A ∥/ _≊_
                      ; isModel = isModel
                      }
-    where open Setoid (setoid ≊)
-          open import Relation.Binary.Reasoning.Setoid (setoid ≊)
+    where open Setoid (∥ A ∥/ _≊_)
+          open import Relation.Binary.Reasoning.Setoid (∥ A ∥/ _≊_)
 
-          models : Models (A / ≊)
+          models : Models (A / _≊_)
           models eq θ = begin
-              ∣ inst (A / ≊) θ ∣ lhs
-            ≡⟨ PE.sym (∣inst∣-quot (≊) {x = lhs} θ) ⟩
+              ∣ inst (A / _≊_) θ ∣ lhs
+            ≡⟨ PE.sym (∣inst∣-quot _≊_ {x = lhs} θ) ⟩
               ∣ inst A θ ∣ lhs
             ≈⟨ model eq θ ⟩
               ∣ inst A θ ∣ rhs
-            ≡⟨ ∣inst∣-quot (≊) {x = rhs} θ ⟩
-              ∣ inst (A / ≊) θ ∣ rhs
+            ≡⟨ ∣inst∣-quot _≊_ {x = rhs} θ ⟩
+              ∣ inst (A / _≊_) θ ∣ rhs
             ∎
             where lhs = proj₁ (Θ ⟦ eq ⟧ₑ)
                   rhs = proj₂ (Θ ⟦ eq ⟧ₑ)
 
-          isModel : IsModel (setoid ≊)
-          isModel = record { isAlgebra = A / ≊ -isAlgebra
+          isModel : IsModel (∥ A ∥/ _≊_)
+          isModel = record { isAlgebra = A / _≊_ -isAlgebra
                            ; models    = models
                            }
-
 J : ℕ → Model
 J = Synthetic ∘ F
--}

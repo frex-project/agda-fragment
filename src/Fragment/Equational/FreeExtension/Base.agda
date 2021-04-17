@@ -4,7 +4,6 @@ open import Fragment.Equational.Theory
 
 module Fragment.Equational.FreeExtension.Base (Θ : Theory) where
 
-{-
 open import Fragment.Equational.Model Θ
 open import Fragment.Equational.Coproduct Θ
 
@@ -26,4 +25,3 @@ record FreeExtension : Setω where
   field
     _[_]        : Extension
     _[_]-isFrex : IsFreeExtension _[_]
--}

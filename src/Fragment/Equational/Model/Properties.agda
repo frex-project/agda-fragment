@@ -4,7 +4,6 @@ open import Fragment.Equational.Theory
 
 module Fragment.Equational.Model.Properties (Θ : Theory) where
 
-{-
 open import Fragment.Equational.Model.Base Θ
 open import Fragment.Equational.Model.Synthetic Θ
 open import Fragment.Algebra.Homomorphism (Σ Θ)
@@ -73,4 +72,3 @@ module _ {n} (A : Model {a} {ℓ}) (θ : Env ∥ A ∥ₐ n) where
   interp = record { ∣_∣⃗    = ∣interp∣⃗
                   ; ∣_∣-hom = ∣ inst ∥ A ∥ₐ θ ∣-hom
                   }
--}

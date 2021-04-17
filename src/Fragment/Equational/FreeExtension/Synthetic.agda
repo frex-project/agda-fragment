@@ -4,7 +4,6 @@ open import Fragment.Equational.Theory
 
 module Fragment.Equational.FreeExtension.Synthetic (Θ : Theory) where
 
-{-
 open import Fragment.Algebra.Signature
 open import Fragment.Algebra.Algebra (Σ Θ) as Algebra using (Algebra)
 open import Fragment.Equational.Model Θ
@@ -67,35 +66,36 @@ module _ (A : Model {a} {ℓ₁}) (n : ℕ) where
                            ; trans = trans
                            }
 
-  ≋ : CompatibleEquivalence Terms
-  ≋ = record { _≈_           = _≈_
-             ; isEquivalence = ≈-isEquivalence
-             ; compatible    = cong
-             }
+  instance
+    ≈-isDenom : IsDenominator Terms _≈_
+    ≈-isDenom = record { isEquivalence = ≈-isEquivalence
+                       ; isCompatible  = cong
+                       ; isCoarser     = inherit
+                       }
 
-  open module N = Setoid (setoid ≋) using ()
-  open import Relation.Binary.Reasoning.Setoid (setoid ≋)
+  open module N = Setoid (∥ Terms ∥/ _≈_) using ()
+  open import Relation.Binary.Reasoning.Setoid (∥ Terms ∥/ _≈_)
 
-  Normals-models : Models (Terms / ≋)
+  Normals-models : Models (Terms / _≈_)
   Normals-models eq θ = begin
-      ∣ inst (Terms / ≋) θ ∣ lhs
-    ≡⟨ PE.sym (∣inst∣-quot (≋) {x = lhs} θ) ⟩
+      ∣ inst (Terms / _≈_) θ ∣ lhs
+    ≡⟨ PE.sym (∣inst∣-quot _≈_ {x = lhs} θ) ⟩
       ∣ inst Terms θ ∣ lhs
     ≈⟨ model eq θ ⟩
       ∣ inst Terms θ ∣ rhs
-    ≡⟨ ∣inst∣-quot (≋) {x = rhs} θ ⟩
-      ∣ inst (Terms / ≋) θ ∣ rhs
+    ≡⟨ ∣inst∣-quot _≈_ {x = rhs} θ ⟩
+      ∣ inst (Terms / _≈_) θ ∣ rhs
     ∎
     where lhs = proj₁ (Θ ⟦ eq ⟧ₑ)
           rhs = proj₂ (Θ ⟦ eq ⟧ₑ)
 
-  Normals-isModel : IsModel (setoid ≋)
-  Normals-isModel = record { isAlgebra = Terms / ≋ -isAlgebra
+  Normals-isModel : IsModel (∥ Terms ∥/ _≈_)
+  Normals-isModel = record { isAlgebra = Terms / _≈_ -isAlgebra
                            ; models    = Normals-models
                            }
 
   Normals : Model
-  Normals = record { ∥_∥/≈   = setoid ≋
+  Normals = record { ∥_∥/≈   = ∥ Terms ∥/ _≈_
                    ; isModel = Normals-isModel
                    }
 
@@ -124,9 +124,24 @@ module _ (A : Model {a} {ℓ₁}) (n : ℕ) where
     (g : ∥ J n ∥ₐ ⟿ ∥ X ∥ₐ)
     where
 
+    private
+      module X = Setoid ∥ X ∥/≈
+
+      s : Terms ⟿ ∥ X ∥ₐ
+      s = subst ∥ X ∥ₐ ∣ f ∣⃗ (∣ g ∣ ∘ atom)
+
+      s-cong : Congruent _≈_ ≈[ X ] ∣ s ∣
+      s-cong refl         = X.refl
+      s-cong (sym p)      = X.sym (s-cong p)
+      s-cong (trans p q)  = X.trans (s-cong p) (s-cong q)
+      s-cong (inherit p)  = ∣ s ∣-cong p
+      s-cong (step f)     = {!!}
+      s-cong (cong f ps)  = {!!}
+      s-cong (model eq θ) = {!!}
+
     _[_,_] : ∥ Normals ∥ₐ ⟿ ∥ X ∥ₐ
-    _[_,_] = {!subst!}
--}
+    _[_,_] = factor Terms _≈_ s s-cong
+
 {-
   module _
     {X : Model {b} {ℓ₂}}
@@ -134,11 +149,13 @@ module _ (A : Model {a} {ℓ₁}) (n : ℕ) where
     {g : ∥ J n ∥ₐ ⟿ ∥ X ∥ₐ}
     where
 
+    module X = Setoid ∥ X ∥/≈
+
     commute₁ : X [ f , g ] ⊙ inl ≗ f
-    commute₁ = {!!}
+    commute₁ {x} = X.refl
 
     commute₂ : X [ f , g ] ⊙ inr ≗ g
-    commute₂ = {!!}
+    commute₂ {x} = {!!}
 
     module _
       {h : ∥ Normals ∥ₐ ⟿ ∥ X ∥ₐ}
