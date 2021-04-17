@@ -2,6 +2,7 @@
 
 module Fragment.Macros.Fin where
 
+{-
 open import Reflection hiding (name; Type)
 open import Fragment.Macros.Base
 
@@ -45,3 +46,4 @@ fin-refl s n f g
        declareDef (vra η) τ
        defineFun η (map (λ m → fin-hclause m (def (quote Setoid.refl) (vra s ∷ []))) (upTo n))
        return (def η [])
+-}

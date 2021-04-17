@@ -2,6 +2,7 @@
 
 module Fragment.Extensions.Semigroup where
 
+{-
 open import Fragment.Equational.Theory.Bundles
 
 open import Fragment.Algebra.Signature
@@ -489,3 +490,4 @@ SemigroupFrex : FreeExtension
 SemigroupFrex = record { _[_]        = ++-model
                        ; _[_]-isFrex = ++-model-isFrex
                        }
+-}

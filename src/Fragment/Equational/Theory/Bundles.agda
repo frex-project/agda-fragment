@@ -2,6 +2,7 @@
 
 module Fragment.Equational.Theory.Bundles where
 
+{-
 open import Fragment.Algebra.Signature
 open import Fragment.Equational.Theory.Base
 open import Fragment.Equational.Theory.Combinators
@@ -52,3 +53,4 @@ module _ where
 
 Θ-monoid : Theory
 Θ-monoid = AddId Θ-semigroup •
+-}

@@ -2,6 +2,7 @@
 
 module Fragment.Examples where
 
+{-
 open import Fragment.Prelude
 
 open import Relation.Binary.PropositionalEquality as PE using (_≡_)
@@ -87,3 +88,4 @@ lists : ∀ {m n x y}
         → ((0 ∷ m) ++ (x ∷ [])) ++ ((y ∷ []) ++ n)
           ≡ (0 ∷ m) ++ (x ∷ y ∷ []) ++ n
 lists = fragment SemigroupFrex (semigroup→model (++-isSemigroup {A = ℕ}))
+-}

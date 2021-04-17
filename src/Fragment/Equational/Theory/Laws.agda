@@ -4,6 +4,7 @@ open import Fragment.Algebra.Signature
 
 module Fragment.Equational.Theory.Laws (Σ : Signature) where
 
+{-
 open import Fragment.Equational.Theory.Base using (Eq)
 
 open import Data.Fin using (#_)
@@ -87,3 +88,4 @@ module _ where
       (⟨ a ⟩₀ ⟨ • ⟩₂ ⟨ b ⟩₀) ⟨ • ⟩₂ ⟨ c ⟩₀
     ,
       ⟨ a ⟩₀ ⟨ • ⟩₂ (⟨ b ⟩₀ ⟨ • ⟩₂ ⟨ c ⟩₀)
+-}

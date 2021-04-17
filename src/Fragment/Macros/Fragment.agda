@@ -2,6 +2,7 @@
 
 module Fragment.Macros.Fragment where
 
+{-
 open import Reflection hiding (name; Type; _≟_; reduce)
 open import Reflection.Term using (_≟_)
 
@@ -386,3 +387,4 @@ macro
          frag ← restore-telescope binders frag
          frag ← normalise frag
          unify frag goal
+-}

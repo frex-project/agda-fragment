@@ -6,7 +6,6 @@ module Fragment.Equational.Coproduct (Θ : Theory) where
 
 open import Fragment.Equational.Model Θ
 open import Fragment.Algebra.Homomorphism (Σ Θ)
-open import Fragment.Algebra.Homomorphism.Setoid (Σ Θ)
 
 open import Level using (Level; Setω)
 
@@ -15,35 +14,35 @@ private
     a b c ℓ₁ ℓ₂ ℓ₃ : Level
 
 module _
-  (M : Model {a} {ℓ₁})
-  (N : Model {b} {ℓ₂})
-  (M+N : Model {c} {ℓ₃})
+  (A : Model {a} {ℓ₁})
+  (B : Model {b} {ℓ₂})
+  (A+B : Model {c} {ℓ₃})
   where
 
   record IsCoproduct : Setω where
     field
-      inl : ∥ M ∥ₐ →ₕ ∥ M+N ∥ₐ
-      inr : ∥ N ∥ₐ →ₕ ∥ M+N ∥ₐ
+      inl : ∥ A ∥ₐ ⟿ ∥ A+B ∥ₐ
+      inr : ∥ B ∥ₐ ⟿ ∥ A+B ∥ₐ
 
-      [_,_] : ∀ {d ℓ₄} {W : Model {d} {ℓ₄}}
-              → ∥ M ∥ₐ →ₕ ∥ W ∥ₐ
-              → ∥ N ∥ₐ →ₕ ∥ W ∥ₐ
-              → ∥ M+N ∥ₐ →ₕ ∥ W ∥ₐ
+      _[_,_] : ∀ {d ℓ₄} (X : Model {d} {ℓ₄})
+               → ∥ A ∥ₐ ⟿ ∥ X ∥ₐ
+               → ∥ B ∥ₐ ⟿ ∥ X ∥ₐ
+               → ∥ A+B ∥ₐ ⟿ ∥ X ∥ₐ
 
-      commute₁ : ∀ {d ℓ₄} {W : Model {d} {ℓ₄}}
-                 → {f : ∥ M ∥ₐ →ₕ ∥ W ∥ₐ}
-                 → {g : ∥ N ∥ₐ →ₕ ∥ W ∥ₐ}
-                 → ([_,_] {W = W} f g) ∘ₕ inl ≡ₕ f
+      commute₁ : ∀ {d ℓ₄} {X : Model {d} {ℓ₄}}
+                 → {f : ∥ A ∥ₐ ⟿ ∥ X ∥ₐ}
+                 → {g : ∥ B ∥ₐ ⟿ ∥ X ∥ₐ}
+                 → X [ f , g ] ⊙ inl ≗ f
 
-      commute₂ : ∀ {d ℓ₄} {W : Model {d} {ℓ₄}}
-                 → {f : ∥ M ∥ₐ →ₕ ∥ W ∥ₐ}
-                 → {g : ∥ N ∥ₐ →ₕ ∥ W ∥ₐ}
-                 → ([_,_] {W = W} f g) ∘ₕ inr ≡ₕ g
+      commute₂ : ∀ {d ℓ₄} {X : Model {d} {ℓ₄}}
+                 → {f : ∥ A ∥ₐ ⟿ ∥ X ∥ₐ}
+                 → {g : ∥ B ∥ₐ ⟿ ∥ X ∥ₐ}
+                 → X [ f , g ] ⊙ inr ≗ g
 
-      universal : ∀ {d ℓ₄} {W : Model {d} {ℓ₄}}
-                  → {f : ∥ M ∥ₐ →ₕ ∥ W ∥ₐ}
-                  → {g : ∥ N ∥ₐ →ₕ ∥ W ∥ₐ}
-                  → {h : ∥ M+N ∥ₐ →ₕ ∥ W ∥ₐ}
-                  → h ∘ₕ inl ≡ₕ f
-                  → h ∘ₕ inr ≡ₕ g
-                  → ([_,_] {W = W} f g) ≡ₕ h
+      universal : ∀ {d ℓ₄} {X : Model {d} {ℓ₄}}
+                  → {f : ∥ A ∥ₐ ⟿ ∥ X ∥ₐ}
+                  → {g : ∥ B ∥ₐ ⟿ ∥ X ∥ₐ}
+                  → {h : ∥ A+B ∥ₐ ⟿ ∥ X ∥ₐ}
+                  → h ⊙ inl ≗ f
+                  → h ⊙ inr ≗ g
+                  → X [ f , g ] ≗ h

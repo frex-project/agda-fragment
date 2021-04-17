@@ -8,15 +8,18 @@ open import Fragment.Algebra.Free.Monad Σ
 open import Fragment.Algebra.Algebra Σ
 open import Fragment.Algebra.Free.Base Σ
 open import Fragment.Algebra.Homomorphism Σ
-open import Fragment.Setoid.Morphism
+open import Fragment.Setoid.Morphism as Morphism
 
 open import Level using (Level)
 
+open import Data.Nat using (ℕ)
+open import Data.Fin using (Fin)
 open import Data.Vec using (Vec; []; _∷_; map)
 open import Data.Vec.Relation.Binary.Pointwise.Inductive
   using (Pointwise; []; _∷_)
 
 open import Relation.Binary using (Setoid)
+import Relation.Binary.PropositionalEquality as PE
 
 private
   variable
@@ -46,7 +49,8 @@ module _ (A : Algebra {a} {ℓ₁}) where
 
     ∣eval∣-cong : Congruent (_∼_ ∥ A ∥/≈) ≈[ A ] ∣eval∣
     ∣eval∣-cong (atom p)                 = p
-    ∣eval∣-cong {x = term op _} (term p) = (A ⟦ op ⟧-cong) (∣eval∣-args-cong p)
+    ∣eval∣-cong {x = term op _} (term p) =
+      (A ⟦ op ⟧-cong) (∣eval∣-args-cong p)
 
   ∣eval∣⃗ : Herbrand ∥ A ∥/≈ ↝ ∥ A ∥/≈
   ∣eval∣⃗ = record { ∣_∣      = ∣eval∣
@@ -69,4 +73,36 @@ module _ (A : Algebra {a} {ℓ₁}) where
 
 fold : ∀ {A : Setoid a ℓ₁} (B : Algebra {b} {ℓ₂})
        → (A ↝ ∥ B ∥/≈) → Free A ⟿ B
-fold B θ = (eval B) ⊙ bind (unit · θ)
+fold B f = (eval B) ⊙ bind (unit · f)
+
+Env : (A : Algebra {a} {ℓ₁}) → ℕ → Set _
+Env A n = Fin n → ∥ A ∥
+
+∣inst∣-args : ∀ {n m} (A : Algebra {a} {ℓ₁})
+              → Env A n
+              → Vec ∥ F n ∥ m
+              → Vec ∥ A ∥ m
+∣inst∣-args A θ xs =
+  ∣eval∣-args A (∣bind∣-args Morphism.∣ unit · (lift {B = ∥ A ∥/≈} θ) ∣ xs)
+
+inst : ∀ {n} (A : Algebra {a} {ℓ₁})
+       → Env A n → F n ⟿ A
+inst A θ = fold A (lift θ)
+
+{-
+subst : ∀ {n} (A : Algebra {a} {ℓ₁})
+        → Env A n → Adjoin A n ⟿ A
+subst {n = n} A θ = fold A sub
+  where ∣sub∣ : BT ∥ A ∥ n → ∥ A ∥
+        ∣sub∣ (sta x) = x
+        ∣sub∣ (dyn n) = θ n
+
+        ∣sub∣-cong : ∀ {x y} → x ≑ y → ∣sub∣ x =[ A ] ∣sub∣ y
+        ∣sub∣-cong (sta x≈y) = x≈y
+        ∣sub∣-cong (dyn x≡y) = Setoid.reflexive ∥ A ∥/≈ (PE.cong θ x≡y)
+
+        sub : Atoms ∥ A ∥/≈ n ↝ ∥ A ∥/≈
+        sub = record { ∣_∣      = ∣sub∣
+                     ; ∣_∣-cong = ∣sub∣-cong
+                     }
+-}

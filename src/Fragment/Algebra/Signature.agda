@@ -27,6 +27,7 @@ _⦉_⦊ : (Σ : Signature) → ℕ → Signature
         extend : ℕ → ℕ → Set
         extend n 0 = (ops Σ 0) ⊎ Fin n
         extend _ k = ops Σ k
+
         _≟_ : ∀ {k} → Decidable {A = extend n k} _≡_
-        _≟_ {k = 0} = ≡-dec _≈_ Fin-dec
+        _≟_ {k = 0}     = ≡-dec _≈_ Fin-dec
         _≟_ {k = suc k} = _≈_

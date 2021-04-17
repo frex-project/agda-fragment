@@ -4,6 +4,7 @@ open import Fragment.Equational.Theory.Base
 
 module Fragment.Extensions.Combinators {Θ : Theory} where
 
+{-
 open import Fragment.Algebra.Signature
 open import Fragment.Algebra.Combinators
 open import Fragment.Algebra.Algebra using (∥_∥/≈-isAlgebra)
@@ -307,4 +308,5 @@ module _
   AddIdFrex = record { _[_]        = id-model
                      ; _[_]-isFrex = id-model-isFrex
                      }
+-}
 -}

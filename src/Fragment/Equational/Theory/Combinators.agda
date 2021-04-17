@@ -2,6 +2,7 @@
 
 module Fragment.Equational.Theory.Combinators where
 
+{-
 open import Fragment.Equational.Theory.Base
 open import Fragment.Equational.Satisfaction
 
@@ -111,3 +112,4 @@ module _ (Θ : Theory) where
           withId idₗ           = L.idₗ (inj₂ (# 0)) •
           withId idᵣ           = L.idᵣ (inj₂ (# 0)) •
           withId (inherited e) = extend (Θ ⟦ e ⟧ₑ)
+-}

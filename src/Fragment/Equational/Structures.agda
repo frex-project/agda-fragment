@@ -2,6 +2,7 @@
 
 module Fragment.Equational.Structures where
 
+{-
 import Fragment.Equational.Theory.Laws as L
 open import Fragment.Equational.Theory
 open import Fragment.Equational.Theory.Bundles
@@ -84,3 +85,4 @@ module _ {A : Set a} {_≈_ : Rel A ℓ} where
       semigroup→model = record { ∥_∥/≈   = magma→setoid isMagma
                                ; isModel = semigroup→isModel
                                }
+-}

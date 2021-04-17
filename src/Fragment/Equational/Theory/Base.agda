@@ -3,13 +3,14 @@
 module Fragment.Equational.Theory.Base where
 
 open import Fragment.Algebra.Signature
-open import Fragment.Algebra.TermAlgebra
+open import Fragment.Algebra.Free
 
 open import Data.Nat using (ℕ)
+open import Data.Fin using (Fin)
 open import Data.Product using (_×_; _,_)
 
 Eq : (Σ : Signature) → (n : ℕ) → Set
-Eq Σ n = Expr (Σ ⦉ n ⦊) × Expr (Σ ⦉ n ⦊)
+Eq Σ n = Term Σ (Fin n) × Term Σ (Fin n)
 
 record Theory : Set₁ where
   field

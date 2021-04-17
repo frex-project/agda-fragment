@@ -10,9 +10,10 @@ open import Function using (_∘_)
 open import Fragment.Algebra.Algebra Σ
 open import Fragment.Algebra.Free.Base Σ
 open import Fragment.Algebra.Free.Evaluation Σ
-open import Fragment.Algebra.Homomorphism Σ
 open import Fragment.Algebra.Free.Monad Σ
+open import Fragment.Algebra.Homomorphism Σ
 open import Fragment.Algebra.Initial Σ
+open import Fragment.Algebra.Quotient Σ
 
 open import Fragment.Setoid.Morphism as Morphism
   hiding (∣_∣; ∣_∣-cong; id)
@@ -20,9 +21,10 @@ open import Fragment.Setoid.Morphism as Morphism
 open import Data.Empty using (⊥)
 open import Data.Vec using (Vec; []; _∷_; map)
 open import Data.Vec.Relation.Binary.Pointwise.Inductive
-  using (Pointwise; []; _∷_)
+  using (Pointwise; Pointwise-≡⇒≡; []; _∷_)
 
 open import Relation.Binary using (Setoid)
+open import Relation.Binary.PropositionalEquality as PE using (_≡_)
 
 private
   variable
@@ -38,9 +40,9 @@ module _
   open import Relation.Binary.Reasoning.Setoid ∥ A ∥/≈
 
   mutual
-    ∣eval∣-args-universal : ∀ {arity} {xs : Vec (Term ∥ A ∥) arity}
-                            → Pointwise (≈[ A ] ) (map ∣ h ∣ xs)
-                                                  (∣eval∣-args A xs)
+    ∣eval∣-args-universal : ∀ {n} {xs : Vec (Term ∥ A ∥) n}
+                            → Pointwise (≈[ A ]) (map ∣ h ∣ xs)
+                                                 (∣eval∣-args A xs)
     ∣eval∣-args-universal {_} {[]}     = []
     ∣eval∣-args-universal {_} {x ∷ xs} =
       eval-universal {x} ∷ ∣eval∣-args-universal {_} {xs}
@@ -54,6 +56,28 @@ module _
       ≈⟨ (A ⟦ f ⟧-cong) ∣eval∣-args-universal ⟩
         A ⟦ f ⟧ (∣eval∣-args A xs)
       ∎
+
+module _
+  {A : Algebra {a} {ℓ₁}}
+  (≈ : CompatibleEquivalence A {ℓ₃})
+  where
+
+  mutual
+    ∣eval∣-args-quot : ∀ {n} {xs : Vec (Term ∥ A ∥) n}
+                       → Pointwise _≡_ (∣eval∣-args A xs)
+                                    (∣eval∣-args (A / ≈) xs)
+    ∣eval∣-args-quot {xs = []}     = []
+    ∣eval∣-args-quot {xs = x ∷ xs} = ∣eval∣-quot {x} ∷ ∣eval∣-args-quot
+
+    ∣eval∣-quot : ∀ {x} → ∣ eval A ∣ x ≡ ∣ eval (A / ≈) ∣ x
+    ∣eval∣-quot {atom _}   = PE.refl
+    ∣eval∣-quot {term f _} =
+      PE.cong (A ⟦ f ⟧_) (Pointwise-≡⇒≡ ∣eval∣-args-quot)
+
+  ∣inst∣-quot : ∀ {n x} (θ : Env A n)
+                → ∣ inst A θ ∣ x ≡ ∣ inst (A / ≈) θ ∣ x
+  ∣inst∣-quot {x = x} θ =
+    ∣eval∣-quot {x = ∣ bind {B = ∥ A ∥/≈} (unit · (lift θ)) ∣ x}
 
 module _
   {A : Setoid a ℓ₁}
@@ -110,15 +134,22 @@ module _ {A : Setoid a ℓ₁} where
   fmap-id : fmap Morphism.id ≗ id
   fmap-id = bind-unitʳ {A = A}
 
-module _
-  {A : Setoid a ℓ₁}
-  {B : Setoid b ℓ₂}
-  {C : Setoid c ℓ₃}
-  (g : B ↝ C)
-  (f : A ↝ B)
-  where
+module _ {p q}
+ {A : Algebra {a} {ℓ₁}}
+ (θ : Env A p)
+ (θ' : Env (F p) q)
+ where
 
-  open Setoid (Herbrand C)
+ open Setoid ∥ A ∥/≈
 
-  fmap-· : fmap (g · f) ≗ fmap g ⊙ fmap f
-  fmap-· {x} = sym (bind-assoc (unit · g) (unit · f) {x})
+ mutual
+   ∣inst∣-args-assoc : ∀ {n} {xs : Vec ∥ F q ∥ n}
+                       → Pointwise ≈[ A ]
+                                   (∣inst∣-args A θ (∣inst∣-args (F p) θ' xs))
+                                   (∣inst∣-args A (∣ inst A θ ∣ ∘ θ') xs)
+   ∣inst∣-args-assoc {xs = []}     = []
+   ∣inst∣-args-assoc {xs = x ∷ xs} = inst-assoc {x = x} ∷ ∣inst∣-args-assoc
+
+   inst-assoc : inst A θ ⊙ (inst (F p) θ') ≗ inst A (∣ inst A θ ∣ ∘ θ')
+   inst-assoc {atom _}   = refl
+   inst-assoc {term f _} = (A ⟦ f ⟧-cong) ∣inst∣-args-assoc

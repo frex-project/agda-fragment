@@ -61,7 +61,7 @@ module _
                     → Pointwise (_∼_ B) (∣bind∣-args Morphism.∣ f ∣ xs)
                                         (map (∣bind∣ Morphism.∣ f ∣) xs)
   ∣bind∣-args≡map {xs = []}     = []
-  ∣bind∣-args≡map {xs = x ∷ xs} = (∼-refl B) ∷ ∣bind∣-args≡map
+  ∣bind∣-args≡map {xs = x ∷ xs} = ∼-refl B ∷ ∣bind∣-args≡map
 
   ∣bind∣-hom : Homomorphic (Free A) (Free B) (∣bind∣ Morphism.∣ f ∣)
   ∣bind∣-hom op []       = ∼-refl B

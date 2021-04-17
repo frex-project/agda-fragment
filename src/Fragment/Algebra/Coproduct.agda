@@ -14,29 +14,29 @@ private
     a b c ℓ₁ ℓ₂ ℓ₃ : Level
 
 module _
-  (S : Algebra {a} {ℓ₁})
-  (T : Algebra {b} {ℓ₂})
-  (S+T : Algebra {c} {ℓ₃})
+  (A : Algebra {a} {ℓ₁})
+  (B : Algebra {b} {ℓ₂})
+  (A+B : Algebra {c} {ℓ₃})
   where
 
   record IsCoproduct : Setω where
     field
-      inl : S ⟿ S+T
-      inr : T ⟿ S+T
+      inl : A ⟿ A+B
+      inr : B ⟿ A+B
 
-      [_,_] : ∀ {d ℓ₄} {W : Algebra {d} {ℓ₄}}
-              → S ⟿ W → T ⟿ W → S+T ⟿ W
+      _[_,_] : ∀ {d ℓ₄} (X : Algebra {d} {ℓ₄})
+               → A ⟿ X → B ⟿ X → A+B ⟿ X
 
-      commute₁ : ∀ {d ℓ₄} {W : Algebra {d} {ℓ₄}}
-                 → {f : S ⟿ W} {g : T ⟿ W}
-                 → [ f , g ] ⊙ inl ≗ f
+      commute₁ : ∀ {d ℓ₄} {X : Algebra {d} {ℓ₄}}
+                 → {f : A ⟿ X} {g : B ⟿ X}
+                 → X [ f , g ] ⊙ inl ≗ f
 
-      commute₂ : ∀ {d ℓ₄} {W : Algebra {d} {ℓ₄}}
-                 → {f : S ⟿ W} {g : T ⟿ W}
-                 → [ f , g ] ⊙ inr ≗ g
+      commute₂ : ∀ {d ℓ₄} {X : Algebra {d} {ℓ₄}}
+                 → {f : A ⟿ X} {g : B ⟿ X}
+                 → X [ f , g ] ⊙ inr ≗ g
 
-      universal : ∀ {d ℓ₄} {W : Algebra {d} {ℓ₄}}
-                  → {f : S ⟿ W} {g : T ⟿ W} {h : S+T ⟿ W}
+      universal : ∀ {d ℓ₄} {X : Algebra {d} {ℓ₄}}
+                  → {f : A ⟿ X} {g : B ⟿ X} {h : A+B ⟿ X}
                   → h ⊙ inl ≗ f
                   → h ⊙ inr ≗ g
-                  → [ f , g ] ≗ h
+                  → X [ f , g ] ≗ h

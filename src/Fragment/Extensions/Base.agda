@@ -2,6 +2,7 @@
 
 module Fragment.Extensions.Base where
 
+{-
 open import Level using (Level; _⊔_)
 
 open import Data.Nat using (ℕ)
@@ -49,3 +50,4 @@ module _ (n : ℕ) (S : Setoid a ℓ) where
                       ; _≈_           = _≈BT_
                       ; isEquivalence = ≈BT-isEquivalence
                       }
+-}

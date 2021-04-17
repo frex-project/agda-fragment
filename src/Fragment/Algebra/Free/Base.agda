@@ -103,10 +103,10 @@ module _ (S : Setoid a ℓ) where
                 ; ∥_∥/≈-isAlgebra = Free-isAlgebra
                 }
 
-Free/≡ : Set a → Algebra
-Free/≡ = Free ∘ PE.setoid
+F : ℕ → Algebra
+F = Free ∘ PE.setoid ∘ Fin
 
-module _ (S : Setoid a ℓ) (n : ℕ) where
+module _ {S : Setoid a ℓ} {n : ℕ} where
 
   open Setoid S renaming (Carrier to A)
 
@@ -132,14 +132,8 @@ module _ (S : Setoid a ℓ) (n : ℕ) where
                            ; trans = ≑-trans
                            }
 
-  BT/≑ : Setoid a (a ⊔ ℓ)
-  BT/≑ = record { Carrier       = BT A n
-                ; _≈_           = _≑_
-                ; isEquivalence = ≑-isEquivalence
-                }
-
-  Free_[_] : Algebra
-  Free_[_] = Free BT/≑
-
-Free/≡_[_] : Set a → ℕ → Algebra
-Free/≡ A [ n ] = Free (BT/≑ (PE.setoid A) n)
+Atoms : Setoid a ℓ → ℕ → Setoid a (a ⊔ ℓ)
+Atoms S n = record { Carrier       = BT (Setoid.Carrier S) n
+                   ; _≈_           = _≑_ {S = S}
+                   ; isEquivalence = ≑-isEquivalence
+                   }

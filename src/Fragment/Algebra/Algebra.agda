@@ -6,7 +6,8 @@ module Fragment.Algebra.Algebra (Σ : Signature) where
 
 open import Level using (Level; _⊔_; suc)
 open import Function using (id)
-open import Data.Vec
+open import Data.Vec using (Vec)
+open import Data.Vec.Relation.Binary.Pointwise.Inductive using (Pointwise)
 open import Relation.Binary using (Setoid; Rel; IsEquivalence)
 open import Relation.Binary.PropositionalEquality as PE using (_≡_)
 
@@ -26,7 +27,7 @@ module _ (S : Setoid a ℓ) where
   Congruence : Interpretation → Set (a ⊔ ℓ)
   Congruence ⟦_⟧ = ∀ {arity}
                    → (f : ops Σ arity)
-                   → ∀ {xs ys} → xs ≋ ys → ⟦ f ⟧ xs ≈ ⟦ f ⟧ ys
+                   → ∀ {xs ys} → Pointwise _≈_ xs ys → ⟦ f ⟧ xs ≈ ⟦ f ⟧ ys
 
   record IsAlgebra : Set (a ⊔ ℓ) where
     field
