@@ -20,10 +20,10 @@ private
     D : Algebra {d} {ℓ₄}
 
 id-unitˡ : ∀ {f : A ⟿ B} → id ⊙ f ≗ f
-id-unitˡ {B = B} {x} = Setoid.refl ∥ B ∥/≈
+id-unitˡ {B = B} = Setoid.refl ∥ B ∥/≈
 
 id-unitʳ : ∀ {f : A ⟿ B} → f ⊙ id ≗ f
-id-unitʳ {B = B} {x} = Setoid.refl ∥ B ∥/≈
+id-unitʳ {B = B} = Setoid.refl ∥ B ∥/≈
 
 ⊙-assoc : ∀ (h : C ⟿ D) (g : B ⟿ C) (f : A ⟿ B)
           → (h ⊙ g) ⊙ f ≗ h ⊙ (g ⊙ f)
