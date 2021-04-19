@@ -129,8 +129,3 @@ ignore _ = record { ∣_∣      = λ ()
 inst : ∀ {n} (A : Algebra {a} {ℓ₁})
        → Env A n → F n ⟿ A
 inst {n = n} A θ = subst A (ignore ∥ A ∥/≈) θ
-
-∣inst∣-args : ∀ {n m} (A : Algebra {a} {ℓ₁})
-              → Env A n
-              → Vec ∥ F n ∥ m → Vec ∥ A ∥ m
-∣inst∣-args A θ = ∣subst∣-args A (ignore ∥ A ∥/≈) θ

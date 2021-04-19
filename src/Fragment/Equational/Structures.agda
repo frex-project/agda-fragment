@@ -2,7 +2,6 @@
 
 module Fragment.Equational.Structures where
 
-{-
 import Fragment.Equational.Theory.Laws as L
 open import Fragment.Equational.Theory
 open import Fragment.Equational.Theory.Bundles
@@ -43,7 +42,7 @@ module _ {A : Set a} {_≈_ : Rel A ℓ} where
       magma→⟦ MagmaOp.• ⟧ (x ∷ y ∷ []) = _•_ x y
 
       magma→⟦⟧-cong : Congruent₂ _•_ → Congruence Σ-magma magma→setoid magma→⟦_⟧
-      magma→⟦⟧-cong cong MagmaOp.• (x₁≈x₂ ∷ y₁≈y₂ ∷ []) = cong x₁≈x₂ y₁≈y₂
+      magma→⟦⟧-cong c MagmaOp.• (x₁≈x₂ ∷ y₁≈y₂ ∷ []) = c x₁≈x₂ y₁≈y₂
 
       magma→isAlgebra : IsAlgebra Σ-magma magma→setoid
       magma→isAlgebra = record { ⟦_⟧     = magma→⟦_⟧
@@ -73,7 +72,7 @@ module _ {A : Set a} {_≈_ : Rel A ℓ} where
       open IsSemigroup isSemigroup renaming (assoc to •-assoc)
 
       semigroup→models : Models Θ-semigroup (magma→algebra isMagma)
-      semigroup→models assoc {θ} =
+      semigroup→models assoc θ =
         •-assoc (θ (# 0)) (θ (# 1)) (θ (# 2))
 
       semigroup→isModel : IsModel Θ-semigroup (magma→setoid isMagma)
@@ -85,4 +84,3 @@ module _ {A : Set a} {_≈_ : Rel A ℓ} where
       semigroup→model = record { ∥_∥/≈   = magma→setoid isMagma
                                ; isModel = semigroup→isModel
                                }
--}

@@ -8,3 +8,4 @@ open import Fragment.Algebra.Free.Base Σ public
 open import Fragment.Algebra.Free.Properties Σ public
 open import Fragment.Algebra.Free.Monad Σ public
 open import Fragment.Algebra.Free.Evaluation Σ public
+open import Fragment.Algebra.Free.Syntax Σ public

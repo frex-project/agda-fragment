@@ -131,10 +131,11 @@ module _ (A : Model {a} {ℓ₁}) (n : ℕ) where
     (g : ∥ J n ∥ₐ ⟿ ∥ X ∥ₐ)
     where
 
+    open import Relation.Binary.Reasoning.Setoid ∥ X ∥/≈
+
     private
 
       module X = Setoid ∥ X ∥/≈
-      open import Relation.Binary.Reasoning.Setoid ∥ X ∥/≈
 
       ∣g∣ : Fin n → ∥ X ∥
       ∣g∣ n = ∣ g ∣ (atom (dyn n))
@@ -194,6 +195,7 @@ module _ (A : Model {a} {ℓ₁}) (n : ℕ) where
     where
 
     module X = Setoid ∥ X ∥/≈
+    open import Relation.Binary.Reasoning.Setoid ∥ X ∥/≈
 
     commute₁ : X [ f , g ] ⊙ inl ≗ f
     commute₁ = X.refl
@@ -217,7 +219,6 @@ module _ (A : Model {a} {ℓ₁}) (n : ℕ) where
         ≈⟨ ∣ g ∣-hom op xs ⟩
           ∣ g ∣ (term op xs)
         ∎
-        where open import Relation.Binary.Reasoning.Setoid ∥ X ∥/≈
 
     module _
       {h : ∥ Normals ∥ₐ ⟿ ∥ X ∥ₐ}
@@ -242,7 +243,6 @@ module _ (A : Model {a} {ℓ₁}) (n : ℕ) where
           ≈⟨ X.sym c₂ ⟩
             ∣ h ∣ (atom (dyn x))
           ∎
-          where open import Relation.Binary.Reasoning.Setoid ∥ X ∥/≈
         universal {term op xs}   = begin
             ∣ X [ f , g ] ∣ (term op xs)
           ≈⟨ X.sym (∣ X [ f , g ] ∣-hom op xs) ⟩
@@ -252,16 +252,16 @@ module _ (A : Model {a} {ℓ₁}) (n : ℕ) where
           ≈⟨ ∣ h ∣-hom op xs ⟩
             ∣ h ∣ (term op xs)
           ∎
-          where open import Relation.Binary.Reasoning.Setoid ∥ X ∥/≈
 
   isFrex : IsCoproduct A (J n) Normals
-  isFrex = record { inl       = inl
-                  ; inr       = inr
-                  ; _[_,_]    = _[_,_]
-                  ; commute₁  = λ {_} {_} {X} {f} {g} → commute₁ {X = X} {f = f} {g = g}
-                  ; commute₂  = λ {_} {_} {X} {f} {g} → commute₂ {X = X} {f = f} {g = g}
-                  ; universal = λ {_} {_} {X} {f} {g} {h} → universal {X = X} {f = f} {g = g} {h = h}
-                  }
+  isFrex =
+    record { inl       = inl
+           ; inr       = inr
+           ; _[_,_]    = _[_,_]
+           ; commute₁  = λ {_} {_} {X} {f} {g} → commute₁ {X = X} {f = f} {g = g}
+           ; commute₂  = λ {_} {_} {X} {f} {g} → commute₂ {X = X} {f = f} {g = g}
+           ; universal = λ {_} {_} {X} {f} {g} {h} → universal {X = X} {f = f} {g = g} {h = h}
+           }
 
 SynFrex : FreeExtension
 SynFrex = record { _[_]        = Normals
