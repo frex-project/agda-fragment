@@ -12,7 +12,6 @@ open import Fragment.Algebra.Free.Base Σ
 open import Fragment.Algebra.Free.Evaluation Σ
 open import Fragment.Algebra.Free.Monad Σ
 open import Fragment.Algebra.Homomorphism Σ
-open import Fragment.Algebra.Initial Σ
 open import Fragment.Algebra.Quotient Σ
 
 open import Fragment.Setoid.Morphism as Morphism

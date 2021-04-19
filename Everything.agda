@@ -1,6 +1,5 @@
 import Fragment.Algebra.Algebra
 import Fragment.Algebra.Combinators
-import Fragment.Algebra.Coproduct
 import Fragment.Algebra.Free
 import Fragment.Algebra.Free.Base
 import Fragment.Algebra.Free.Evaluation
@@ -12,7 +11,6 @@ import Fragment.Algebra.Homomorphism.Definitions
 import Fragment.Algebra.Homomorphism.Equivalence
 import Fragment.Algebra.Homomorphism.Properties
 import Fragment.Algebra.Homomorphism.Setoid
-import Fragment.Algebra.Initial
 import Fragment.Algebra.Quotient
 import Fragment.Algebra.Signature
 import Fragment.Equational.Coproduct
@@ -20,7 +18,6 @@ import Fragment.Equational.FreeExtension
 import Fragment.Equational.FreeExtension.Base
 import Fragment.Equational.FreeExtension.Properties
 import Fragment.Equational.FreeExtension.Synthetic
-import Fragment.Equational.Initial
 import Fragment.Equational.Model
 import Fragment.Equational.Model.Base
 import Fragment.Equational.Model.Properties
