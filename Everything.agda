@@ -5,6 +5,7 @@ import Fragment.Algebra.Free.Base
 import Fragment.Algebra.Free.Evaluation
 import Fragment.Algebra.Free.Monad
 import Fragment.Algebra.Free.Properties
+import Fragment.Algebra.Free.Syntax
 import Fragment.Algebra.Homomorphism
 import Fragment.Algebra.Homomorphism.Base
 import Fragment.Algebra.Homomorphism.Definitions
@@ -30,7 +31,6 @@ import Fragment.Equational.Theory.Bundles
 import Fragment.Equational.Theory.Combinators
 import Fragment.Equational.Theory.Laws
 import Fragment.Examples
-import Fragment.Extensions.Base
 import Fragment.Extensions.Combinators
 import Fragment.Extensions.Semigroup
 import Fragment.Macros.Base
