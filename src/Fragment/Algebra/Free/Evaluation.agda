@@ -12,6 +12,7 @@ open import Fragment.Setoid.Morphism as Morphism
 
 open import Level using (Level)
 
+open import Data.Empty using (⊥)
 open import Data.Nat using (ℕ)
 open import Data.Fin using (Fin)
 open import Data.Vec using (Vec; []; _∷_; map)
@@ -83,15 +84,6 @@ fold B f = (eval B) ⊙ bind (unit · f)
 Env : (A : Algebra {a} {ℓ₁}) → ℕ → Set _
 Env A n = Fin n → ∥ A ∥
 
-inst : ∀ {n} (A : Algebra {a} {ℓ₁})
-       → Env A n → F n ⟿ A
-inst A θ = fold A (lift θ)
-
-∣inst∣-args : ∀ {n m} (A : Algebra {a} {ℓ₁})
-              → Env A n
-              → Vec ∥ F n ∥ m → Vec ∥ A ∥ m
-∣inst∣-args A θ = ∣fold∣-args A (lift θ)
-
 module _ {n}
   {S : Setoid a ℓ₁}
   (T : Setoid b ℓ₂)
@@ -114,16 +106,31 @@ module _ {n}
   sub = record { ∣_∣      = ∣sub∣
                ; ∣_∣-cong = ∣sub∣-cong
                }
+
 module _ {n}
-  {A : Algebra {a} {ℓ₁}}
+  {A : Setoid a ℓ₁}
   (B : Algebra {b} {ℓ₂})
-  (f : ∥ A ∥/≈ ↝ ∥ B ∥/≈)
+  (f : A ↝ ∥ B ∥/≈)
   (g : Fin n → ∥ B ∥)
   where
 
-  subst : Free (Atoms ∥ A ∥/≈ n) ⟿ B
+  subst : Free (Atoms A n) ⟿ B
   subst = fold B (sub ∥ B ∥/≈ f g)
 
-  ∣subst∣-args : ∀ {m} → Vec (Term (BT ∥ A ∥ n)) m
+  ∣subst∣-args : ∀ {m} → Vec (Term (BT (Setoid.Carrier A) n)) m
                  → Vec ∥ B ∥ m
   ∣subst∣-args = ∣fold∣-args B (sub ∥ B ∥/≈ f g)
+
+ignore : ∀ (A : Setoid a ℓ₁) → PE.setoid ⊥ ↝ A
+ignore _ = record { ∣_∣      = λ ()
+                  ; ∣_∣-cong = λ {}
+                  }
+
+inst : ∀ {n} (A : Algebra {a} {ℓ₁})
+       → Env A n → F n ⟿ A
+inst {n = n} A θ = subst A (ignore ∥ A ∥/≈) θ
+
+∣inst∣-args : ∀ {n m} (A : Algebra {a} {ℓ₁})
+              → Env A n
+              → Vec ∥ F n ∥ m → Vec ∥ A ∥ m
+∣inst∣-args A θ = ∣subst∣-args A (ignore ∥ A ∥/≈) θ

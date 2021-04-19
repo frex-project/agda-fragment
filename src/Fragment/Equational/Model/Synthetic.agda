@@ -11,12 +11,15 @@ open import Fragment.Algebra.Homomorphism (Σ Θ)
 open import Fragment.Algebra.Quotient (Σ Θ)
 open import Fragment.Equational.Model.Base Θ
   using (Model; IsModel; Models)
+open import Fragment.Setoid.Morphism using (_·_)
 
 open import Level using (Level; _⊔_)
 open import Function using (_∘_)
 
+open import Data.Empty using (⊥)
 open import Data.Nat using (ℕ)
 open import Data.Product using (proj₁; proj₂)
+open import Data.Vec using (map)
 open import Data.Vec.Relation.Binary.Pointwise.Inductive
   using (Pointwise; []; _∷_)
 
@@ -52,25 +55,31 @@ module _ (A : Algebra {a} {ℓ}) where
   instance
     ≊-isDenom : IsDenominator A _≊_
     ≊-isDenom = record { isEquivalence = ≊-isEquivalence
-                       ; isCoarser     = inherit
                        ; isCompatible  = cong
+                       ; isCoarser     = inherit
                        }
 
   Synthetic : Model
   Synthetic = record { ∥_∥/≈   = ∥ A ∥/ _≊_
                      ; isModel = isModel
                      }
-    where open Setoid (∥ A ∥/ _≊_)
+    where open module T = Setoid (∥ A ∥/ _≊_)
           open import Relation.Binary.Reasoning.Setoid (∥ A ∥/ _≊_)
 
           models : Models (A / _≊_)
           models eq θ = begin
               ∣ inst (A / _≊_) θ ∣ lhs
-            ≡⟨ PE.sym (∣inst∣-quot _≊_ {x = lhs} θ) ⟩
-              ∣ inst A θ ∣ lhs
+            ≈⟨ T.sym (inst-universal (A / _≊_) θ
+                                     {h = (inc A _≊_) ⊙ (inst A θ) }
+                                     (λ x → PE.refl) {x = lhs})
+             ⟩
+              ∣ (inc A _≊_) ⊙ (inst A θ) ∣ lhs
             ≈⟨ model eq θ ⟩
-              ∣ inst A θ ∣ rhs
-            ≡⟨ ∣inst∣-quot _≊_ {x = rhs} θ ⟩
+              ∣ (inc A _≊_) ⊙ (inst A θ) ∣ rhs
+            ≈⟨ inst-universal (A / _≊_) θ
+                              {h = (inc A _≊_) ⊙ (inst A θ) }
+                              (λ x → PE.refl) {x = rhs}
+             ⟩
               ∣ inst (A / _≊_) θ ∣ rhs
             ∎
             where lhs = proj₁ (Θ ⟦ eq ⟧ₑ)
@@ -80,5 +89,6 @@ module _ (A : Algebra {a} {ℓ}) where
           isModel = record { isAlgebra = A / _≊_ -isAlgebra
                            ; models    = models
                            }
+
 J : ℕ → Model
 J = Synthetic ∘ F

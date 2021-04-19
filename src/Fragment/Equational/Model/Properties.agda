@@ -53,11 +53,11 @@ module _ {n} (A : Model {a} {ℓ}) (θ : Env ∥ A ∥ₐ n) where
       ∎
     ∣interp∣-cong (model eq θ') = begin
         ∣ inst ∥ A ∥ₐ θ ∣ (∣ inst (F n) θ' ∣ lhs)
-      ≈⟨ inst-assoc {A = ∥ A ∥ₐ} θ θ' {x = lhs} ⟩
+      ≈⟨ inst-assoc (F n) θ' (inst ∥ A ∥ₐ θ) {x = lhs} ⟩
         ∣ inst ∥ A ∥ₐ (∣ inst ∥ A ∥ₐ θ ∣ ∘ θ') ∣ lhs
       ≈⟨ ∥ A ∥ₐ-models eq _ ⟩
         ∣ inst ∥ A ∥ₐ (∣ inst ∥ A ∥ₐ θ ∣ ∘ θ') ∣ rhs
-      ≈⟨ S.sym (inst-assoc {A = ∥ A ∥ₐ} θ θ' {x = rhs}) ⟩
+      ≈⟨ S.sym (inst-assoc (F n) θ' (inst ∥ A ∥ₐ θ) {x = rhs}) ⟩
         ∣ inst ∥ A ∥ₐ θ ∣ (∣ inst (F n) θ' ∣ rhs)
       ∎
       where lhs = proj₁ (Θ ⟦ eq ⟧ₑ)

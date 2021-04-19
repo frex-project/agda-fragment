@@ -23,7 +23,7 @@ open import Data.Vec using (Vec; []; _∷_; map)
 open import Data.Vec.Relation.Binary.Pointwise.Inductive
   using (Pointwise; Pointwise-≡⇒≡; []; _∷_)
 
-open import Relation.Binary using (Setoid; Rel)
+open import Relation.Binary using (Setoid; Rel; IsEquivalence)
 open import Relation.Binary.PropositionalEquality as PE using (_≡_)
 
 private
@@ -56,29 +56,6 @@ module _
       ≈⟨ (A ⟦ f ⟧-cong) ∣eval∣-args-universal ⟩
         A ⟦ f ⟧ (∣eval∣-args A xs)
       ∎
-
-module _
-  {A : Algebra {a} {ℓ₁}}
-  (_≈_ : Rel ∥ A ∥ ℓ₃)
-  {{isDenom : IsDenominator A _≈_}}
-  where
-
-  mutual
-    ∣eval∣-args-quot : ∀ {n} {xs : Vec (Term ∥ A ∥) n}
-                       → Pointwise _≡_ (∣eval∣-args A xs)
-                                       (∣eval∣-args (A / _≈_) xs)
-    ∣eval∣-args-quot {xs = []}     = []
-    ∣eval∣-args-quot {xs = x ∷ xs} = ∣eval∣-quot {x} ∷ ∣eval∣-args-quot
-
-    ∣eval∣-quot : ∀ {x} → ∣ eval A ∣ x ≡ ∣ eval (A / _≈_) ∣ x
-    ∣eval∣-quot {atom _}   = PE.refl
-    ∣eval∣-quot {term f _} =
-      PE.cong (A ⟦ f ⟧_) (Pointwise-≡⇒≡ ∣eval∣-args-quot)
-
-  ∣inst∣-quot : ∀ {n x} (θ : Env A n)
-                → ∣ inst A θ ∣ x ≡ ∣ inst (A / _≈_) θ ∣ x
-  ∣inst∣-quot {x = x} θ =
-    ∣eval∣-quot {x = ∣ bind {B = ∥ A ∥/≈} (unit · (lift θ)) ∣ x}
 
 module _
   {A : Setoid a ℓ₁}
@@ -135,22 +112,63 @@ module _ {A : Setoid a ℓ₁} where
   fmap-id : fmap Morphism.id ≗ id
   fmap-id = bind-unitʳ {A = A}
 
-module _ {p q}
- {A : Algebra {a} {ℓ₁}}
- (θ : Env A p)
- (θ' : Env (F p) q)
- where
 
- open Setoid ∥ A ∥/≈
+module _ {n}
+  (A : Algebra {a} {ℓ₁})
+  (θ : Env A n)
+  where
 
- mutual
-   ∣inst∣-args-assoc : ∀ {n} {xs : Vec ∥ F q ∥ n}
-                       → Pointwise ≈[ A ]
-                                   (∣inst∣-args A θ (∣inst∣-args (F p) θ' xs))
-                                   (∣inst∣-args A (∣ inst A θ ∣ ∘ θ') xs)
-   ∣inst∣-args-assoc {xs = []}     = []
-   ∣inst∣-args-assoc {xs = x ∷ xs} = inst-assoc {x = x} ∷ ∣inst∣-args-assoc
+  IsInstantiation : F n ⟿ A → Set _
+  IsInstantiation f = ∀ x → ∣ f ∣ (atom (dyn x)) ≡ θ x
 
-   inst-assoc : inst A θ ⊙ (inst (F p) θ') ≗ inst A (∣ inst A θ ∣ ∘ θ')
-   inst-assoc {atom _}   = refl
-   inst-assoc {term f _} = (A ⟦ f ⟧-cong) ∣inst∣-args-assoc
+  inst-isInstantiation : IsInstantiation (inst A θ)
+  inst-isInstantiation x = PE.refl
+
+  mutual
+    map-inst-universal : ∀ {h m} → IsInstantiation h
+                         → {xs : Vec ∥ F n ∥ m}
+                         → Pointwise ≈[ A ] (map ∣ h ∣ xs)
+                                            (map ∣ inst A θ ∣ xs)
+    map-inst-universal p {xs = []}             = []
+    map-inst-universal {h = h} p {xs = x ∷ xs} =
+      inst-universal {h = h} p ∷ map-inst-universal {h = h} p
+
+    inst-universal : ∀ {h} → IsInstantiation h → h ≗ (inst A θ)
+    inst-universal {h} p {x = atom (dyn x)} = Setoid.reflexive ∥ A ∥/≈ (p x)
+    inst-universal {h} p {x = term f xs}    = begin
+        ∣ h ∣ (term f xs)
+      ≈⟨ Setoid.sym ∥ A ∥/≈ (∣ h ∣-hom f xs) ⟩
+        A ⟦ f ⟧ (map ∣ h ∣ xs)
+      ≈⟨ (A ⟦ f ⟧-cong) (map-inst-universal {h = h} p {xs = xs}) ⟩
+        A ⟦ f ⟧ (map ∣ inst A θ ∣ xs)
+      ≈⟨ ∣ inst A θ ∣-hom f xs ⟩
+        ∣ inst A θ ∣ (term f xs)
+      ∎
+      where open import Relation.Binary.Reasoning.Setoid ∥ A ∥/≈
+
+  module _
+    {B : Algebra {b} {ℓ₂}}
+    (h : A ⟿ B)
+    where
+
+    mutual
+      map-inst-assoc : ∀ {m} {xs : Vec ∥ F n ∥ m}
+                       → Pointwise ≈[ B ]
+                                   (map ∣ h ⊙ inst A θ ∣ xs)
+                                   (map ∣ inst B (∣ h ∣ ∘ θ) ∣ xs)
+      map-inst-assoc {xs = []}     = []
+      map-inst-assoc {xs = x ∷ xs} = inst-assoc {x = x} ∷ map-inst-assoc
+
+      inst-assoc : h ⊙ inst A θ ≗ inst B (∣ h ∣ ∘ θ)
+      inst-assoc {atom (dyn _)} = Setoid.refl ∥ B ∥/≈
+      inst-assoc {term f xs}    = begin
+          ∣ h ⊙ inst A θ ∣ (term f xs)
+        ≈⟨ sym (∣ h ⊙ inst A θ ∣-hom f xs) ⟩
+          B ⟦ f ⟧ (map ∣ h ⊙ inst A θ ∣ xs)
+        ≈⟨ (B ⟦ f ⟧-cong) map-inst-assoc ⟩
+          B ⟦ f ⟧ (map ∣ inst B (∣ h ∣ ∘ θ) ∣ xs)
+        ≈⟨ ∣ inst B (∣ h ∣ ∘ θ) ∣-hom f xs ⟩
+          ∣ inst B (∣ h ∣ ∘ θ) ∣ (term f xs)
+        ∎
+        where open Setoid ∥ B ∥/≈
+              open import Relation.Binary.Reasoning.Setoid ∥ B ∥/≈

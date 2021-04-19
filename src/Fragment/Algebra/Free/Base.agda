@@ -9,6 +9,7 @@ open import Fragment.Algebra.Algebra Σ
 open import Level using (Level; _⊔_)
 open import Function using (_∘_)
 
+open import Data.Empty using (⊥)
 open import Data.Nat using (ℕ)
 open import Data.Fin using (Fin)
 open import Data.Vec using (Vec; []; _∷_)
@@ -103,9 +104,6 @@ module _ (S : Setoid a ℓ) where
                 ; ∥_∥/≈-isAlgebra = Free-isAlgebra
                 }
 
-F : ℕ → Algebra
-F = Free ∘ PE.setoid ∘ Fin
-
 module _ {S : Setoid a ℓ} {n : ℕ} where
 
   open Setoid S renaming (Carrier to A)
@@ -137,3 +135,6 @@ Atoms S n = record { Carrier       = BT (Setoid.Carrier S) n
                    ; _≈_           = _≑_ {S = S}
                    ; isEquivalence = ≑-isEquivalence
                    }
+
+F : ℕ → Algebra
+F = Free ∘ Atoms (PE.setoid ⊥)

@@ -78,11 +78,17 @@ module _ (A : Model {a} {ℓ₁}) (n : ℕ) where
   Normals-models : Models (Terms / _≈_)
   Normals-models eq θ = begin
       ∣ inst (Terms / _≈_) θ ∣ lhs
-    ≡⟨ PE.sym (∣inst∣-quot _≈_ {x = lhs} θ) ⟩
+    ≈⟨ N.sym (inst-universal (Terms / _≈_) θ
+                             {h = (inc Terms _≈_) ⊙ (inst Terms θ) }
+                             (λ x → PE.refl) {x = lhs})
+     ⟩
       ∣ inst Terms θ ∣ lhs
     ≈⟨ model eq θ ⟩
       ∣ inst Terms θ ∣ rhs
-    ≡⟨ ∣inst∣-quot _≈_ {x = rhs} θ ⟩
+    ≈⟨ inst-universal (Terms / _≈_) θ
+                      {h = (inc Terms _≈_) ⊙ (inst Terms θ) }
+                      (λ x → PE.refl) {x = rhs}
+     ⟩
       ∣ inst (Terms / _≈_) θ ∣ rhs
     ∎
     where open import Relation.Binary.Reasoning.Setoid (∥ Terms ∥/ _≈_)
@@ -130,11 +136,14 @@ module _ (A : Model {a} {ℓ₁}) (n : ℕ) where
       module X = Setoid ∥ X ∥/≈
       open import Relation.Binary.Reasoning.Setoid ∥ X ∥/≈
 
+      ∣g∣ : Fin n → ∥ X ∥
+      ∣g∣ n = ∣ g ∣ (atom (dyn n))
+
       s : Terms ⟿ ∥ X ∥ₐ
-      s = subst ∥ X ∥ₐ ∣ f ∣⃗ (∣ g ∣ ∘ atom)
+      s = subst ∥ X ∥ₐ ∣ f ∣⃗ ∣g∣
 
       ∣s∣-args : ∀ {m} → Vec ∥ Normals ∥ m → Vec ∥ X ∥ m
-      ∣s∣-args = ∣subst∣-args ∥ X ∥ₐ ∣ f ∣⃗ (∣ g ∣ ∘ atom)
+      ∣s∣-args = ∣subst∣-args ∥ X ∥ₐ ∣ f ∣⃗ ∣g∣
 
       ∣s∣-map-∣inl∣ : ∀ {m} {xs : Vec ∥ A ∥ m}
                       → Pointwise ≈[ X ]
@@ -165,11 +174,11 @@ module _ (A : Model {a} {ℓ₁}) (n : ℕ) where
         s-cong (cong f ps)  = (X ⟦ f ⟧-cong) (∣s∣-args-cong ps)
         s-cong (model eq θ) = begin
             ∣ s ∣ (∣ inst Terms θ ∣ lhs)
-          ≈⟨ X.sym {!!} ⟩
+          ≈⟨ inst-assoc Terms θ s {lhs} ⟩
             ∣ inst ∥ X ∥ₐ (∣ s ∣ ∘ θ) ∣ lhs
           ≈⟨ ∥ X ∥ₐ-models eq (∣ s ∣ ∘ θ) ⟩
             ∣ inst ∥ X ∥ₐ (∣ s ∣ ∘ θ) ∣ rhs
-          ≈⟨ {!!} ⟩
+          ≈⟨ X.sym (inst-assoc Terms θ s {rhs}) ⟩
             ∣ s ∣ (∣ inst Terms θ ∣ rhs)
           ∎
           where lhs = proj₁ (Θ ⟦ eq ⟧ₑ)
@@ -189,25 +198,72 @@ module _ (A : Model {a} {ℓ₁}) (n : ℕ) where
     commute₁ : X [ f , g ] ⊙ inl ≗ f
     commute₁ = X.refl
 
-{-
-    commute₂ : X [ f , g ] ⊙ inr ≗ g
-    commute₂ {x} = {!!}
+    mutual
+      map-commute₂ : ∀ {m} {xs : Vec ∥ J n ∥ m}
+                     → Pointwise ≈[ X ]
+                                 (map ∣ X [ f , g ] ⊙ inr ∣ xs)
+                                 (map ∣ g ∣ xs)
+      map-commute₂ {xs = []}     = []
+      map-commute₂ {xs = x ∷ xs} = commute₂ ∷ map-commute₂
+
+      commute₂ : X [ f , g ] ⊙ inr ≗ g
+      commute₂ {atom (dyn _)} = X.refl
+      commute₂ {term op xs}    = begin
+          ∣ X [ f , g ] ⊙ inr ∣ (term op xs)
+        ≈⟨ X.sym (∣ X [ f , g ] ⊙ inr ∣-hom op xs) ⟩
+          X ⟦ op ⟧ (map ∣ X [ f , g ] ⊙ inr ∣ xs)
+        ≈⟨ (X ⟦ op ⟧-cong) map-commute₂ ⟩
+          X ⟦ op ⟧ (map ∣ g ∣ xs)
+        ≈⟨ ∣ g ∣-hom op xs ⟩
+          ∣ g ∣ (term op xs)
+        ∎
+        where open import Relation.Binary.Reasoning.Setoid ∥ X ∥/≈
 
     module _
       {h : ∥ Normals ∥ₐ ⟿ ∥ X ∥ₐ}
       (c₁ : h ⊙ inl ≗ f)
-      (c₁ : h ⊙ inr ≗ g)
+      (c₂ : h ⊙ inr ≗ g)
       where
 
-      universal : X [ f , g ] ≗ h
-      universal = {!!}
+      mutual
+        map-universal : ∀ {m} {xs : Vec ∥ Normals ∥ m}
+                        → Pointwise ≈[ X ]
+                                    (map ∣ X [ f , g ] ∣ xs)
+                                    (map ∣ h ∣ xs)
+        map-universal {xs = []}     = []
+        map-universal {xs = x ∷ xs} = universal ∷ map-universal
+
+        universal : X [ f , g ] ≗ h
+        universal {atom (sta x)} = X.sym c₁
+        universal {atom (dyn x)} = begin
+            ∣ X [ f , g ] ∣ (atom (dyn x))
+          ≈⟨ commute₂ ⟩
+            ∣ g ∣ (atom (dyn x))
+          ≈⟨ X.sym c₂ ⟩
+            ∣ h ∣ (atom (dyn x))
+          ∎
+          where open import Relation.Binary.Reasoning.Setoid ∥ X ∥/≈
+        universal {term op xs}   = begin
+            ∣ X [ f , g ] ∣ (term op xs)
+          ≈⟨ X.sym (∣ X [ f , g ] ∣-hom op xs) ⟩
+            X ⟦ op ⟧ (map ∣ X [ f , g ] ∣ xs)
+          ≈⟨ (X ⟦ op ⟧-cong) map-universal ⟩
+            X ⟦ op ⟧ (map ∣ h ∣ xs)
+          ≈⟨ ∣ h ∣-hom op xs ⟩
+            ∣ h ∣ (term op xs)
+          ∎
+          where open import Relation.Binary.Reasoning.Setoid ∥ X ∥/≈
 
   isFrex : IsCoproduct A (J n) Normals
   isFrex = record { inl       = inl
                   ; inr       = inr
                   ; _[_,_]    = _[_,_]
-                  ; commute₁  = commute₁
-                  ; commute₂  = commute₂
-                  ; universal = universal
+                  ; commute₁  = λ {_} {_} {X} {f} {g} → commute₁ {X = X} {f = f} {g = g}
+                  ; commute₂  = λ {_} {_} {X} {f} {g} → commute₂ {X = X} {f = f} {g = g}
+                  ; universal = λ {_} {_} {X} {f} {g} {h} → universal {X = X} {f = f} {g = g} {h = h}
                   }
--}
+
+SynFrex : FreeExtension
+SynFrex = record { _[_]        = Normals
+                 ; _[_]-isFrex = isFrex
+                 }
