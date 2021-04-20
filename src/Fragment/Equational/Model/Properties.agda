@@ -26,8 +26,9 @@ private
 
 module _ {n} (A : Model {a} {ℓ}) (θ : Env ∥ A ∥ₐ n) where
 
-  open module S = Setoid ∥ A ∥/≈
-  open import Relation.Binary.Reasoning.Setoid ∥ A ∥/≈
+  private
+    open module S = Setoid ∥ A ∥/≈
+    open import Relation.Binary.Reasoning.Setoid ∥ A ∥/≈
 
   mutual
     ∣interp∣-args-cong : ∀ {m} {xs ys : Vec ∥ J n ∥ m}
