@@ -6,7 +6,6 @@ module Fragment.Algebra.Homomorphism.Setoid (Σ : Signature) where
 
 open import Fragment.Algebra.Algebra Σ
 open import Fragment.Algebra.Homomorphism.Base Σ
-open import Fragment.Setoid.Morphism
 
 open import Level using (Level; _⊔_)
 open import Relation.Binary using (Rel; Setoid; IsEquivalence)
@@ -16,16 +15,17 @@ private
     a b ℓ₁ ℓ₂ : Level
 
 module _
-  {S : Algebra {a} {ℓ₁}}
-  {T : Algebra {b} {ℓ₂}}
+  {A : Algebra {a} {ℓ₁}}
+  {B : Algebra {b} {ℓ₂}}
   where
 
-  open Setoid ∥ T ∥/≈
+  open Setoid ∥ B ∥/≈
 
   infix 4 _≗_
 
-  _≗_ : Rel (S ⟿ T) (a ⊔ ℓ₂)
-  f ≗ g = ∣ f ∣⃗ ∻ ∣ g ∣⃗
+  _≗_ : Rel (A ⟿ B) (a ⊔ ℓ₂)
+  f ≗ g = ∣ f ∣⃗ ~ ∣ g ∣⃗
+    where open import Fragment.Setoid.Morphism renaming (_≗_ to _~_)
 
   ≗-refl : ∀ {f} → f ≗ f
   ≗-refl = refl
@@ -43,7 +43,7 @@ module _
                            }
 
 _⟿_/≗ : Algebra {a} {ℓ₁} → Algebra {b} {ℓ₂} → Setoid _ _
-_⟿_/≗ A B = record { Carrier       = A ⟿ B
-                    ; _≈_           = _≗_
-                    ; isEquivalence = ≗-isEquivalence
-                    }
+A ⟿ B /≗ = record { Carrier       = A ⟿ B
+                   ; _≈_           = _≗_
+                   ; isEquivalence = ≗-isEquivalence
+                   }

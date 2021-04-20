@@ -28,44 +28,46 @@ private
 
 module _ (A : Algebra {a} {ℓ₁}) where
 
-  open Setoid ∥ A ∥/≈
-  open import Relation.Binary.Reasoning.Setoid ∥ A ∥/≈
+  private
 
-  mutual
-    ∣eval∣-args : ∀ {n} → Vec (Term ∥ A ∥) n → Vec ∥ A ∥ n
-    ∣eval∣-args []       = []
-    ∣eval∣-args (x ∷ xs) = ∣eval∣ x ∷ ∣eval∣-args xs
+    open Setoid ∥ A ∥/≈
+    open import Relation.Binary.Reasoning.Setoid ∥ A ∥/≈
 
-    ∣eval∣ : Term ∥ A ∥ → ∥ A ∥
-    ∣eval∣ (atom x)    = x
-    ∣eval∣ (term f xs) = A ⟦ f ⟧ (∣eval∣-args xs)
+    mutual
+      map-∣eval∣ : ∀ {n} → Vec (Term ∥ A ∥) n → Vec ∥ A ∥ n
+      map-∣eval∣ []       = []
+      map-∣eval∣ (x ∷ xs) = ∣eval∣ x ∷ map-∣eval∣ xs
 
-  mutual
-    ∣eval∣-args-cong : ∀ {n} {xs ys : Vec (Term ∥ A ∥) n}
-                       → Pointwise (_∼_ ∥ A ∥/≈) xs ys
-                       → Pointwise ≈[ A ] (∣eval∣-args xs)
-                                          (∣eval∣-args ys)
-    ∣eval∣-args-cong []       = []
-    ∣eval∣-args-cong (p ∷ ps) = ∣eval∣-cong p ∷ ∣eval∣-args-cong ps
+      ∣eval∣ : Term ∥ A ∥ → ∥ A ∥
+      ∣eval∣ (atom x)    = x
+      ∣eval∣ (term f xs) = A ⟦ f ⟧ (map-∣eval∣ xs)
 
-    ∣eval∣-cong : Congruent (_∼_ ∥ A ∥/≈) ≈[ A ] ∣eval∣
-    ∣eval∣-cong (atom p)                 = p
-    ∣eval∣-cong {x = term op _} (term p) =
-      (A ⟦ op ⟧-cong) (∣eval∣-args-cong p)
+    mutual
+      map-∣eval∣-cong : ∀ {n} {xs ys : Vec (Term ∥ A ∥) n}
+                         → Pointwise (_~_ ∥ A ∥/≈) xs ys
+                         → Pointwise ≈[ A ] (map-∣eval∣ xs)
+                                          (map-∣eval∣ ys)
+      map-∣eval∣-cong []       = []
+      map-∣eval∣-cong (p ∷ ps) = ∣eval∣-cong p ∷ map-∣eval∣-cong ps
 
-  ∣eval∣⃗ : Herbrand ∥ A ∥/≈ ↝ ∥ A ∥/≈
-  ∣eval∣⃗ = record { ∣_∣      = ∣eval∣
-                   ; ∣_∣-cong = ∣eval∣-cong
-                   }
+      ∣eval∣-cong : Congruent (_~_ ∥ A ∥/≈) ≈[ A ] ∣eval∣
+      ∣eval∣-cong (atom p)                 = p
+      ∣eval∣-cong {x = term op _} (term p) =
+        (A ⟦ op ⟧-cong) (map-∣eval∣-cong p)
 
-  ∣eval∣-args≡map : ∀ {n} {xs : Vec (Term ∥ A ∥) n}
-                    → Pointwise _≈_ (∣eval∣-args xs) (map ∣eval∣ xs)
-  ∣eval∣-args≡map {xs = []}     = []
-  ∣eval∣-args≡map {xs = x ∷ xs} = refl ∷ ∣eval∣-args≡map
+    ∣eval∣⃗ : Herbrand ∥ A ∥/≈ ↝ ∥ A ∥/≈
+    ∣eval∣⃗ = record { ∣_∣      = ∣eval∣
+                     ; ∣_∣-cong = ∣eval∣-cong
+                     }
 
-  ∣eval∣-hom : Homomorphic (Free ∥ A ∥/≈) A ∣eval∣
-  ∣eval∣-hom f []       = refl
-  ∣eval∣-hom f (x ∷ xs) = sym ((A ⟦ f ⟧-cong) (∣eval∣-args≡map {xs = x ∷ xs}))
+    ∣eval∣-args≡map : ∀ {n} {xs : Vec (Term ∥ A ∥) n}
+                      → Pointwise _≈_ (map-∣eval∣ xs) (map ∣eval∣ xs)
+    ∣eval∣-args≡map {xs = []}     = []
+    ∣eval∣-args≡map {xs = x ∷ xs} = refl ∷ ∣eval∣-args≡map
+
+    ∣eval∣-hom : Homomorphic (Free ∥ A ∥/≈) A ∣eval∣
+    ∣eval∣-hom f []       = refl
+    ∣eval∣-hom f (x ∷ xs) = sym ((A ⟦ f ⟧-cong) (∣eval∣-args≡map {xs = x ∷ xs}))
 
   eval : Free ∥ A ∥/≈ ⟿ A
   eval = record { ∣_∣⃗    = ∣eval∣⃗
@@ -75,11 +77,6 @@ module _ (A : Algebra {a} {ℓ₁}) where
 fold : ∀ {A : Setoid a ℓ₁} (B : Algebra {b} {ℓ₂})
        → (A ↝ ∥ B ∥/≈) → Free A ⟿ B
 fold B f = (eval B) ⊙ bind (unit · f)
-
-∣fold∣-args : ∀ {m} {A : Setoid a ℓ₁} (B : Algebra {b} {ℓ₂})
-              → (A ↝ ∥ B ∥/≈) → Vec ∥ Free A ∥ m → Vec ∥ B ∥ m
-∣fold∣-args B f xs =
-  ∣eval∣-args B (∣bind∣-args Morphism.∣ unit · f ∣ xs)
 
 Env : (A : Algebra {a} {ℓ₁}) → ℕ → Set _
 Env A n = Fin n → ∥ A ∥
@@ -91,16 +88,18 @@ module _ {n}
   (g : Fin n → Setoid.Carrier T)
   where
 
-  open Setoid S renaming (Carrier to A) using ()
-  open Setoid T renaming (Carrier to B)
+  private
 
-  ∣sub∣ : BT A n → B
-  ∣sub∣ (sta x) = Morphism.∣ f ∣ x
-  ∣sub∣ (dyn x) = g x
+    open Setoid S renaming (Carrier to A) using ()
+    open Setoid T renaming (Carrier to B)
 
-  ∣sub∣-cong : Congruent (_≑_ {S = S}) _≈_ ∣sub∣
-  ∣sub∣-cong (sta p) = Morphism.∣ f ∣-cong p
-  ∣sub∣-cong (dyn q) = reflexive (PE.cong g q)
+    ∣sub∣ : BT A n → B
+    ∣sub∣ (sta x) = Morphism.∣ f ∣ x
+    ∣sub∣ (dyn x) = g x
+
+    ∣sub∣-cong : Congruent (_≍_ S n) _≈_ ∣sub∣
+    ∣sub∣-cong (sta p) = Morphism.∣ f ∣-cong p
+    ∣sub∣-cong (dyn q) = reflexive (PE.cong g q)
 
   sub : Atoms S n ↝ T
   sub = record { ∣_∣      = ∣sub∣
@@ -116,10 +115,6 @@ module _ {n}
 
   subst : Free (Atoms A n) ⟿ B
   subst = fold B (sub ∥ B ∥/≈ f g)
-
-  ∣subst∣-args : ∀ {m} → Vec (Term (BT (Setoid.Carrier A) n)) m
-                 → Vec ∥ B ∥ m
-  ∣subst∣-args = ∣fold∣-args B (sub ∥ B ∥/≈ f g)
 
 ignore : ∀ (A : Setoid a ℓ₁) → PE.setoid ⊥ ↝ A
 ignore _ = record { ∣_∣      = λ ()

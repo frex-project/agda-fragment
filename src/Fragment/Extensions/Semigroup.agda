@@ -6,14 +6,14 @@ open import Fragment.Equational.Theory.Bundles
 
 open import Fragment.Algebra.Signature
 open import Fragment.Algebra.Homomorphism Σ-magma
-open import Fragment.Algebra.Free Σ-magma hiding (_≑_)
+open import Fragment.Algebra.Free Σ-magma hiding (_~_)
 open import Fragment.Algebra.Algebra Σ-magma
   using (Algebra; IsAlgebra; Interpretation; Congruence; algebra)
 
 open import Fragment.Equational.FreeExtension Θ-semigroup
 open import Fragment.Equational.Model Θ-semigroup
 
-open import Fragment.Setoid.Morphism using (_↝_)
+open import Fragment.Setoid.Morphism as Morphism using (_↝_)
 
 open import Level using (Level; _⊔_)
 open import Function using (_∘_)
@@ -356,8 +356,8 @@ module _ (A : Model {a} {ℓ}) (n : ℕ) where
       {g : ∥ J n ∥ₐ ⟿ ∥ X ∥ₐ}
       where
 
-      ∣base∣ = ∣sub∣ ∥ X ∥/≈ ∣ f ∣⃗ (λ k → ∣ g ∣ (atom (dyn k)))
-      ∣base∣-cong = ∣sub∣-cong ∥ X ∥/≈ ∣ f ∣⃗ (λ k → ∣ g ∣ (atom (dyn k)))
+      ∣base∣ = Morphism.∣ sub ∥ X ∥/≈ ∣ f ∣⃗ (λ k → ∣ g ∣ (atom (dyn k))) ∣
+      ∣base∣-cong = Morphism.∣ sub ∥ X ∥/≈ ∣ f ∣⃗ (λ k → ∣ g ∣ (atom (dyn k))) ∣-cong
 
       ++-[_,_]-raw : Semigroup → ∥ X ∥
       ++-[_,_]-raw (leaf x)    = ∣base∣ x

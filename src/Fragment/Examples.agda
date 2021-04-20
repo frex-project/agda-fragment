@@ -15,18 +15,21 @@ open import Relation.Binary using (Setoid; IsEquivalence)
 open import Fragment.Equational.Model Θ-semigroup
 open import Fragment.Algebra.Free.Syntax Σ-magma (PE.setoid ℕ)
 open import Fragment.Extensions.Semigroup using (≋-refl)
+open import Fragment.Equational.FreeExtension using (frexify)
 
-simple : ∀ {m n} → (m + 2) + (3 + n) ≡ (m + 5) + n
-simple {m} {n} = frexify Θ-semigroup
-                         SemigroupFrex
-                         (semigroup→model +-isSemigroup)
-                         2
-                         {lhs = (⟨ # 0 ⟩ ⟨ • ⟩₂ ⟨ 2 ⟩ₛ) ⟨ • ⟩₂ (⟨ 3 ⟩ₛ ⟨ • ⟩₂ ⟨ # 1 ⟩)}
-                         {rhs = (⟨ # 0 ⟩ ⟨ • ⟩₂ ⟨ 5 ⟩ₛ) ⟨ • ⟩₂ ⟨ # 1 ⟩}
-                         θ
-                         (≋-refl (semigroup→model +-isSemigroup) 2)
-  where θ : Fin 2 → ℕ
-        θ zero       = m
+simple : ∀ {f : ℕ → ℕ} {m n} → (f m + 2) + (3 + n) ≡ (f m + 5) + n
+simple {f} {m} {n} = frexify Θ-semigroup
+                             SemigroupFrex
+                             model
+                             2
+                             {lhs = (⟨ # 0 ⟩ ⟨ • ⟩₂ ⟨ 2 ⟩ₛ) ⟨ • ⟩₂ (⟨ 3 ⟩ₛ ⟨ • ⟩₂ ⟨ # 1 ⟩)}
+                             {rhs = (⟨ # 0 ⟩ ⟨ • ⟩₂ ⟨ 5 ⟩ₛ) ⟨ • ⟩₂ ⟨ # 1 ⟩}
+                             θ
+                             (≋-refl model 2)
+  where model = semigroup→model +-isSemigroup
+
+        θ : Fin 2 → ℕ
+        θ zero       = f m
         θ (suc zero) = n
 
 {-

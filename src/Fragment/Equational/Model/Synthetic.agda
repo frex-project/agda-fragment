@@ -42,15 +42,17 @@ module _ (A : Algebra {a} {ℓ}) where
     cong    : ∀ {n} → (f : ops (Σ Θ) n)
               → ∀ {xs ys} → Pointwise _≊_ xs ys
               → A ⟦ f ⟧ xs ≊ A ⟦ f ⟧ ys
-    model   : ∀ {n} → (eq : eqs Θ n) → (θ : Env A n)
+    axiom   : ∀ {n} → (eq : eqs Θ n) → (θ : Env A n)
               → ∣ inst A θ ∣ (proj₁ (Θ ⟦ eq ⟧ₑ))
                 ≊ ∣ inst A θ ∣ (proj₂ (Θ ⟦ eq ⟧ₑ))
 
-  ≊-isEquivalence : IsEquivalence _≊_
-  ≊-isEquivalence = record { refl  = refl
-                           ; sym   = sym
-                           ; trans = trans
-                           }
+  private
+
+    ≊-isEquivalence : IsEquivalence _≊_
+    ≊-isEquivalence = record { refl  = refl
+                             ; sym   = sym
+                             ; trans = trans
+                             }
 
   instance
     ≊-isDenom : IsDenominator A _≊_
@@ -69,21 +71,18 @@ module _ (A : Algebra {a} {ℓ}) where
           models : Models (A / _≊_)
           models eq θ = begin
               ∣ inst (A / _≊_) θ ∣ lhs
-            ≈⟨ T.sym (inst-universal (A / _≊_) θ
-                                     {h = (inc A _≊_) ⊙ (inst A θ) }
-                                     (λ x → PE.refl) {x = lhs})
-             ⟩
+            ≈⟨ T.sym (lemma {x = lhs}) ⟩
               ∣ (inc A _≊_) ⊙ (inst A θ) ∣ lhs
-            ≈⟨ model eq θ ⟩
+            ≈⟨ axiom eq θ ⟩
               ∣ (inc A _≊_) ⊙ (inst A θ) ∣ rhs
-            ≈⟨ inst-universal (A / _≊_) θ
-                              {h = (inc A _≊_) ⊙ (inst A θ) }
-                              (λ x → PE.refl) {x = rhs}
-             ⟩
+            ≈⟨ lemma {x = rhs} ⟩
               ∣ inst (A / _≊_) θ ∣ rhs
             ∎
             where lhs = proj₁ (Θ ⟦ eq ⟧ₑ)
                   rhs = proj₂ (Θ ⟦ eq ⟧ₑ)
+                  lemma = inst-universal (A / _≊_) θ
+                              {h = (inc A _≊_) ⊙ (inst A θ) }
+                              (λ x → PE.refl)
 
           isModel : IsModel (∥ A ∥/ _≊_)
           isModel = record { isAlgebra = A / _≊_ -isAlgebra

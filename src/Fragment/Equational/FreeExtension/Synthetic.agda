@@ -9,7 +9,7 @@ open import Fragment.Algebra.Algebra (Σ Θ) as Algebra using (Algebra)
 open import Fragment.Equational.Model Θ
 open import Fragment.Equational.Coproduct Θ
 open import Fragment.Equational.FreeExtension.Base Θ
-open import Fragment.Algebra.Free (Σ Θ)
+open import Fragment.Algebra.Free (Σ Θ) hiding (_~_)
 open import Fragment.Algebra.Homomorphism (Σ Θ)
 open import Fragment.Algebra.Quotient (Σ Θ)
 open import Fragment.Setoid.Morphism using (_↝_)
@@ -56,7 +56,7 @@ module _ (A : Model {a} {ℓ₁}) (n : ℕ) where
     cong    : ∀ {n} → (f : ops (Σ Θ) n)
               → ∀ {xs ys} → Pointwise _≈_ xs ys
               → term f xs ≈ term f ys
-    model   : ∀ {n} → (eq : eqs Θ n) → (θ : Env Terms n)
+    axiom   : ∀ {n} → (eq : eqs Θ n) → (θ : Env Terms n)
               → ∣ inst Terms θ ∣ (proj₁ (Θ ⟦ eq ⟧ₑ))
                 ≈ ∣ inst Terms θ ∣ (proj₂ (Θ ⟦ eq ⟧ₑ))
 
@@ -83,7 +83,7 @@ module _ (A : Model {a} {ℓ₁}) (n : ℕ) where
                              (λ x → PE.refl) {x = lhs})
      ⟩
       ∣ inst Terms θ ∣ lhs
-    ≈⟨ model eq θ ⟩
+    ≈⟨ axiom eq θ ⟩
       ∣ inst Terms θ ∣ rhs
     ≈⟨ inst-universal (Terms / _≈_) θ
                       {h = (inc Terms _≈_) ⊙ (inst Terms θ) }
@@ -143,12 +143,9 @@ module _ (A : Model {a} {ℓ₁}) (n : ℕ) where
       s : Terms ⟿ ∥ X ∥ₐ
       s = subst ∥ X ∥ₐ ∣ f ∣⃗ ∣g∣
 
-      ∣s∣-args : ∀ {m} → Vec ∥ Normals ∥ m → Vec ∥ X ∥ m
-      ∣s∣-args = ∣subst∣-args ∥ X ∥ₐ ∣ f ∣⃗ ∣g∣
-
       ∣s∣-map-∣inl∣ : ∀ {m} {xs : Vec ∥ A ∥ m}
                       → Pointwise ≈[ X ]
-                                  (∣s∣-args (map ∣inl∣ xs))
+                                  (map ∣ s ∣ (map ∣inl∣ xs))
                                   (map ∣ f ∣ xs)
       ∣s∣-map-∣inl∣ {xs = []}     = []
       ∣s∣-map-∣inl∣ {xs = x ∷ xs} = X.refl ∷ ∣s∣-map-∣inl∣
@@ -156,7 +153,7 @@ module _ (A : Model {a} {ℓ₁}) (n : ℕ) where
       mutual
         ∣s∣-args-cong : ∀ {m} {xs ys : Vec ∥ Normals ∥ m}
                         → Pointwise _≈_ xs ys
-                        → Pointwise ≈[ X ] (∣s∣-args xs) (∣s∣-args ys)
+                        → Pointwise ≈[ X ] (map ∣ s ∣ xs) (map ∣ s ∣ ys)
         ∣s∣-args-cong []       = []
         ∣s∣-args-cong (p ∷ ps) = s-cong p ∷ ∣s∣-args-cong ps
 
@@ -166,14 +163,24 @@ module _ (A : Model {a} {ℓ₁}) (n : ℕ) where
         s-cong (trans p q) = X.trans (s-cong p) (s-cong q)
         s-cong (inherit p) = ∣ s ∣-cong p
         s-cong (step {xs = xs} op) = begin
-            X ⟦ op ⟧ ∣s∣-args (map ∣inl∣ xs)
+            ∣ s ∣ (term op (map ∣inl∣ xs))
+          ≈⟨ X.sym (∣ s ∣-hom op (map ∣inl∣ xs)) ⟩
+            X ⟦ op ⟧ (map ∣ s ∣ (map ∣inl∣ xs))
           ≈⟨ (X ⟦ op ⟧-cong) ∣s∣-map-∣inl∣ ⟩
             X ⟦ op ⟧ (map ∣ f ∣ xs)
           ≈⟨ ∣ f ∣-hom op xs ⟩
             ∣ f ∣ (A ⟦ op ⟧ xs)
           ∎
-        s-cong (cong f ps)  = (X ⟦ f ⟧-cong) (∣s∣-args-cong ps)
-        s-cong (model eq θ) = begin
+        s-cong (cong f {xs = xs} {ys = ys} ps) = begin
+            ∣ s ∣ (term f xs)
+          ≈⟨ X.sym (∣ s ∣-hom f xs) ⟩
+            X ⟦ f ⟧ (map ∣ s ∣ xs)
+          ≈⟨ (X ⟦ f ⟧-cong) (∣s∣-args-cong ps) ⟩
+            X ⟦ f ⟧ (map ∣ s ∣ ys)
+          ≈⟨ ∣ s ∣-hom f ys ⟩
+            ∣ s ∣ (term f ys)
+          ∎
+        s-cong (axiom eq θ) = begin
             ∣ s ∣ (∣ inst Terms θ ∣ lhs)
           ≈⟨ inst-assoc Terms θ s {lhs} ⟩
             ∣ inst ∥ X ∥ₐ (∣ s ∣ ∘ θ) ∣ lhs

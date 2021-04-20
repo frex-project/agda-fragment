@@ -11,77 +11,79 @@ open import Fragment.Algebra.Homomorphism.Setoid Σ
 
 open import Level using (Level; _⊔_)
 open import Relation.Binary using (Setoid; IsEquivalence)
-open import Relation.Binary.Definitions using (Reflexive; Transitive; Symmetric)
+import Relation.Binary.Reasoning.Setoid as Reasoning
 
 private
   variable
     a b c ℓ₁ ℓ₂ ℓ₃ : Level
-    S : Algebra {a} {ℓ₁}
-    T : Algebra {b} {ℓ₂}
-    U : Algebra {c} {ℓ₃}
+    A : Algebra {a} {ℓ₁}
+    B : Algebra {b} {ℓ₂}
+    C : Algebra {c} {ℓ₃}
 
 module _
-  (S : Algebra {a} {ℓ₁})
-  (T : Algebra {b} {ℓ₂})
+  (A : Algebra {a} {ℓ₁})
+  (B : Algebra {b} {ℓ₂})
   where
 
   infix 3 _≃_
 
   record _≃_ : Set (a ⊔ b ⊔ ℓ₁ ⊔ ℓ₂) where
     field
-      _⃗ : S ⟿ T
-      _⃖ : T ⟿ S
+      _⃗ : A ⟿ B
+      _⃖ : B ⟿ A
 
       invˡ : _⃗ ⊙ _⃖ ≗ id
       invʳ : _⃖ ⊙ _⃗ ≗ id
 
 open _≃_ public
 
-≃-refl : S ≃ S
-≃-refl {S = S} = record { _⃗   = id
-                        ; _⃖   = id
-                        ; invˡ = λ {_} → refl
-                        ; invʳ = λ {_} → refl
-                        }
-  where open Setoid ∥ S ∥/≈
+private
 
-≃-sym : S ≃ T → T ≃ S
-≃-sym f = record { _⃗   = f ⃖
-                 ; _⃖   = f ⃗
-                 ; invˡ = invʳ f
-                 ; invʳ = invˡ f
-                 }
+  ≃-refl : A ≃ A
+  ≃-refl {A = A} = record { _⃗   = id
+                          ; _⃖   = id
+                          ; invˡ = λ {_} → refl
+                          ; invʳ = λ {_} → refl
+                          }
+    where open Setoid ∥ A ∥/≈
 
-≃-inv : ∀ (g : T ≃ U) (f : S ≃ T)
-        → (g ⃗ ⊙ f ⃗) ⊙ (f ⃖ ⊙ g ⃖) ≗ id
-≃-inv {T = T} {U = U} g f = begin
-    (g ⃗ ⊙ f ⃗) ⊙ (f ⃖ ⊙ g ⃖)
-  ≈⟨ ⊙-assoc (g ⃗) (f ⃗) (f ⃖ ⊙ g ⃖) ⟩
-    g ⃗ ⊙ (f ⃗ ⊙ (f ⃖ ⊙ g ⃖))
-  ≈⟨ ⊙-congˡ (g ⃗) (f ⃗ ⊙ (f ⃖ ⊙ g ⃖)) ((f ⃗ ⊙ f ⃖) ⊙ g ⃖) (⊙-assoc (f ⃗) (f ⃖) (g ⃖)) ⟩
-    g ⃗ ⊙ ((f ⃗ ⊙ f ⃖) ⊙ g ⃖)
-  ≈⟨ ⊙-congˡ (g ⃗) ((f ⃗ ⊙ f ⃖) ⊙ g ⃖) (id ⊙ g ⃖) (⊙-congʳ (g ⃖) (f ⃗ ⊙ f ⃖) id (invˡ f)) ⟩
-    g ⃗ ⊙ (id ⊙ g ⃖)
-  ≈⟨ ⊙-congˡ (g ⃗) (id ⊙ g ⃖) (g ⃖) (id-unitˡ {f = g ⃖}) ⟩
-    g ⃗ ⊙ g ⃖
-  ≈⟨ invˡ g ⟩
-    id
-  ∎
-  where open import Relation.Binary.Reasoning.Setoid (U ⟿ U /≗)
+  ≃-sym : A ≃ B → B ≃ A
+  ≃-sym f = record { _⃗   = f ⃖
+                   ; _⃖   = f ⃗
+                   ; invˡ = invʳ f
+                   ; invʳ = invˡ f
+                   }
 
-≃-trans : S ≃ T → T ≃ U → S ≃ U
-≃-trans f g = record { _⃗   = g ⃗ ⊙ f ⃗
-                     ; _⃖   = f ⃖ ⊙ g ⃖
-                     ; invˡ = ≃-inv g f
-                     ; invʳ = ≃-inv (≃-sym f) (≃-sym g)
-                     }
+  ≃-inv : ∀ (g : B ≃ C) (f : A ≃ B)
+          → (g ⃗ ⊙ f ⃗) ⊙ (f ⃖ ⊙ g ⃖) ≗ id
+  ≃-inv {B = B} {C = C} g f = begin
+      (g ⃗ ⊙ f ⃗) ⊙ (f ⃖ ⊙ g ⃖)
+    ≈⟨ ⊙-assoc (g ⃗) (f ⃗) (f ⃖ ⊙ g ⃖) ⟩
+      g ⃗ ⊙ (f ⃗ ⊙ (f ⃖ ⊙ g ⃖))
+    ≈⟨ ⊙-congˡ (g ⃗) (f ⃗ ⊙ (f ⃖ ⊙ g ⃖)) ((f ⃗ ⊙ f ⃖) ⊙ g ⃖) (⊙-assoc (f ⃗) (f ⃖) (g ⃖)) ⟩
+      g ⃗ ⊙ ((f ⃗ ⊙ f ⃖) ⊙ g ⃖)
+    ≈⟨ ⊙-congˡ (g ⃗) ((f ⃗ ⊙ f ⃖) ⊙ g ⃖) (id ⊙ g ⃖) (⊙-congʳ (g ⃖) (f ⃗ ⊙ f ⃖) id (invˡ f)) ⟩
+      g ⃗ ⊙ (id ⊙ g ⃖)
+    ≈⟨ ⊙-congˡ (g ⃗) (id ⊙ g ⃖) (g ⃖) (id-unitˡ {f = g ⃖}) ⟩
+      g ⃗ ⊙ g ⃖
+    ≈⟨ invˡ g ⟩
+      id
+    ∎
+    where open Reasoning (C ⟿ C /≗)
 
-≃-isEquivalence : IsEquivalence (_≃_ {a} {ℓ₁} {a} {ℓ₁})
-≃-isEquivalence =
-  record { refl  = ≃-refl
-         ; sym   = ≃-sym
-         ; trans = ≃-trans
-         }
+  ≃-trans : A ≃ B → B ≃ C → A ≃ C
+  ≃-trans f g = record { _⃗   = g ⃗ ⊙ f ⃗
+                       ; _⃖   = f ⃖ ⊙ g ⃖
+                       ; invˡ = ≃-inv g f
+                       ; invʳ = ≃-inv (≃-sym f) (≃-sym g)
+                       }
+
+  ≃-isEquivalence : IsEquivalence (_≃_ {a} {ℓ₁} {a} {ℓ₁})
+  ≃-isEquivalence =
+    record { refl  = ≃-refl
+           ; sym   = ≃-sym
+           ; trans = ≃-trans
+           }
 
 ≃-setoid : ∀ {a ℓ} → Setoid _ _
 ≃-setoid {a} {ℓ} = record { Carrier       = Algebra {a} {ℓ}

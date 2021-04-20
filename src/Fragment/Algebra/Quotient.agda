@@ -81,14 +81,16 @@ module _
                ; ∥_∥/≈-isAlgebra = _/_-isAlgebra
                }
 
-  ∣inc∣⃗ : ∥ A ∥/≈ ↝ ∥_∥/_
-  ∣inc∣⃗ = record { ∣_∣      = λ x → x
-                  ; ∣_∣-cong = isCoarser
-                  }
+  private
 
-  ∣inc∣-hom : Homomorphic A _/_ (λ x → x)
-  ∣inc∣-hom f xs =
-    Setoid.reflexive ∥_∥/_ (PE.cong (A ⟦ f ⟧_) (map-id xs))
+    ∣inc∣⃗ : ∥ A ∥/≈ ↝ ∥_∥/_
+    ∣inc∣⃗ = record { ∣_∣      = λ x → x
+                    ; ∣_∣-cong = isCoarser
+                    }
+
+    ∣inc∣-hom : Homomorphic A _/_ (λ x → x)
+    ∣inc∣-hom f xs =
+      Setoid.reflexive ∥_∥/_ (PE.cong (A ⟦ f ⟧_) (map-id xs))
 
   inc : A ⟿ _/_
   inc = record { ∣_∣⃗    = ∣inc∣⃗
@@ -101,10 +103,12 @@ module _
     (cong : Congruent _≈_ ≈[ X ] ∣ f ∣)
     where
 
-    ∣factor∣⃗ : ∥_∥/_ ↝ ∥ X ∥/≈
-    ∣factor∣⃗ = record { ∣_∣      = ∣ f ∣
-                       ; ∣_∣-cong = cong
-                       }
+    private
+
+      ∣factor∣⃗ : ∥_∥/_ ↝ ∥ X ∥/≈
+      ∣factor∣⃗ = record { ∣_∣      = ∣ f ∣
+                         ; ∣_∣-cong = cong
+                         }
 
     factor : _/_ ⟿ X
     factor = record { ∣_∣⃗    = ∣factor∣⃗

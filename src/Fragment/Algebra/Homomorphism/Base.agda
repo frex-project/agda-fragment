@@ -12,9 +12,13 @@ open import Fragment.Setoid.Morphism as Morphism
 
 open import Level using (Level; _⊔_)
 open import Function using (_∘_; _$_)
-open import Relation.Binary using (IsEquivalence)
+
 open import Data.Vec using (map)
 open import Data.Vec.Properties using (map-id; map-∘)
+import Data.Vec.Relation.Binary.Equality.Setoid as VecSetoid
+
+open import Relation.Binary using (IsEquivalence)
+import Relation.Binary.Reasoning.Setoid as Reasoning
 
 private
   variable
@@ -42,11 +46,12 @@ open _⟿_ public
 
 module _ {A : Algebra {a} {ℓ₁}} where
 
-  open import Data.Vec.Relation.Binary.Equality.Setoid ∥ A ∥/≈
+  private
 
-  ∣id∣-hom : Homomorphic A A (λ x → x)
-  ∣id∣-hom {n} f xs = A ⟦ f ⟧-cong $ reflexive (map-id xs)
-    where open IsEquivalence (≋-isEquivalence n) using (reflexive)
+    ∣id∣-hom : Homomorphic A A (λ x → x)
+    ∣id∣-hom {n} f xs = A ⟦ f ⟧-cong $ reflexive (map-id xs)
+      where open VecSetoid ∥ A ∥/≈
+            open IsEquivalence (≋-isEquivalence n) using (reflexive)
 
   id : A ⟿ A
   id = record { ∣_∣⃗    = Morphism.id
@@ -61,20 +66,21 @@ module _
   (f : A ⟿ B)
   where
 
-  open import Relation.Binary.Reasoning.Setoid ∥ C ∥/≈
-  open import Data.Vec.Relation.Binary.Equality.Setoid ∥ C ∥/≈
+  private
 
-  ⊙-hom : Homomorphic A C (∣ g ∣ ∘ ∣ f ∣)
-  ⊙-hom {n} op xs = begin
-      C ⟦ op ⟧ (map (∣ g ∣ ∘ ∣ f ∣) xs)
-    ≈⟨ C ⟦ op ⟧-cong $ reflexive (map-∘ ∣ g ∣ ∣ f ∣ xs) ⟩
-      C ⟦ op ⟧ (map ∣ g ∣ (map ∣ f ∣ xs))
-    ≈⟨ ∣ g ∣-hom op (map ∣ f ∣ xs) ⟩
-      ∣ g ∣ (B ⟦ op ⟧ (map ∣ f ∣ xs))
-    ≈⟨ ∣ g ∣-cong (∣ f ∣-hom op xs) ⟩
-      ∣ g ∣ (∣ f ∣ (A ⟦ op ⟧ xs))
-    ∎
-    where open IsEquivalence (≋-isEquivalence n) using (reflexive)
+    ⊙-hom : Homomorphic A C (∣ g ∣ ∘ ∣ f ∣)
+    ⊙-hom {n} op xs = begin
+        C ⟦ op ⟧ (map (∣ g ∣ ∘ ∣ f ∣) xs)
+      ≈⟨ C ⟦ op ⟧-cong $ reflexive (map-∘ ∣ g ∣ ∣ f ∣ xs) ⟩
+        C ⟦ op ⟧ (map ∣ g ∣ (map ∣ f ∣ xs))
+      ≈⟨ ∣ g ∣-hom op (map ∣ f ∣ xs) ⟩
+        ∣ g ∣ (B ⟦ op ⟧ (map ∣ f ∣ xs))
+      ≈⟨ ∣ g ∣-cong (∣ f ∣-hom op xs) ⟩
+        ∣ g ∣ (∣ f ∣ (A ⟦ op ⟧ xs))
+      ∎
+      where open Reasoning ∥ C ∥/≈
+            open VecSetoid ∥ C ∥/≈
+            open IsEquivalence (≋-isEquivalence n) using (reflexive)
 
   infixr 9 _⊙_
 

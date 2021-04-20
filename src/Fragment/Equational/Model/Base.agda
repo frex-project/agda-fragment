@@ -31,7 +31,6 @@ module _ (S : Setoid a ℓ) where
     open IsAlgebra isAlgebra public
 
 record Model : Set (suc a ⊔ suc ℓ) where
-  constructor model
   field
     ∥_∥/≈   : Setoid a ℓ
     isModel : IsModel ∥_∥/≈

@@ -15,6 +15,7 @@ open import Fragment.Equational.FreeExtension.Synthetic Θ using (SynFrex)
 open import Level using (Level)
 open import Data.Nat using (ℕ)
 open import Relation.Binary using (Setoid)
+import Relation.Binary.Reasoning.Setoid as Reasoning
 
 private
   variable
@@ -60,7 +61,7 @@ module _
             ≈⟨ commute₁₂ {X = A [ n ]₁} {f = inl₁} {g = inr₁} ⟩
               inl₁
             ∎
-            where open import Relation.Binary.Reasoning.Setoid (∥ A ∥ₐ ⟿ ∥ A [ n ]₁ ∥ₐ /≗)
+            where open Reasoning (∥ A ∥ₐ ⟿ ∥ A [ n ]₁ ∥ₐ /≗)
 
           c₂ : (to ⊙ from) ⊙ inr₁ ≗ inr₁
           c₂ = begin
@@ -72,9 +73,9 @@ module _
             ≈⟨ commute₂₂ {X = A [ n ]₁} {f = inl₁} {g = inr₁} ⟩
               inr₁
             ∎
-            where open import Relation.Binary.Reasoning.Setoid (∥ J n ∥ₐ ⟿ ∥ A [ n ]₁ ∥ₐ /≗)
+            where open Reasoning (∥ J n ∥ₐ ⟿ ∥ A [ n ]₁ ∥ₐ /≗)
 
-          open import Relation.Binary.Reasoning.Setoid (∥ A [ n ]₁ ∥ₐ ⟿ ∥ A [ n ]₁ ∥ₐ /≗)
+          open Reasoning (∥ A [ n ]₁ ∥ₐ ⟿ ∥ A [ n ]₁ ∥ₐ /≗)
 
 module _
   (X : FreeExtension)
@@ -127,4 +128,4 @@ module _
     ≈⟨ ∣ reduce θ ∣-cong (inv SynFrex X A n {x = rhs}) ⟩
       ∣ reduce θ ∣ rhs
     ∎
-    where open import Relation.Binary.Reasoning.Setoid ∥ A ∥/≈
+    where open Reasoning ∥ A ∥/≈
