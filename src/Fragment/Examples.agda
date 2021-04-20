@@ -2,16 +2,34 @@
 
 module Fragment.Examples where
 
-{-
 open import Fragment.Prelude
 
 open import Relation.Binary.PropositionalEquality as PE using (_≡_)
 
-open import Data.Nat using (ℕ; _+_; suc)
+open import Data.Nat using (ℕ; _+_)
+open import Data.Fin using (Fin; zero; suc; #_)
 open import Data.Nat.Properties using (+-isSemigroup)
 
 open import Relation.Binary using (Setoid; IsEquivalence)
 
+open import Fragment.Equational.Model Θ-semigroup
+open import Fragment.Algebra.Free.Syntax Σ-magma (PE.setoid ℕ)
+open import Fragment.Extensions.Semigroup using (≋-refl)
+
+simple : ∀ {m n} → (m + 2) + (3 + n) ≡ (m + 5) + n
+simple {m} {n} = frexify Θ-semigroup
+                         SemigroupFrex
+                         (semigroup→model +-isSemigroup)
+                         2
+                         {lhs = (⟨ # 0 ⟩ ⟨ • ⟩₂ ⟨ 2 ⟩ₛ) ⟨ • ⟩₂ (⟨ 3 ⟩ₛ ⟨ • ⟩₂ ⟨ # 1 ⟩)}
+                         {rhs = (⟨ # 0 ⟩ ⟨ • ⟩₂ ⟨ 5 ⟩ₛ) ⟨ • ⟩₂ ⟨ # 1 ⟩}
+                         θ
+                         (≋-refl (semigroup→model +-isSemigroup) 2)
+  where θ : Fin 2 → ℕ
+        θ zero       = m
+        θ (suc zero) = n
+
+{-
 infix 5 _≈_
 
 data _≈_ : ℕ → ℕ → Set where

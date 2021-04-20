@@ -5,11 +5,14 @@ open import Fragment.Algebra.Signature
 module Fragment.Equational.Theory.Laws (Σ : Signature) where
 
 open import Fragment.Equational.Theory.Base using (Eq)
-open import Fragment.Algebra.Free Σ
 
+open import Data.Empty using (⊥)
 open import Data.Fin using (#_)
 open import Data.Sum using (inj₁; inj₂)
 open import Data.Product using (_,_)
+import Relation.Binary.PropositionalEquality as PE
+
+open import Fragment.Algebra.Free.Syntax Σ (PE.setoid ⊥)
 
 module _ where
 
