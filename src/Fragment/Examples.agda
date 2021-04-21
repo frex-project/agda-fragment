@@ -25,7 +25,7 @@ simple {f} {m} {n} = frexify Θ-semigroup
                              {lhs = (⟨ # 0 ⟩ ⟨ • ⟩₂ ⟨ 2 ⟩ₛ) ⟨ • ⟩₂ (⟨ 3 ⟩ₛ ⟨ • ⟩₂ ⟨ # 1 ⟩)}
                              {rhs = (⟨ # 0 ⟩ ⟨ • ⟩₂ ⟨ 5 ⟩ₛ) ⟨ • ⟩₂ ⟨ # 1 ⟩}
                              θ
-                             (≋-refl model 2)
+                             (≋-refl model 2) -- this is a problem
   where model = semigroup→model +-isSemigroup
 
         θ : Fin 2 → ℕ

@@ -38,6 +38,14 @@ module _ where
   semigroup-eqs : ∀ {n} → SemigroupEq n → Eq Σ-magma n
   semigroup-eqs assoc = L.assoc •
 
+  data CSemigroupEq : ℕ → Set where
+    comm  : CSemigroupEq 2
+    assoc : CSemigroupEq 3
+
+  csemigroup-eqs : ∀ {n} → CSemigroupEq n → Eq Σ-magma n
+  csemigroup-eqs comm  = L.comm •
+  csemigroup-eqs assoc = L.assoc •
+
 Θ-magma : Theory
 Θ-magma = record { Σ     = Σ-magma
                  ; eqs   = MagmaEq
@@ -49,6 +57,12 @@ module _ where
                      ; eqs   = SemigroupEq
                      ; _⟦_⟧ₑ = semigroup-eqs
                      }
+
+Θ-csemigroup : Theory
+Θ-csemigroup = record { Σ     = Σ-magma
+                      ; eqs   = CSemigroupEq
+                      ; _⟦_⟧ₑ = csemigroup-eqs
+                      }
 
 {-
 Θ-monoid : Theory
