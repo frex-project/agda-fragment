@@ -16,7 +16,7 @@ open import Fragment.Setoid.Morphism using (_↝_)
 
 open import Level using (Level; _⊔_)
 
-open import Data.Nat using (ℕ; _+_; zero; suc; _≤_; z≤n)
+open import Data.Nat using (ℕ; _+_; zero; suc; _≤_)
 open import Data.Nat.Properties using (m≤m+n; ≤-poset; +-comm; +-assoc; +-identityˡ)
 open import Data.Fin using (Fin; zero; suc; #_)
 open import Data.Maybe using (Maybe; just; nothing)
@@ -35,7 +35,7 @@ private
     a ℓ : Level
 
   NonEmpty : ∀ {n} → Vec ℕ n → Set
-  NonEmpty {n} xs = Σ[ i ∈ Fin n ] (0 ≤ lookup xs i)
+  NonEmpty {n} xs = Σ[ i ∈ Fin n ] (1 ≤ lookup xs i)
 
   merge : ∀ {n} → Vec ℕ n → Vec ℕ n → Vec ℕ n
   merge xs ys = zipWith _+_ xs ys
@@ -53,9 +53,9 @@ private
   merge-preserves {b = b} {c = c} (i , p) _ = i , lemma
     where open PosetReasoning ≤-poset
 
-          lemma : 0 ≤ lookup (merge b c) i
+          lemma : 1 ≤ lookup (merge b c) i
           lemma = begin
-              0
+              1
             ≤⟨ p ⟩
               lookup b i
             ≤⟨ m≤m+n (lookup b i) (lookup c i) ⟩
@@ -79,10 +79,8 @@ private
     singleton-nonempty k = k , lemma
       where open PosetReasoning ≤-poset
 
-            lemma : 0 ≤ lookup (singleton k) k
+            lemma : 1 ≤ lookup (singleton k) k
             lemma = begin
-                0
-              ≤⟨ z≤n ⟩
                 1
               ≡⟨ PE.sym (lookup∘updateAt k empty) ⟩
                 lookup (singleton k) k

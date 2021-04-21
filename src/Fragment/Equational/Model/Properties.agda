@@ -33,12 +33,12 @@ module _ {n} (A : Model {a} {ℓ}) (θ : Env ∥ A ∥ₐ n) where
     open Reasoning ∥ A ∥/≈
 
     mutual
-      ∣interp∣-args-cong : ∀ {m} {xs ys : Vec ∥ J n ∥ m}
-                           → Pointwise ≈[ J n ] xs ys
-                           → Pointwise ≈[ A ] (map ∣ inst ∥ A ∥ₐ θ ∣ xs)
-                                              (map ∣ inst ∥ A ∥ₐ θ ∣ ys)
-      ∣interp∣-args-cong []       = []
-      ∣interp∣-args-cong (p ∷ ps) = ∣interp∣-cong p ∷ ∣interp∣-args-cong ps
+      map-∣interp∣-cong : ∀ {m} {xs ys : Vec ∥ J n ∥ m}
+                          → Pointwise ≈[ J n ] xs ys
+                          → Pointwise ≈[ A ] (map ∣ inst ∥ A ∥ₐ θ ∣ xs)
+                                             (map ∣ inst ∥ A ∥ₐ θ ∣ ys)
+      map-∣interp∣-cong []       = []
+      map-∣interp∣-cong (p ∷ ps) = ∣interp∣-cong p ∷ map-∣interp∣-cong ps
 
       ∣interp∣-cong : Congruent ≈[ J n ] ≈[ A ] ∣ inst ∥ A ∥ₐ θ ∣
       ∣interp∣-cong refl          = S.refl
@@ -49,7 +49,7 @@ module _ {n} (A : Model {a} {ℓ}) (θ : Env ∥ A ∥ₐ n) where
           ∣ inst ∥ A ∥ₐ θ ∣ (term f xs)
         ≈⟨ S.sym (∣ inst ∥ A ∥ₐ θ ∣-hom f xs) ⟩
           A ⟦ f ⟧ (map ∣ inst ∥ A ∥ₐ θ ∣ xs)
-        ≈⟨ (A ⟦ f ⟧-cong) (∣interp∣-args-cong ps) ⟩
+        ≈⟨ (A ⟦ f ⟧-cong) (map-∣interp∣-cong ps) ⟩
           A ⟦ f ⟧ (map ∣ inst ∥ A ∥ₐ θ ∣ ys)
         ≈⟨ ∣ inst ∥ A ∥ₐ θ ∣-hom f ys ⟩
           ∣ inst ∥ A ∥ₐ θ ∣ (term f ys)
