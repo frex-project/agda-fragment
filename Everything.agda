@@ -31,6 +31,7 @@ import Fragment.Equational.Theory.Bundles
 import Fragment.Equational.Theory.Combinators
 import Fragment.Equational.Theory.Laws
 import Fragment.Examples
+import Fragment.Extensions.CSemigroup
 import Fragment.Extensions.Combinators
 import Fragment.Extensions.Semigroup
 import Fragment.Macros.Base
