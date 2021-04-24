@@ -1,5 +1,4 @@
 import Fragment.Algebra.Algebra
-import Fragment.Algebra.Combinators
 import Fragment.Algebra.Free
 import Fragment.Algebra.Free.Base
 import Fragment.Algebra.Free.Evaluation
@@ -28,11 +27,9 @@ import Fragment.Equational.Structures
 import Fragment.Equational.Theory
 import Fragment.Equational.Theory.Base
 import Fragment.Equational.Theory.Bundles
-import Fragment.Equational.Theory.Combinators
 import Fragment.Equational.Theory.Laws
 import Fragment.Examples
 import Fragment.Extensions.CSemigroup
-import Fragment.Extensions.Combinators
 import Fragment.Extensions.Semigroup
 import Fragment.Macros.Base
 import Fragment.Macros.Environment

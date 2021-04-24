@@ -4,7 +4,6 @@ module Fragment.Equational.Theory.Bundles where
 
 open import Fragment.Algebra.Signature
 open import Fragment.Equational.Theory.Base
-open import Fragment.Equational.Theory.Combinators
 
 open import Data.Nat using (ℕ)
 open import Data.List using (List; []; _∷_)

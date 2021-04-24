@@ -21,7 +21,6 @@ simple : ∀ {f : ℕ → ℕ} {m n} → (f m + 2) + (3 + n) ≡ (f m + 5) + n
 simple {f} {m} {n} = frexify Θ-semigroup
                              SemigroupFrex
                              model
-                             2
                              (f m ∷ n ∷ [])
                              {lhs = (⟨ # 0 ⟩ ⟨ • ⟩₂ ⟨ 2 ⟩ₛ) ⟨ • ⟩₂ (⟨ 3 ⟩ₛ ⟨ • ⟩₂ ⟨ # 1 ⟩)}
                              {rhs = (⟨ # 0 ⟩ ⟨ • ⟩₂ ⟨ 5 ⟩ₛ) ⟨ • ⟩₂ ⟨ # 1 ⟩}

@@ -98,7 +98,7 @@ module _
 module _
   (X : FreeExtension)
   (A : Model {a} {ℓ₁})
-  (n : ℕ)
+  {n : ℕ}
   where
 
   open FreeExtension X
