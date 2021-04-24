@@ -13,22 +13,16 @@ open import Fragment.Algebra.Algebra Σ-magma
 open import Fragment.Equational.FreeExtension Θ-semigroup
 open import Fragment.Equational.Model Θ-semigroup
 
-open import Fragment.Setoid.Morphism as Morphism using (_↝_)
+open import Fragment.Setoid.Morphism using (_↝_)
 
 open import Level using (Level; _⊔_)
-open import Function using (_∘_)
-open import Algebra.Structures using (IsSemigroup)
 
-open import Data.Empty using (⊥; ⊥-elim)
 open import Data.Nat using (ℕ)
-open import Data.Sum using (_⊎_; inj₁; inj₂)
-open import Data.Product using (Σ-syntax; _,_; proj₁; proj₂)
-open import Data.Fin using (Fin; #_; zero; suc)
+open import Data.Fin using (Fin; #_)
 open import Data.Vec using (Vec; []; _∷_; map)
 open import Data.Vec.Relation.Binary.Pointwise.Inductive using ([]; _∷_)
-open import Data.Vec.Relation.Binary.Equality.Propositional using (≋⇒≡)
 
-open import Relation.Nullary using (Dec; yes; no; recompute)
+import Relation.Binary.Reasoning.Setoid as Reasoning
 open import Relation.Binary using (Setoid; IsEquivalence)
 open import Relation.Binary.PropositionalEquality as PE using (_≡_)
 
@@ -38,9 +32,10 @@ private
 
 module _ (A : Model {a} {ℓ}) (n : ℕ) where
 
-  open module A = Setoid ∥ A ∥/≈
-
   private
+
+    open module A = Setoid ∥ A ∥/≈
+
     _·_ : ∥ A ∥ → ∥ A ∥ → ∥ A ∥
     x · y = A ⟦ • ⟧ (x ∷ y ∷ [])
 
@@ -48,41 +43,81 @@ module _ (A : Model {a} {ℓ}) (n : ℕ) where
     ·-cong x≈y z≈w = (A ⟦ • ⟧-cong) (x≈y ∷ z≈w ∷ [])
 
     ·-assoc : ∀ (x y z : ∥ A ∥) → (x · y) · z ≈ x · (y · z)
-    ·-assoc x y z = ∥ A ∥ₐ-models assoc θ
-      where θ : Fin 3 → ∥ A ∥
-            θ zero             = x
-            θ (suc zero)       = y
-            θ (suc (suc zero)) = z
+    ·-assoc x y z = ∥ A ∥ₐ-models assoc (env {A = ∥ A ∥ₐ} (x ∷ y ∷ z ∷ []))
 
-  data Semigroup : Set a where
-    leaf : BT ∥ A ∥ n → Semigroup
-    cons : BT ∥ A ∥ n → Semigroup → Semigroup
+    mutual
 
-  pattern leaf₁ x = leaf (sta x)
-  pattern leaf₂ x = leaf (dyn x)
-  pattern cons₁ x xs = cons (sta x) xs
-  pattern cons₂ x ys = cons (dyn x) ys
+      data STree : Set a where
+        leaf : ∥ A ∥ → STree
+        cons : ∥ A ∥ → DTree → STree
 
-  open module B = Setoid (Atoms ∥ A ∥/≈ n) renaming (_≈_ to _≑_)
+      data DTree : Set a where
+        leaf : Fin n → DTree
+        cons : Fin n → Tree → DTree
 
-  infix 6 _≋_
+      data Tree : Set a where
+        sta : STree → Tree
+        dyn : DTree → Tree
 
-  data _≋_ : Semigroup → Semigroup → Set (a ⊔ ℓ) where
-    ≈-leaf : ∀ {x y} → x ≑ y → leaf x ≋ leaf y
-    ≈-cons : ∀ {x y xs ys} → x ≑ y → xs ≋ ys → cons x xs ≋ cons y ys
+    mutual
 
-  ≋-refl : ∀ {x} → x ≋ x
-  ≋-refl {leaf x}    = ≈-leaf B.refl
-  ≋-refl {cons x xs} = ≈-cons B.refl ≋-refl
+      infix 6 _≋_ _≋⟨s⟩_ _≋⟨d⟩_
 
-  ≋-sym : ∀ {x y} → x ≋ y → y ≋ x
-  ≋-sym (≈-leaf p)   = ≈-leaf (B.sym p)
-  ≋-sym (≈-cons p q) = ≈-cons (B.sym p) (≋-sym q)
+      data _≋⟨s⟩_ : STree → STree → Set (a ⊔ ℓ) where
+        leaf : ∀ {x y} → x ≈ y → leaf x ≋⟨s⟩ leaf y
+        cons : ∀ {x y xs ys} → x ≈ y → xs ≋⟨d⟩ ys
+               → cons x xs ≋⟨s⟩ cons y ys
 
-  ≋-trans : ∀ {x y z} → x ≋ y → y ≋ z → x ≋ z
-  ≋-trans (≈-leaf p)   (≈-leaf q)   = ≈-leaf (B.trans p q)
-  ≋-trans (≈-cons p q) (≈-cons r s) =
-    ≈-cons (B.trans p r) (≋-trans q s)
+      data _≋⟨d⟩_ : DTree → DTree → Set (a ⊔ ℓ) where
+        leaf : ∀ {x y} → x ≡ y → leaf x ≋⟨d⟩ leaf y
+        cons : ∀ {x y xs ys} → x ≡ y → xs ≋ ys
+               → cons x xs ≋⟨d⟩ cons y ys
+
+      data _≋_ : Tree → Tree → Set (a ⊔ ℓ) where
+        sta : ∀ {x y} → x ≋⟨s⟩ y → sta x ≋ sta y
+        dyn : ∀ {x y} → x ≋⟨d⟩ y → dyn x ≋ dyn y
+
+    mutual
+
+      ≋⟨s⟩-refl : ∀ {x} → x ≋⟨s⟩ x
+      ≋⟨s⟩-refl {leaf x}    = leaf A.refl
+      ≋⟨s⟩-refl {cons x xs} = cons A.refl ≋⟨d⟩-refl
+
+      ≋⟨d⟩-refl : ∀ {x} → x ≋⟨d⟩ x
+      ≋⟨d⟩-refl {leaf x}    = leaf PE.refl
+      ≋⟨d⟩-refl {cons x xs} = cons PE.refl ≋-refl
+
+      ≋-refl : ∀ {x} → x ≋ x
+      ≋-refl {sta x} = sta ≋⟨s⟩-refl
+      ≋-refl {dyn x} = dyn ≋⟨d⟩-refl
+
+    mutual
+
+      ≋⟨s⟩-sym : ∀ {x y} → x ≋⟨s⟩ y → y ≋⟨s⟩ x
+      ≋⟨s⟩-sym (leaf p)    = leaf (A.sym p)
+      ≋⟨s⟩-sym (cons p ps) = cons (A.sym p) (≋⟨d⟩-sym ps)
+
+      ≋⟨d⟩-sym : ∀ {x y} → x ≋⟨d⟩ y → y ≋⟨d⟩ x
+      ≋⟨d⟩-sym (leaf p)    = leaf (PE.sym p)
+      ≋⟨d⟩-sym (cons p ps) = cons (PE.sym p) (≋-sym ps)
+
+      ≋-sym : ∀ {x y} → x ≋ y → y ≋ x
+      ≋-sym (sta p) = sta (≋⟨s⟩-sym p)
+      ≋-sym (dyn p) = dyn (≋⟨d⟩-sym p)
+
+    mutual
+
+      ≋⟨s⟩-trans : ∀ {x y z} → x ≋⟨s⟩ y → y ≋⟨s⟩ z → x ≋⟨s⟩ z
+      ≋⟨s⟩-trans (leaf p)    (leaf q)    = leaf (A.trans p q)
+      ≋⟨s⟩-trans (cons p ps) (cons q qs) = cons (A.trans p q) (≋⟨d⟩-trans ps qs)
+
+      ≋⟨d⟩-trans : ∀ {x y z} → x ≋⟨d⟩ y → y ≋⟨d⟩ z → x ≋⟨d⟩ z
+      ≋⟨d⟩-trans (leaf p)    (leaf q)    = leaf (PE.trans p q)
+      ≋⟨d⟩-trans (cons p ps) (cons q qs) = cons (PE.trans p q) (≋-trans ps qs)
+
+      ≋-trans : ∀ {x y z} → x ≋ y → y ≋ z → x ≋ z
+      ≋-trans (sta p) (sta q) = sta (≋⟨s⟩-trans p q)
+      ≋-trans (dyn p) (dyn q) = dyn (≋⟨d⟩-trans p q)
 
   ≋-isEquivalence : IsEquivalence _≋_
   ≋-isEquivalence = record { refl  = ≋-refl
@@ -90,396 +125,248 @@ module _ (A : Model {a} {ℓ}) (n : ℕ) where
                            ; trans = ≋-trans
                            }
 
-  ≋-setoid : Setoid a (a ⊔ ℓ)
-  ≋-setoid = record { Carrier       = Semigroup
-                    ; _≈_           = _≋_
-                    ; isEquivalence = ≋-isEquivalence
-                    }
-
-  open module S = Setoid ≋-setoid hiding (_≈_)
-
-  consS : ∥ A ∥ → Semigroup → Semigroup
-  consS a (leaf₁ x)    = leaf₁ (a · x)
-  consS a (cons₁ x xs) = cons₁ (a · x) xs
-  consS a x            = cons₁ a x
-
-  consD : Fin n → Semigroup → Semigroup
-  consD a x = cons₂ a x
-
-  normalise : Semigroup → Semigroup
-  normalise (cons₁ x xs) = consS x (normalise xs)
-  normalise (cons₂ x xs) = consD x (normalise xs)
-  normalise x            = x
+  Tree/≋ : Setoid _ _
+  Tree/≋ = record { Carrier       = Tree
+                  ; _≈_           = _≋_
+                  ; isEquivalence = ≋-isEquivalence
+                  }
 
   mutual
-    data DNormal : Semigroup → Set a where
-      dleaf : ∀ {x} → DNormal (leaf₂ x)
-      dhead : ∀ {x xs} → Normal xs → DNormal (cons₂ x xs)
 
-    data SNormal : Semigroup → Set a where
-      sleaf : ∀ {x} → SNormal (leaf₁ x)
-      shead : ∀ {x ys} → DNormal ys → SNormal (cons₁ x ys)
+    _++⟨d⟩_ : DTree → Tree → DTree
+    (leaf x)    ++⟨d⟩ y = cons x y
+    (cons x xs) ++⟨d⟩ y = cons x (xs ++ y)
 
-    data Normal : Semigroup → Set a where
-      snorm : ∀ {x} → SNormal x → Normal x
-      dnorm : ∀ {x} → DNormal x → Normal x
+    _++_ : Tree → Tree → Tree
+    sta (leaf x)    ++ sta (leaf y)    = sta (leaf (x · y))
+    sta (leaf x)    ++ sta (cons y ys) = sta (cons (x · y) ys)
+    sta (leaf x)    ++ dyn y           = sta (cons x y)
+    sta (cons x xs) ++ y               = sta (cons x (xs ++⟨d⟩ y))
+    dyn x           ++ y               = dyn (x ++⟨d⟩ y)
 
-  pattern Sleaf    = snorm sleaf
-  pattern Dleaf    = dnorm dleaf
-  pattern SDleaf   = snorm (shead dleaf)
-  pattern SDcons p = snorm (shead (dhead p))
-  pattern Scons p  = snorm (shead p)
-  pattern Dcons p  = dnorm (dhead p)
+  mutual
 
-  normal? : ∀ x → Dec (Normal x)
-  normal? (leaf₁ x)              = yes Sleaf
-  normal? (leaf₂ x)              = yes Dleaf
-  normal? (cons₁ x (leaf₁ y))    = no lemma
-    where lemma : ∀ {x y} → Normal (cons₁ x (leaf₁ y)) → ⊥
-          lemma (Scons ())
-  normal? (cons₁ x (leaf₂ y))    = yes SDleaf
-  normal? (cons₁ x (cons₁ y ys)) = no lemma
-    where lemma : ∀ {x y xs} → Normal (cons₁ x (cons₁ y xs)) → ⊥
-          lemma (Scons ())
-  normal? (cons₁ x (cons₂ y ys))
-    with normal? ys
-  ...  | yes p = yes (SDcons p)
-  ...  | no ¬p = no (lemma ¬p)
-    where lemma : ∀ {x y xs} → (Normal xs → ⊥) → Normal (cons₁ x (cons₂ y xs)) → ⊥
-          lemma ¬p (SDcons q) = ¬p q
-  normal? (cons₂ _ xs)
-    with normal? xs
-  ...  | yes p = yes (Dcons p)
-  ...  | no ¬p  = no (lemma ¬p)
-    where lemma : ∀ {x xs} → (Normal xs → ⊥) → Normal (cons₂ x xs) → ⊥
-          lemma ¬p (Dcons q) = ¬p q
+    ++⟨d⟩-assoc : ∀ x y z → (x ++⟨d⟩ y) ++⟨d⟩ z ≋⟨d⟩ x ++⟨d⟩ (y ++ z)
+    ++⟨d⟩-assoc (leaf x)    y z = ≋⟨d⟩-refl
+    ++⟨d⟩-assoc (cons x xs) y z = cons PE.refl (++-assoc xs y z)
 
-  consS-preserves : ∀ {x xs} → Normal xs → Normal (consS x xs)
-  consS-preserves Sleaf      = Sleaf
-  consS-preserves SDleaf     = SDleaf
-  consS-preserves Dleaf      = SDleaf
-  consS-preserves (Dcons p)  = SDcons p
-  consS-preserves (SDcons p) = SDcons p
+    ++-assoc : ∀ x y z → (x ++ y) ++ z ≋ x ++ (y ++ z)
+    ++-assoc (sta (leaf x))    (sta (leaf y))    (sta (leaf z))    = sta (leaf (·-assoc x y z))
+    ++-assoc (sta (leaf x))    (sta (leaf y))    (sta (cons z zs)) = sta (cons (·-assoc x y z) ≋⟨d⟩-refl)
+    ++-assoc (sta (leaf x))    (sta (leaf y))    (dyn z)           = ≋-refl
+    ++-assoc (sta (leaf x))    (sta (cons y ys)) z                 = ≋-refl
+    ++-assoc (sta (leaf x))    (dyn y)           z                 = ≋-refl
+    ++-assoc (sta (cons x xs)) y                 z                 = sta (cons A.refl (++⟨d⟩-assoc xs y z))
+    ++-assoc (dyn x)           y                 z                 = dyn (++⟨d⟩-assoc x y z)
 
-  consS-cong : ∀ {x y xs ys} → x ≈ y → xs ≋ ys
-               → consS x xs ≋ consS y ys
-  consS-cong x≈y (≈-leaf (sta p))     = ≈-leaf (sta (·-cong x≈y p))
-  consS-cong x≈y (≈-cons (sta p) q)   = ≈-cons (sta (·-cong x≈y p)) q
-  consS-cong x≈y p@(≈-leaf (dyn _))   = ≈-cons (sta x≈y) p
-  consS-cong x≈y p@(≈-cons (dyn _) _) = ≈-cons (sta x≈y) p
+  mutual
 
-  normalise-reduction : ∀ {x} → Normal (normalise x)
-  normalise-reduction {x = leaf₁ x}     = Sleaf
-  normalise-reduction {x = leaf₂ x}     = Dleaf
-  normalise-reduction {x = cons₁ x xs} =
-    consS-preserves (normalise-reduction {x = xs})
-  normalise-reduction {x = cons₂ x xs} =
-    Dcons (normalise-reduction {x = xs})
+    ++⟨d⟩-cong : ∀ {x y z w} → x ≋⟨d⟩ y → z ≋ w → x ++⟨d⟩ z ≋⟨d⟩ y ++⟨d⟩ w
+    ++⟨d⟩-cong (leaf p)    q = cons p q
+    ++⟨d⟩-cong (cons p ps) q = cons p (++-cong ps q)
 
-  _++-raw_ : Semigroup → Semigroup → Semigroup
-  leaf₁ x    ++-raw y = consS x y
-  leaf₂ x    ++-raw y = consD x y
-  cons₁ x xs ++-raw y = consS x (xs ++-raw y)
-  cons₂ x xs ++-raw y = consD x (xs ++-raw y)
+    ++-cong : ∀ {x y z w} → x ≋ y → z ≋ w → x ++ z ≋ y ++ w
+    ++-cong (sta (leaf p))    (sta (leaf q))    = sta (leaf (·-cong p q))
+    ++-cong (sta (leaf p))    (sta (cons q qs)) = sta (cons (·-cong p q) qs)
+    ++-cong (sta (leaf p))    (dyn q)           = sta (cons p q)
+    ++-cong (sta (cons p ps)) q                 = sta (cons p (++⟨d⟩-cong ps q))
+    ++-cong (dyn p)           q                 = dyn (++⟨d⟩-cong p q)
 
-  ++-raw-cong : ∀ {x y z w} → x ≋ y → z ≋ w
-                → x ++-raw z ≋ y ++-raw w
-  ++-raw-cong (≈-leaf (sta p)) q   = consS-cong p q
-  ++-raw-cong (≈-leaf (dyn p)) q   = ≈-cons (dyn p) q
-  ++-raw-cong (≈-cons (sta p) q) r = consS-cong p (++-raw-cong q r)
-  ++-raw-cong (≈-cons (dyn p) q) r = ≈-cons (dyn p) (++-raw-cong q r)
+  Tree⟦_⟧ : Interpretation Tree/≋
+  Tree⟦ • ⟧ (x ∷ y ∷ []) = x ++ y
 
-  consS-· : ∀ {a b} → (x : Semigroup) → consS (a · b) x ≋ consS a (consS b x)
-  consS-· {a = a} {b = b} (leaf₁ x)    = ≈-leaf (sta (·-assoc a b x))
-  consS-· {a = a} {b = b} (cons₁ x xs) = ≈-cons (sta (·-assoc a b x)) S.refl
-  consS-· (leaf₂ x)                    = S.refl
-  consS-· (cons₂ x xs)                 = S.refl
+  Tree⟦_⟧-cong : Congruence Tree/≋ Tree⟦_⟧
+  Tree⟦ • ⟧-cong (p ∷ q ∷ []) = ++-cong p q
 
-  consS-++ : ∀ {a} → (x y : Semigroup)
-             → (consS a x) ++-raw y ≋ consS a (x ++-raw y)
-  consS-++ {a = a} (leaf₁ x) (leaf₁ y)    = ≈-leaf (sta (·-assoc a x y))
-  consS-++ {a = a} (leaf₁ x) (cons₁ y ys) = ≈-cons (sta (·-assoc a x y)) S.refl
-  consS-++ (leaf₁ x) (leaf₂ y)            = S.refl
-  consS-++ (leaf₁ x) (cons₂ y ys)         = S.refl
-  consS-++ (leaf₂ x) y                    = S.refl
-  consS-++ (cons₂ x xs) y                 = S.refl
-  consS-++ {a = a} (cons₁ x xs) y         = begin
-      (consS a (cons₁ x xs)) ++-raw y
-    ≈⟨ ++-raw-cong (S.refl {x = cons₁ (a · x) xs}) S.refl ⟩
-      (cons₁ (a · x) xs) ++-raw y
-    ≡⟨⟩
-      consS (a · x) (xs ++-raw y)
-    ≈⟨ consS-· (xs ++-raw y) ⟩
-      consS a ((cons₁ x xs) ++-raw y)
-    ∎
-    where open import Relation.Binary.Reasoning.Setoid ≋-setoid
+  Tree/≋-isAlgebra : IsAlgebra Tree/≋
+  Tree/≋-isAlgebra = record { ⟦_⟧     = Tree⟦_⟧
+                            ; ⟦⟧-cong = Tree⟦_⟧-cong
+                            }
 
-  ++-raw-assoc : ∀ (x y z : Semigroup)
-                 → (x ++-raw y) ++-raw z ≋ x ++-raw (y ++-raw z)
-  ++-raw-assoc (leaf₁ x) (leaf₁ y) (leaf₂ z) = S.refl
-  ++-raw-assoc (leaf₁ x) (leaf₂ y) z         = S.refl
-  ++-raw-assoc (leaf₂ x) y z                 = S.refl
-  ++-raw-assoc (leaf₁ x) y z                 = consS-++ y z
-  ++-raw-assoc (cons₂ x xs) y z              =
-    ≈-cons B.refl (++-raw-assoc xs y z)
-  ++-raw-assoc (cons₁ x xs) y z              = begin
-      (consS x (xs ++-raw y)) ++-raw z
-    ≈⟨ consS-++ (xs ++-raw y) z ⟩
-      consS x ((xs ++-raw y) ++-raw z)
-    ≈⟨ consS-cong A.refl (++-raw-assoc xs y z) ⟩
-      consS x (xs ++-raw (y ++-raw z))
-    ∎
-    where open import Relation.Binary.Reasoning.Setoid ≋-setoid
+  Tree/≋-algebra : Algebra
+  Tree/≋-algebra = record { ∥_∥/≈           = Tree/≋
+                          ; ∥_∥/≈-isAlgebra = Tree/≋-isAlgebra
+                          }
 
-  _++ₙ_ : ∀ {x y} →  Normal x → Normal y → Normal (x ++-raw y)
-  _++ₙ_ Sleaf q      = consS-preserves q
-  _++ₙ_ Dleaf q      = Dcons q
-  _++ₙ_ SDleaf q     = SDcons q
-  _++ₙ_ (Dcons p) q  = Dcons (p ++ₙ q)
-  _++ₙ_ (SDcons p) q = SDcons (p ++ₙ q)
+  Tree/≋-models : Models Tree/≋-algebra
+  Tree/≋-models assoc θ = ++-assoc (θ (# 0)) (θ (# 1)) (θ (# 2))
 
-  ++-D : ∀ {x y : Semigroup}
-         → DNormal x
-         → Normal y
-         → DNormal (x ++-raw y)
-  ++-D dleaf q     = dhead q
-  ++-D (dhead p) q = dhead (p ++ₙ q)
+  Tree/≋-isModel : IsModel Tree/≋
+  Tree/≋-isModel = record { isAlgebra = Tree/≋-isAlgebra
+                          ; models    = Tree/≋-models
+                          }
 
-  consSD-lemma : ∀ {x y} → DNormal y → cons₁ x y ≡ consS x y
-  consSD-lemma dleaf     = PE.refl
-  consSD-lemma (dhead x) = PE.refl
+  Frex : Model
+  Frex = record { ∥_∥/≈   = Tree/≋
+                ; isModel = Tree/≋-isModel
+                }
 
-  record NormalSemigroup : Set a where
-    constructor _,_
-    field
-      x      : Semigroup
-      normal : Normal x
+  ∣inl∣ : ∥ A ∥ → ∥ Frex ∥
+  ∣inl∣ x = sta (leaf x)
 
-  infix 6 _~_
+  ∣inl∣-cong : Congruent _≈_ _≋_ ∣inl∣
+  ∣inl∣-cong p = sta (leaf p)
 
-  _~_ : NormalSemigroup → NormalSemigroup → Set (a ⊔ ℓ)
-  (x , _) ~ (y , _) = x ≋ y
-
-  ~-isEquivalence : IsEquivalence _~_
-  ~-isEquivalence = record { refl  = ≋-refl
-                           ; sym   = ≋-sym
-                           ; trans = ≋-trans
-                           }
-
-  ~-setoid : Setoid a (a ⊔ ℓ)
-  ~-setoid = record { Carrier       = NormalSemigroup
-                    ; _≈_           = _~_
-                    ; isEquivalence = ~-isEquivalence
-                    }
-
-  open module N = Setoid ~-setoid hiding (_≈_)
-
-  _++_ : NormalSemigroup → NormalSemigroup → NormalSemigroup
-  (x , p) ++ (y , q) = x ++-raw y , p ++ₙ q
-
-  ++-assoc : ∀ (x y z : NormalSemigroup)
-             → (x ++ y) ++ z ~ x ++ (y ++ z)
-  ++-assoc (x , _) (y , _) (z , _) = ++-raw-assoc x y z
-
-  ++-⟦_⟧ : Interpretation ~-setoid
-  ++-⟦ • ⟧ (x ∷ y ∷ []) = x ++ y
-
-  ++-⟦⟧-cong : Congruence ~-setoid ++-⟦_⟧
-  ++-⟦⟧-cong • (x≋y ∷ z≋w ∷ []) = ++-raw-cong x≋y z≋w
-
-  ++-isAlgebra : IsAlgebra ~-setoid
-  ++-isAlgebra = record { ⟦_⟧     = ++-⟦_⟧
-                        ; ⟦⟧-cong = ++-⟦⟧-cong
-                        }
-
-  ++-algebra : Algebra
-  ++-algebra = algebra ~-setoid ++-isAlgebra
-
-  ++-models : Models ++-algebra
-  ++-models assoc θ = ++-assoc (θ (# 0)) (θ (# 1)) (θ (# 2))
-
-  ++-isModel : IsModel ~-setoid
-  ++-isModel = record { isAlgebra = ++-isAlgebra
-                      ; models    = ++-models
-                      }
-
-  ++-model : Model
-  ++-model = record { ∥_∥/≈   = ~-setoid
-                    ; isModel = ++-isModel
-                    }
-
-  ∣inl∣ : ∥ A ∥ → NormalSemigroup
-  ∣inl∣ a = leaf₁ a , Sleaf
-
-  ∣inl∣-cong : Congruent _≈_ _~_ ∣inl∣
-  ∣inl∣-cong = ≈-leaf ∘ sta
-
-  ∣inl∣⃗ : ∥ A ∥/≈ ↝ ~-setoid
-  ∣inl∣⃗ = record { ∣_∣ = ∣inl∣
+  ∣inl∣⃗ : ∥ A ∥/≈ ↝ ∥ Frex ∥/≈
+  ∣inl∣⃗ = record { ∣_∣      = ∣inl∣
                   ; ∣_∣-cong = ∣inl∣-cong
                   }
 
-  ∣inl∣-hom : Homomorphic ∥ A ∥ₐ ++-algebra ∣inl∣
-  ∣inl∣-hom • (x ∷ y ∷ []) = N.refl {x = _ , Sleaf}
+  ∣inl∣-hom : Homomorphic ∥ A ∥ₐ ∥ Frex ∥ₐ ∣inl∣
+  ∣inl∣-hom • (x ∷ y ∷ []) = ≋-refl
 
-  inl : ∥ A ∥ₐ ⟿ ++-algebra
+  inl : ∥ A ∥ₐ ⟿ ∥ Frex ∥ₐ
   inl = record { ∣_∣⃗    = ∣inl∣⃗
                ; ∣_∣-hom = ∣inl∣-hom
                }
 
-  inr-θ : Env ++-algebra n
-  inr-θ k = leaf₂ k , Dleaf
-
-  inr : ∥ J n ∥ₐ ⟿ ++-algebra
-  inr = interp ++-model inr-θ
+  inr : ∥ J n ∥ₐ ⟿ ∥ Frex ∥ₐ
+  inr = interp Frex (λ k → dyn (leaf k))
 
   module _ {b ℓ} (X : Model {b} {ℓ}) where
 
-    open module X = Setoid ∥ X ∥/≈ renaming (_≈_ to _≐_)
-
     private
+
+      open module X = Setoid ∥ X ∥/≈ renaming (_≈_ to _~_)
+
       _⊕_ : ∥ X ∥ → ∥ X ∥ → ∥ X ∥
       x ⊕ y = X ⟦ • ⟧ (x ∷ y ∷ [])
 
-      ⊕-cong : ∀ {x y z w} → x ≐ y → z ≐ w → x ⊕ z ≐ y ⊕ w
+      ⊕-cong : ∀ {x y z w} → x ~ y → z ~ w → x ⊕ z ~ y ⊕ w
       ⊕-cong p q = (X ⟦ • ⟧-cong) (p ∷ q ∷ [])
 
-      ⊕-assoc : ∀ (x y z : ∥ X ∥) → (x ⊕ y) ⊕ z ≐ x ⊕ (y ⊕ z)
-      ⊕-assoc x y z = ∥ X ∥ₐ-models assoc θ
-        where θ : Fin 3 → ∥ X ∥
-              θ zero             = x
-              θ (suc zero)       = y
-              θ (suc (suc zero)) = z
+      ⊕-assoc : ∀ (x y z : ∥ X ∥) → (x ⊕ y) ⊕ z ~ x ⊕ (y ⊕ z)
+      ⊕-assoc x y z = ∥ X ∥ₐ-models assoc (env {A = ∥ X ∥ₐ} (x ∷ y ∷ z ∷ []))
+
+    module _
+      (f : ∥ A ∥ₐ ⟿ ∥ X ∥ₐ)
+      (g : ∥ J n ∥ₐ ⟿ ∥ X ∥ₐ)
+      where
+
+      ∣resid∣ : ∥ Frex ∥ → ∥ X ∥
+      ∣resid∣ (sta (leaf x))    = ∣ f ∣ x
+      ∣resid∣ (sta (cons x xs)) = ∣ f ∣ x ⊕ ∣resid∣ (dyn xs)
+      ∣resid∣ (dyn (leaf x))    = ∣ g ∣ (atom (dyn x))
+      ∣resid∣ (dyn (cons x xs)) = ∣ g ∣ (atom (dyn x)) ⊕ ∣resid∣ xs
+
+      ∣resid∣-cong : Congruent _≋_ _~_ ∣resid∣
+      ∣resid∣-cong (sta (leaf p))    = ∣ f ∣-cong p
+      ∣resid∣-cong (sta (cons p ps)) = ⊕-cong (∣ f ∣-cong p) (∣resid∣-cong (dyn ps))
+      ∣resid∣-cong (dyn (leaf p))    = ∣ g ∣-cong (inherit (atom (dyn p)))
+      ∣resid∣-cong (dyn (cons p ps)) =
+        ⊕-cong (∣ g ∣-cong (inherit (atom (dyn p)))) (∣resid∣-cong ps)
+
+      open Reasoning ∥ X ∥/≈
+
+      ∣resid∣-hom : Homomorphic ∥ Frex ∥ₐ ∥ X ∥ₐ ∣resid∣
+      ∣resid∣-hom • (sta (leaf x) ∷ sta (leaf y) ∷ [])    = ∣ f ∣-hom • (x ∷ y ∷ [])
+      ∣resid∣-hom • (sta (leaf x) ∷ sta (cons y ys) ∷ []) = begin
+          ∣ f ∣ x ⊕ (∣ f ∣ y ⊕ ∣resid∣ (dyn ys))
+        ≈⟨ X.sym (⊕-assoc (∣ f ∣ x) (∣ f ∣ y) _) ⟩
+          (∣ f ∣ x ⊕ ∣ f ∣ y) ⊕ ∣resid∣ (dyn ys)
+        ≈⟨ ⊕-cong (∣ f ∣-hom • (x ∷ y ∷ [])) X.refl ⟩
+          ∣ f ∣ (x · y) ⊕ ∣resid∣ (dyn ys)
+        ∎
+      ∣resid∣-hom • (sta (leaf x) ∷ dyn y ∷ [])           = X.refl
+      ∣resid∣-hom • (sta (cons x xs) ∷ y ∷ [])            = begin
+          (∣ f ∣ x ⊕ ∣resid∣ (dyn xs)) ⊕ ∣resid∣ y
+        ≈⟨ ⊕-assoc (∣ f ∣ x) _ (∣resid∣ y) ⟩
+          ∣ f ∣ x ⊕ (∣resid∣ (dyn xs) ⊕ ∣resid∣ y)
+        ≈⟨ ⊕-cong X.refl (∣resid∣-hom • (dyn xs ∷ y ∷ [])) ⟩
+          ∣ f ∣ x ⊕ ∣resid∣ (dyn xs ++ y)
+        ∎
+      ∣resid∣-hom • (dyn (leaf x) ∷ y ∷ [])               = X.refl
+      ∣resid∣-hom • (dyn (cons x xs) ∷ y ∷ [])            = begin
+          (∣ g ∣ (atom (dyn x)) ⊕ ∣resid∣ xs) ⊕ ∣resid∣ y
+        ≈⟨ ⊕-assoc _ (∣resid∣ xs) (∣resid∣ y) ⟩
+          ∣ g ∣ (atom (dyn x)) ⊕ (∣resid∣ xs ⊕ ∣resid∣ y)
+        ≈⟨ ⊕-cong X.refl (∣resid∣-hom • (xs ∷ y ∷ [])) ⟩
+          ∣ g ∣ (atom (dyn x)) ⊕ ∣resid∣ (xs ++ y)
+        ∎
+
+      ∣resid∣⃗ : ∥ Frex ∥/≈ ↝ ∥ X ∥/≈
+      ∣resid∣⃗ = record { ∣_∣      = ∣resid∣
+                        ; ∣_∣-cong = ∣resid∣-cong
+                        }
+
+      _[_,_] : ∥ Frex ∥ₐ ⟿ ∥ X ∥ₐ
+      _[_,_] = record { ∣_∣⃗    = ∣resid∣⃗
+                      ; ∣_∣-hom = ∣resid∣-hom
+                      }
+
+  module _ {b ℓ} {X : Model {b} {ℓ}} where
+
+    private
+
+      open module X = Setoid ∥ X ∥/≈ renaming (_≈_ to _~_)
+
+      _⊕_ : ∥ X ∥ → ∥ X ∥ → ∥ X ∥
+      x ⊕ y = X ⟦ • ⟧ (x ∷ y ∷ [])
+
+      ⊕-cong : ∀ {x y z w} → x ~ y → z ~ w → x ⊕ z ~ y ⊕ w
+      ⊕-cong p q = (X ⟦ • ⟧-cong) (p ∷ q ∷ [])
+
+      ⊕-assoc : ∀ (x y z : ∥ X ∥) → (x ⊕ y) ⊕ z ~ x ⊕ (y ⊕ z)
+      ⊕-assoc x y z = ∥ X ∥ₐ-models assoc (env {A = ∥ X ∥ₐ} (x ∷ y ∷ z ∷ []))
 
     module _
       {f : ∥ A ∥ₐ ⟿ ∥ X ∥ₐ}
       {g : ∥ J n ∥ₐ ⟿ ∥ X ∥ₐ}
       where
 
-      ∣base∣ = Morphism.∣ sub ∥ X ∥/≈ ∣ f ∣⃗ (λ k → ∣ g ∣ (atom (dyn k))) ∣
-      ∣base∣-cong = Morphism.∣ sub ∥ X ∥/≈ ∣ f ∣⃗ (λ k → ∣ g ∣ (atom (dyn k))) ∣-cong
-
-      ++-[_,_]-raw : Semigroup → ∥ X ∥
-      ++-[_,_]-raw (leaf x)    = ∣base∣ x
-      ++-[_,_]-raw (cons x xs) = ∣base∣ x ⊕ ++-[_,_]-raw xs
-
-      ++-[_,_] : NormalSemigroup → ∥ X ∥
-      ++-[_,_] (x , _) = ++-[_,_]-raw x
-
-      ++-[_,_]-raw-cong : Congruent _≋_ _≐_ ++-[_,_]-raw
-      ++-[_,_]-raw-cong (≈-leaf p)   = ∣base∣-cong p
-      ++-[_,_]-raw-cong (≈-cons p q) =
-        ⊕-cong (∣base∣-cong p) (++-[_,_]-raw-cong q)
-
-      open import Relation.Binary.Reasoning.Setoid ∥ X ∥/≈
-
-      ++-[_,_]-raw-hom : ∀ (x y : Σ[ x ∈ Semigroup ] (Normal x))
-                         → (++-[_,_]-raw (proj₁ x) ⊕ ++-[_,_]-raw (proj₁ y))
-                            ≐ ++-[_,_]-raw (proj₁ x ++-raw proj₁ y)
-      ++-[_,_]-raw-hom (leaf₁ x , _) (leaf₁ y , _)   = ∣ f ∣-hom • (x ∷ y ∷ [])
-      ++-[_,_]-raw-hom (leaf₁ _ , _) (leaf₂ _ , _)   = X.refl
-      ++-[_,_]-raw-hom (leaf₁ x , _) (cons₁ y z , _) = begin
-          ∣ f ∣ x ⊕ (∣ f ∣ y ⊕ ++-[_,_]-raw z)
-        ≈⟨ X.sym (⊕-assoc (∣ f ∣ x) (∣ f ∣ y) (++-[_,_]-raw z)) ⟩
-          (∣ f ∣ x ⊕ ∣ f ∣ y) ⊕ ++-[_,_]-raw z
-        ≈⟨ ⊕-cong (∣ f ∣-hom • (x ∷ y ∷ [])) X.refl ⟩
-          ∣ f ∣ (x · y) ⊕ ++-[_,_]-raw z
-        ∎
-      ++-[_,_]-raw-hom (leaf₁ x , _) (cons₂ _ _ , _) = ⊕-cong X.refl X.refl
-      ++-[_,_]-raw-hom (leaf₂ _ , _) _               = X.refl
-      ++-[_,_]-raw-hom (cons₁ x y , Scons q) (z , r) = begin
-          (∣ f ∣ x ⊕ ++-[_,_]-raw y) ⊕ ++-[_,_] (z , r)
-        ≈⟨ ⊕-assoc (∣ f ∣ x) (++-[_,_]-raw y) (++-[_,_] (z , r)) ⟩
-          ∣ f ∣ x ⊕ (++-[_,_]-raw y ⊕ ++-[_,_] (z , r))
-        ≈⟨ ⊕-cong X.refl (++-[_,_]-raw-hom (y , dnorm q) (z , r)) ⟩
-          ∣ f ∣ x ⊕ ++-[_,_] ((y , dnorm q) ++ (z , r))
-        ≈⟨ ++-[_,_]-raw-cong (S.reflexive (consSD-lemma (++-D q (recompute (normal? z) r)))) ⟩
-          ++-[_,_]-raw (consS x (y ++-raw z))
-        ≈⟨ X.sym (++-[_,_]-raw-cong (consS-++ {a = x} y z)) ⟩
-          ++-[_,_]-raw ((consS x y) ++-raw z)
-        ≈⟨ X.sym (++-[_,_]-raw-cong (++-raw-cong (S.reflexive (consSD-lemma q)) S.refl)) ⟩
-          ++-[_,_]-raw ((cons₁ x y) ++-raw z)
-        ∎
-      ++-[_,_]-raw-hom (cons₂ x xs , Dcons p) (y , q)       = begin
-          (∣ g ∣ (atom (dyn x)) ⊕ ++-[_,_]-raw xs) ⊕ ++-[_,_]-raw y
-        ≈⟨ ⊕-assoc (∣ g ∣ (atom (dyn x))) (++-[_,_]-raw xs) (++-[_,_]-raw y) ⟩
-          ∣ g ∣ (atom (dyn x)) ⊕ (++-[_,_]-raw xs ⊕ ++-[_,_]-raw y)
-        ≈⟨ ⊕-cong X.refl (++-[_,_]-raw-hom (xs , p) (y , q)) ⟩
-          ∣ g ∣ (atom (dyn x)) ⊕ ++-[_,_]-raw (xs ++-raw y)
-        ∎
-
-      ++-[_,_]-hom : ∀ (x y : NormalSemigroup)
-                     → (++-[_,_] x ⊕ ++-[_,_] y) ≐ ++-[_,_] (x ++ y)
-      ++-[_,_]-hom (x , p) (y , q)
-        with recompute (normal? x) p
-           | recompute (normal? y) q
-      ...  | r | s  = ++-[_,_]-raw-hom (x , r) (y , s)
-
-      _[_,_] : ++-algebra ⟿ ∥ X ∥ₐ
-      _[_,_] = record { ∣_∣⃗      = record { ∣_∣ = ++-[_,_] ; ∣_∣-cong = ++-[_,_]-raw-cong }
-                      ; ∣_∣-hom  = hom
-                      }
-        where hom : Homomorphic ++-algebra ∥ X ∥ₐ ++-[_,_]
-              hom • (x ∷ y ∷ []) = ++-[_,_]-hom x y
-
-      commute₁ : _[_,_] ⊙ inl ≗ f
+      commute₁ : X [ f , g ] ⊙ inl ≗ f
       commute₁ = X.refl
 
-      commute₂ : _[_,_] ⊙ inr ≗ g
-      commute₂ {x = atom (dyn k)} =
-        ++-[_,_]-raw-cong (S.refl {x = leaf₂ k})
-      commute₂ {x = t@(term • (x ∷ y ∷ []))} = begin
-          ++-[_,_] (∣ inr ∣ t)
-        ≈⟨ ++-[_,_]-raw-cong (∣ inr ∣-hom • (x ∷ y ∷ [])) ⟩
-          ++-[_,_] (subst-x ++ subst-y)
-        ≈⟨ X.sym (++-[_,_]-hom subst-x subst-y) ⟩
-          (++-[_,_] subst-x) ⊕ (++-[_,_] subst-y)
+      open Reasoning ∥ X ∥/≈
+
+      commute₂ : X [ f , g ] ⊙ inr ≗ g
+      commute₂ {atom (dyn k)} =
+        ∣ X [ f , g ] ∣-cong (≋-refl {x = dyn (leaf k)})
+      commute₂ {t@(term • (x ∷ y ∷ []))} = begin
+          ∣ X [ f , g ] ∣ (∣ inr ∣ t)
+        ≈⟨ ∣ X [ f , g ] ∣-cong (∣ inr ∣-hom • (x ∷ y ∷ [])) ⟩
+          ∣ X [ f , g ] ∣ (∣ inr ∣ x ++ ∣ inr ∣ y)
+        ≈⟨ X.sym (∣ X [ f , g ] ∣-hom • (∣ inr ∣ x ∷ ∣ inr ∣ y ∷ [])) ⟩
+          ∣ X [ f , g ] ∣ (∣ inr ∣ x) ⊕ ∣ X [ f , g ] ∣ (∣ inr ∣ y)
         ≈⟨ ⊕-cong commute₂ commute₂ ⟩
           ∣ g ∣ x ⊕ ∣ g ∣ y
         ≈⟨ ∣ g ∣-hom • (x ∷ y ∷ []) ⟩
           ∣ g ∣ t
         ∎
-        where subst-x = ∣ interp ++-model inr-θ ∣ x
-              subst-y = ∣ interp ++-model inr-θ ∣ y
 
-      module _ {h : ++-algebra ⟿ ∥ X ∥ₐ} where
+      module _ {h : ∥ Frex ∥ₐ ⟿ ∥ X ∥ₐ}
+        (c₁ : h ⊙ inl ≗ f)
+        (c₂ : h ⊙ inr ≗ g)
+        where
 
-        ++-[_,_]-raw-universal : h ⊙ inl ≗ f → h ⊙ inr ≗ g
-                                 → ∀ {x : Σ[ x ∈ Semigroup ] (Normal x)}
-                                 → ++-[_,_] (proj₁ x , proj₂ x) ≐ ∣ h ∣ (proj₁ x , proj₂ x)
-        ++-[_,_]-raw-universal c₁ c₂ {leaf₁ x , Sleaf} = X.sym c₁
-        ++-[_,_]-raw-universal c₁ c₂ {leaf₂ x , Dleaf} = X.sym c₂
-        ++-[_,_]-raw-universal c₁ c₂ {cons₁ x y , Scons p} = begin
-            ∣ f ∣ x ⊕ ++-[_,_] (y , dnorm p)
-          ≈⟨ ⊕-cong (X.sym c₁) (++-[_,_]-raw-universal c₁ c₂ {y , dnorm p}) ⟩
-            ∣ h ∣ (leaf₁ x , _) ⊕ ∣ h ∣ (y , dnorm p)
-          ≈⟨ ∣ h ∣-hom • ((leaf₁ x , _) ∷ (y , dnorm p) ∷ []) ⟩
-            ∣ h ∣ (consS x y , consS-preserves (dnorm p))
-          ≈⟨ X.sym (∣ h ∣-cong (S.reflexive (consSD-lemma p))) ⟩
-            ∣ h ∣ (cons₁ x y , Scons p)
+        universal : X [ f , g ] ≗ h
+        universal {sta (leaf x)}    = X.sym c₁
+        universal {dyn (leaf x)}    = X.sym c₂
+        universal {sta (cons x xs)} = begin
+            ∣ f ∣ x ⊕ ∣ X [ f , g ] ∣ (dyn xs)
+          ≈⟨ ⊕-cong (X.sym c₁) universal ⟩
+            ∣ h ∣ (sta (leaf x)) ⊕ ∣ h ∣ (dyn xs)
+          ≈⟨ ∣ h ∣-hom • (sta (leaf x) ∷ dyn xs ∷ []) ⟩
+            ∣ h ∣ (sta (leaf x) ++ dyn xs)
           ∎
-        ++-[_,_]-raw-universal c₁ c₂ {cons₂ x y , Dcons q} = begin
-            ∣ g ∣ (atom (dyn x)) ⊕ ++-[_,_] (y , q)
-          ≈⟨ ⊕-cong (X.sym c₂) (++-[_,_]-raw-universal c₁ c₂ {x = (y , q)}) ⟩
-            ∣ h ∣ (leaf₂ x , _) ⊕ ∣ h ∣ (y , q)
-          ≈⟨ ∣ h ∣-hom • ((leaf₂ x , _) ∷ (y , q) ∷ []) ⟩
-            ∣ h ∣ ((leaf₂ x , Dleaf) ++ (y , q))
+        universal {dyn (cons x xs)} = begin
+            ∣ g ∣ (atom (dyn x)) ⊕ ∣ X [ f , g ] ∣ xs
+          ≈⟨ ⊕-cong (X.sym c₂) universal ⟩
+            ∣ h ∣ (dyn (leaf x)) ⊕ ∣ h ∣ xs
+          ≈⟨ ∣ h ∣-hom • (dyn (leaf x) ∷ xs ∷ []) ⟩
+            ∣ h ∣ (dyn (leaf x) ++ xs)
           ∎
-
-        ++-[_,_]-universal : h ⊙ inl ≗ f → h ⊙ inr ≗ g → _[_,_] ≗ h
-        ++-[_,_]-universal c₁ c₂ {x = x , p} = ++-[_,_]-raw-universal c₁ c₂ {x = x , p}
-
-++-model-isFrex : IsFreeExtension ++-model
-++-model-isFrex A n =
-  record { inl       = inl A n
-         ; inr       = inr A n
-         ; _[_,_]    = λ X → λ f → λ g → _[_,_] A n X {f = f} {g = g}
-         ; commute₁  = λ {_} {_} {X} {f} {g} → commute₁ A n X {f = f} {g = g}
-         ; commute₂  = λ {_} {_} {X} {f} {g} → commute₂ A n X {f = f} {g = g}
-         ; universal = λ {_} {_} {X} {f} {g} {h} → ++-[_,_]-universal A n X {f = f} {g = g} {h = h}
-         }
 
 SemigroupFrex : FreeExtension
-SemigroupFrex = record { _[_]        = ++-model
-                       ; _[_]-isFrex = ++-model-isFrex
+SemigroupFrex = record { _[_]        = Frex
+                       ; _[_]-isFrex = isFrex
                        }
+  where isFrex : IsFreeExtension Frex
+        isFrex A n =
+          record { inl       = inl A n
+                 ; inr       = inr A n
+                 ; _[_,_]    = _[_,_] A n
+                 ; commute₁  = λ {_ _ X f g} → commute₁ A n {X = X} {f} {g}
+                 ; commute₂  = λ {_ _ X f g} → commute₂ A n {X = X} {f} {g}
+                 ; universal = λ {_ _ X f g h} → universal A n {X = X} {f} {g} {h}
+                 }
