@@ -252,8 +252,8 @@ module _ (A : Model {a} {ℓ}) (n : ℕ) where
   record NormalSemigroup : Set a where
     constructor _,_
     field
-      x       : Semigroup
-      .normal : Normal x
+      x      : Semigroup
+      normal : Normal x
 
   infix 6 _~_
 
@@ -447,8 +447,8 @@ module _ (A : Model {a} {ℓ}) (n : ℕ) where
         ++-[_,_]-raw-universal : h ⊙ inl ≗ f → h ⊙ inr ≗ g
                                  → ∀ {x : Σ[ x ∈ Semigroup ] (Normal x)}
                                  → ++-[_,_] (proj₁ x , proj₂ x) ≐ ∣ h ∣ (proj₁ x , proj₂ x)
-        ++-[_,_]-raw-universal c₁ c₂ {leaf₁ x , _} = X.sym c₁
-        ++-[_,_]-raw-universal c₁ c₂ {leaf₂ x , _} = X.sym c₂
+        ++-[_,_]-raw-universal c₁ c₂ {leaf₁ x , Sleaf} = X.sym c₁
+        ++-[_,_]-raw-universal c₁ c₂ {leaf₂ x , Dleaf} = X.sym c₂
         ++-[_,_]-raw-universal c₁ c₂ {cons₁ x y , Scons p} = begin
             ∣ f ∣ x ⊕ ++-[_,_] (y , dnorm p)
           ≈⟨ ⊕-cong (X.sym c₁) (++-[_,_]-raw-universal c₁ c₂ {y , dnorm p}) ⟩
@@ -467,9 +467,7 @@ module _ (A : Model {a} {ℓ}) (n : ℕ) where
           ∎
 
         ++-[_,_]-universal : h ⊙ inl ≗ f → h ⊙ inr ≗ g → _[_,_] ≗ h
-        ++-[_,_]-universal c₁ c₂ {x = x , p}
-          with recompute (normal? x) p
-        ...  | q = ++-[_,_]-raw-universal c₁ c₂ {x = x , q}
+        ++-[_,_]-universal c₁ c₂ {x = x , p} = ++-[_,_]-raw-universal c₁ c₂ {x = x , p}
 
 ++-model-isFrex : IsFreeExtension ++-model
 ++-model-isFrex A n =

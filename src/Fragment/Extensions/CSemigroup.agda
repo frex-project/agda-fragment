@@ -18,15 +18,15 @@ open import Fragment.Setoid.Morphism using (_↝_)
 open import Level using (Level; _⊔_)
 
 open import Data.Empty using (⊥; ⊥-elim)
-open import Data.Nat using (ℕ; _+_; zero; suc)
+open import Data.Nat using (ℕ; _+_; _∸_; zero; suc)
 open import Data.Nat.Properties using (+-comm; +-assoc; +-identityˡ)
 open import Data.Fin using (Fin; zero; suc; #_)
-open import Data.Maybe using (Maybe; just; nothing)
+open import Data.Maybe as M using (Maybe; just; nothing)
 open import Data.Maybe.Properties using (just-injective)
+open import Data.Maybe.Relation.Binary.Pointwise using (Pointwise; just; nothing)
 open import Data.Product using (Σ-syntax; _×_; _,_; proj₁)
-open import Data.Vec using (Vec; []; _∷_; zipWith; lookup; replicate; updateAt; tabulate)
-open import Data.Vec.Properties
-  using (lookup-zipWith; zipWith-comm; zipWith-assoc; zipWith-identityˡ; lookup∘updateAt; lookup∘tabulate)
+import Data.Vec.Properties as VP
+open import Data.Vec as V using (Vec; []; _∷_)
 open import Data.Vec.Relation.Binary.Pointwise.Inductive using ([]; _∷_)
 
 open import Relation.Nullary using (Dec; yes; no; recompute)
@@ -39,7 +39,7 @@ private
     a ℓ : Level
 
   NonEmpty : ∀ {n} → Vec ℕ n → Set
-  NonEmpty {n} xs = Σ[ i ∈ Fin n ] Σ[ k ∈ ℕ ] (lookup xs i ≡ suc k)
+  NonEmpty {n} xs = Σ[ i ∈ Fin n ] Σ[ k ∈ ℕ ] (V.lookup xs i ≡ suc k)
 
   nonempty? : ∀ {n} → (x : Vec ℕ n) → Dec (NonEmpty x)
   nonempty? []           = no λ ()
@@ -51,40 +51,94 @@ private
           lemma (suc i , p) = ¬p (i , p)
   nonempty? (suc x ∷ xs) = yes (zero , x , PE.refl)
 
+  or : ∀ {A : Set a} → (A → A → A)
+       → Maybe A → Maybe A → Maybe A
+  or f (just x) (just y) = just (f x y)
+  or f (just x) nothing  = just x
+  or f nothing  (just y) = just y
+  or f nothing  nothing  = nothing
+
   merge : ∀ {n} → Vec ℕ n → Vec ℕ n → Vec ℕ n
-  merge xs ys = zipWith _+_ xs ys
+  merge xs ys = V.zipWith _+_ xs ys
 
   merge-comm : ∀ {n} (x y : Vec ℕ n) → merge x y ≡ merge y x
-  merge-comm = zipWith-comm +-comm
+  merge-comm = VP.zipWith-comm +-comm
 
   merge-assoc : ∀ {n} (x y z : Vec ℕ n)
                 → merge (merge x y) z ≡ merge x (merge y z)
-  merge-assoc = zipWith-assoc +-assoc
+  merge-assoc = VP.zipWith-assoc +-assoc
 
   merge-preserves : ∀ {n} {b c : Vec ℕ n}
                     → NonEmpty b → NonEmpty c
                     → NonEmpty (merge b c)
   merge-preserves {b = b} {c = c} (i , n , p) _ =
-    i , n + lookup c i , lemma
+    i , n + V.lookup c i , lemma
     where open PE.≡-Reasoning
 
-          lemma : lookup (merge b c) i ≡ suc (n + lookup c i)
+          lemma : V.lookup (merge b c) i ≡ suc (n + V.lookup c i)
           lemma = begin
-              lookup (merge b c) i
-            ≡⟨ lookup-zipWith _+_ i b c ⟩
-              lookup b i + lookup c i
-            ≡⟨ PE.cong (_+ lookup c i) p ⟩
-              suc n + lookup c i
+              V.lookup (merge b c) i
+            ≡⟨ VP.lookup-zipWith _+_ i b c ⟩
+              V.lookup b i + V.lookup c i
+            ≡⟨ PE.cong (_+ V.lookup c i) p ⟩
+              suc n + V.lookup c i
             ∎
 
-  expand : ∀ {a n} {A : Set a} → (A → A → A)
+  expand : ∀ {n} {A : Set a} → (A → A → A)
            → Vec A n → Vec ℕ n → Maybe A
   expand f []       []           = nothing
   expand f (x ∷ xs) (zero ∷ ks)  = expand f xs ks
-  expand f (x ∷ xs) (suc k ∷ ks)
-    with expand f (x ∷ xs) (k ∷ ks)
-  ...  | just x' = just (f x x')
-  ...  | nothing = just x
+  expand f (x ∷ xs) (suc k ∷ ks) =
+    or f (just x) (expand f (x ∷ xs) (k ∷ ks))
+
+  module _
+    {a ℓ₁ b ℓ₂}
+    {A : Model {a} {ℓ₁}} {B : Model {b} {ℓ₂}}
+    where
+
+    private
+      open module A = Setoid ∥ A ∥/≈ renaming (_≈_ to _~_)
+      open module B = Setoid ∥ B ∥/≈
+
+      _•₁_ : ∥ A ∥ → ∥ A ∥ → ∥ A ∥
+      x •₁ y = A ⟦ • ⟧ (x ∷ y ∷ [])
+
+      _•₂_ : ∥ B ∥ → ∥ B ∥ → ∥ B ∥
+      x •₂ y = B ⟦ • ⟧ (x ∷ y ∷ [])
+
+    expand-merge : ∀ {n} (xs : Vec ∥ A ∥ n) (js ks : Vec ℕ n)
+                   → Pointwise _~_
+                             (or _•₁_ (expand _•₁_ xs js) (expand _•₁_ xs ks))
+                             (expand _•₁_ xs (merge js ks))
+    expand-merge []       []           []           = nothing
+    expand-merge (x ∷ xs) (zero ∷ js)  (zero ∷ ks)  = expand-merge xs js ks
+    expand-merge (x ∷ xs) (zero ∷ js)  (suc k ∷ ks) = {!!}
+    expand-merge (x ∷ xs) (suc j ∷ js) ks           = {!!}
+
+    module _ (h : ∥ A ∥ₐ ⟿ ∥ B ∥ₐ) where
+
+      open Reasoning ∥ B ∥/≈
+
+      expand-hom : ∀ {n} (xs : Vec ∥ A ∥ n) (ks : Vec ℕ n)
+                   → Pointwise _≈_
+                               (expand _•₂_ (V.map ∣ h ∣ xs) ks)
+                               (M.map ∣ h ∣ (expand _•₁_ xs ks))
+      expand-hom []       []           = nothing
+      expand-hom (x ∷ xs) (zero ∷ ks)  = expand-hom xs ks
+      expand-hom (x ∷ xs) (suc k ∷ ks)
+        with expand _•₂_ (V.map ∣ h ∣ (x ∷ xs)) (k ∷ ks)
+           | expand _•₁_ (x ∷ xs) (k ∷ ks)
+           | expand-hom (x ∷ xs) (k ∷ ks)
+      ...  | just b  | just a  | just p  = just lemma
+        where lemma : ∣ h ∣ x •₂ b ≈ ∣ h ∣ (x •₁ a)
+              lemma = begin
+                  ∣ h ∣ x •₂ b
+                ≈⟨ (B ⟦ • ⟧-cong) (B.refl ∷ p ∷ []) ⟩
+                  ∣ h ∣ x •₂ ∣ h ∣ a
+                ≈⟨ ∣ h ∣-hom • (x ∷ a ∷ []) ⟩
+                  ∣ h ∣ (x •₁ a)
+                ∎
+      ...  | nothing | nothing | nothing = just (∣ h ∣-cong A.refl)
 
   ∷-nonempty : ∀ {n x} {xs : Vec ℕ n}
                → NonEmpty xs → NonEmpty (x ∷ xs)
@@ -94,14 +148,14 @@ private
                   → NonEmpty (zero ∷ xs) → NonEmpty xs
   zero-nonempty (suc i , n , p) = i , n , p
 
-  expand-empty : ∀ {a n} {A : Set a}
+  expand-empty : ∀ {n} {A : Set a}
                  → {f : A → A → A}
                  → {xs : Vec A n}
-                 → expand f xs (replicate 0) ≡ nothing
+                 → expand f xs (V.replicate 0) ≡ nothing
   expand-empty {xs = []}     = PE.refl
   expand-empty {xs = x ∷ xs} = expand-empty {xs = xs}
 
-  force : ∀ {a n} {A : Set a}
+  force : ∀ {n} {A : Set a}
           → (f : A → A → A)
           → (xs : Vec A n)
           → (ks : Vec ℕ n)
@@ -115,19 +169,28 @@ private
   ...  | nothing = x , PE.refl
 
   empty : ∀ {n} → Vec ℕ n
-  empty = replicate 0
+  empty = V.replicate 0
+
+  empty-empty : ∀ {n} {xs : Vec ℕ n}
+                → (NonEmpty xs → ⊥)
+                → xs ≡ empty
+  empty-empty {xs = []} ¬p         = PE.refl
+  empty-empty {xs = zero ∷ xs} ¬p  = PE.cong (zero ∷_) (empty-empty lemma)
+    where lemma : NonEmpty xs → ⊥
+          lemma (i , k , p) = ¬p (suc i , k , p)
+  empty-empty {xs = suc k ∷ xs} ¬p = ⊥-elim (¬p (zero , k , PE.refl))
 
   singleton : ∀ {n} → Fin n → Vec ℕ n
-  singleton k = updateAt k (λ _ → 1) empty
+  singleton k = V.updateAt k (λ _ → 1) empty
 
   singleton-nonempty : ∀ {n} → (k : Fin n) → NonEmpty (singleton {n} k)
-  singleton-nonempty k = k , 0 , lookup∘updateAt k empty
+  singleton-nonempty k = k , 0 , VP.lookup∘updateAt k empty
 
-  singleton-force : ∀ {a n} {A : Set a}
+  singleton-force : ∀ {n} {A : Set a}
                     → (f : A → A → A)
                     → (xs : Vec A n)
                     → (k : Fin n)
-                    → expand f xs (singleton k) ≡ just (lookup xs k)
+                    → expand f xs (singleton k) ≡ just (V.lookup xs k)
   singleton-force f (x ∷ xs) zero
     with expand f xs empty | expand-empty {f = f} {xs}
   ...  | nothing           | _ = PE.refl
@@ -265,7 +328,7 @@ private
                     }
 
     ∣inl∣-hom : Homomorphic ∥ A ∥ₐ ++-algebra ∣inl∣
-    ∣inl∣-hom • (x ∷ y ∷ []) = sta (zipWith-identityˡ +-identityˡ empty) A.refl
+    ∣inl∣-hom • (x ∷ y ∷ []) = sta (VP.zipWith-identityˡ +-identityˡ empty) A.refl
 
     inl : ∥ A ∥ₐ ⟿ ++-algebra
     inl = record { ∣_∣⃗    = ∣inl∣⃗
@@ -308,7 +371,7 @@ private
         private
 
           env : Vec ∥ X ∥ n
-          env = tabulate (λ k → ∣ g ∣ (atom (dyn k)))
+          env = V.tabulate (λ k → ∣ g ∣ (atom (dyn k)))
 
         ∣resid∣ : CSemigroup → ∥ X ∥
         ∣resid∣ (sta b x)
@@ -332,15 +395,50 @@ private
         open Reasoning ∥ X ∥/≈
 
         ∣resid∣-hom : Homomorphic ++-algebra ∥ X ∥ₐ ∣resid∣
-        ∣resid∣-hom • (sta b x ∷ sta c y ∷ []) = {!!}
+        ∣resid∣-hom • (x ∷ y ∷ []) = {!!}
+
+{-
+        ∣resid∣-hom • (sta b x ∷ sta c y ∷ [])
+          with expand _⊕_ env b
+             | expand _⊕_ env c
+        ...  | just x' | just y' = begin
+              (∣ f ∣ x ⊕ x') ⊕ (∣ f ∣ y ⊕ y')
+            ≈⟨ ⊕-assoc (∣ f ∣ x) x' _ ⟩
+              ∣ f ∣ x ⊕ (x' ⊕ (∣ f ∣ y ⊕ y'))
+            ≈⟨ ⊕-cong X.refl (X.sym (⊕-assoc x' (∣ f ∣ y) y')) ⟩
+              ∣ f ∣ x ⊕ ((x' ⊕ ∣ f ∣ y) ⊕ y')
+            ≈⟨ ⊕-cong X.refl (⊕-cong (⊕-comm x' (∣ f ∣ y)) X.refl) ⟩
+              ∣ f ∣ x ⊕ ((∣ f ∣ y ⊕ x') ⊕ y')
+            ≈⟨ X.sym (⊕-assoc (∣ f ∣ x) _ y') ⟩
+              (∣ f ∣ x ⊕ (∣ f ∣ y ⊕ x')) ⊕ y'
+            ≈⟨ ⊕-cong (X.sym (⊕-assoc (∣ f ∣ x) (∣ f ∣ y) x')) X.refl ⟩
+              ((∣ f ∣ x ⊕ ∣ f ∣ y) ⊕ x') ⊕ y'
+            ≈⟨ ⊕-assoc _ x' y' ⟩
+              (∣ f ∣ x ⊕ ∣ f ∣ y) ⊕ (x' ⊕ y')
+            ≈⟨ ⊕-cong (∣ f ∣-hom • (x ∷ y ∷ [])) {!!} ⟩
+              ∣ f ∣ (x · y) ⊕ {!!}
+            ≈⟨ {!!} ⟩
+              ∣resid∣ (sta (merge b c) (x · y))
+            ∎
+        ...  | just x' | nothing = {!!}
+        ...  | nothing | just y' = {!!}
+        ...  | nothing | nothing = begin
+              ∣ f ∣ x ⊕ ∣ f ∣ y
+            ≈⟨ ∣ f ∣-hom • (x ∷ y ∷ []) ⟩
+              ∣ f ∣ (x · y)
+            ≈⟨ {!!} ⟩
+              ∣resid∣ (sta (merge b c) (x · y))
+            ∎
         ∣resid∣-hom • (sta b x ∷ dyn c q ∷ []) = {!!}
         ∣resid∣-hom • (dyn b p ∷ sta c y ∷ []) = {!!}
         ∣resid∣-hom • (dyn b p ∷ dyn c q ∷ []) = {!!}
+-}
 
         _[_,_] : ++-algebra ⟿ ∥ X ∥ₐ
         _[_,_] = record { ∣_∣⃗    = ∣resid∣⃗
                         ; ∣_∣-hom = ∣resid∣-hom
                         }
+
     module _
       {b ℓ} {X : Model {b} {ℓ}}
       {f : ∥ A ∥ₐ ⟿ ∥ X ∥ₐ}
@@ -358,7 +456,7 @@ private
         ⊕-cong p q = (X ⟦ • ⟧-cong) (p ∷ q ∷ [])
 
         env : Vec ∥ X ∥ n
-        env = tabulate (λ k → ∣ g ∣ (atom (dyn k)))
+        env = V.tabulate (λ k → ∣ g ∣ (atom (dyn k)))
 
       open Reasoning ∥ X ∥/≈
 
@@ -374,8 +472,8 @@ private
       ...  | (x , p) = begin
           x
         ≡⟨ just-injective (PE.trans (PE.sym p) (singleton-force _⊕_ env k)) ⟩
-          lookup env k
-        ≡⟨ lookup∘tabulate (λ k → ∣ g ∣ (atom (dyn k))) k ⟩
+          V.lookup env k
+        ≡⟨ VP.lookup∘tabulate (λ k → ∣ g ∣ (atom (dyn k))) k ⟩
           ∣ g ∣ (atom (dyn k))
         ∎
       commute₂ {t@(term • (x ∷ y ∷ []))} = begin
@@ -397,6 +495,40 @@ private
 
         universal : X [ f , g ] ≗ h
         universal = {!!}
+
+{-
+        universal {sta b x}
+          with expand _⊕_ env b
+        ...  | just x' = begin
+            ∣ f ∣ x ⊕ x'
+          ≈⟨ ⊕-cong X.refl {!!} ⟩
+            ∣ f ∣ x ⊕ ∣ g ∣ y
+          ≈⟨ ⊕-cong (X.sym c₁) (X.sym c₂) ⟩
+            ∣ h ∣ (∣ inl ∣ x) ⊕ ∣ h ∣ (∣ inr ∣ y)
+          ≈⟨ ∣ h ∣-hom • (∣ inl ∣ x ∷ ∣ inr ∣ y ∷ []) ⟩
+            ∣ h ∣ (∣ inl ∣ x ++ ∣ inr ∣ y)
+          ≈⟨ ∣ h ∣-cong (sta {!!} A.refl) ⟩
+            ∣ h ∣ (sta b x)
+          ∎
+          where y = {!!}
+        ...  | nothing = begin
+            ∣ f ∣ x
+          ≈⟨ X.sym c₁ ⟩
+            ∣ h ∣ (∣ inl ∣ x)
+          ≈⟨ ∣ h ∣-cong (sta (PE.sym (empty-empty {!!})) A.refl) ⟩
+            ∣ h ∣ (sta b x)
+          ∎
+        universal {dyn b p} = begin
+            ∣ X [ f , g ] ∣ (dyn b p)
+          ≈⟨ {!!} ⟩
+            ∣ g ∣ y
+          ≈⟨ X.sym c₂ ⟩
+            ∣ h ∣ (∣ inr ∣ y)
+          ≈⟨ ∣ h ∣-cong {!!} ⟩
+            ∣ h ∣ (dyn b p)
+          ∎
+          where y = {!!}
+-}
 
 private
 

@@ -13,8 +13,8 @@ open import Fragment.Setoid.Morphism as Morphism
 open import Level using (Level)
 
 open import Data.Empty using (⊥)
-open import Data.Nat using (ℕ)
-open import Data.Fin using (Fin)
+open import Data.Nat using (ℕ; suc)
+open import Data.Fin using (Fin; zero; suc)
 open import Data.Vec using (Vec; []; _∷_; map)
 open import Data.Vec.Relation.Binary.Pointwise.Inductive
   using (Pointwise; []; _∷_)
@@ -80,6 +80,10 @@ fold B f = (eval B) ⊙ bind (unit · f)
 
 Env : (A : Algebra {a} {ℓ₁}) → ℕ → Set _
 Env A n = Fin n → ∥ A ∥
+
+env : ∀ {A : Algebra {a} {ℓ₁}} {n} → (Γ : Vec ∥ A ∥ n) → Env A n
+env {A = _} {suc n} (x ∷ _)  zero    = x
+env {A = A} {suc n} (_ ∷ xs) (suc i) = env {A = A} xs i
 
 module _ {n}
   {S : Setoid a ℓ₁}

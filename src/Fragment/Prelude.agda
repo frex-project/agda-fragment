@@ -2,7 +2,7 @@
 
 module Fragment.Prelude where
 
-open import Fragment.Macros.Fragment public
+-- open import Fragment.Macros.Fragment using (fragment) public
 
 open import Fragment.Equational.Theory.Bundles public
 open import Fragment.Equational.Structures public

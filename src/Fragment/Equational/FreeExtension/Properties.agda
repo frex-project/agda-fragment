@@ -14,6 +14,7 @@ open import Fragment.Equational.FreeExtension.Synthetic Θ using (SynFrex)
 
 open import Level using (Level)
 open import Data.Nat using (ℕ)
+open import Data.Vec using (Vec)
 open import Relation.Binary using (Setoid)
 import Relation.Binary.Reasoning.Setoid as Reasoning
 
@@ -115,17 +116,23 @@ module _
   reduce : (θ : Env ∥ A ∥ₐ n) → ∥ A [ n ]ₛ ∥ₐ ⟿ ∥ A ∥ₐ
   reduce θ = A [ id , interp A θ ]ₛ
 
-  frexify : ∀ {lhs rhs : Term (BT ∥ A ∥ n)}
-            → (θ : Env ∥ A ∥ₐ n)
-            → ∣ norm ∣ lhs ≋ ∣ norm ∣ rhs
-            → ∣ reduce θ ∣ lhs ≈ ∣ reduce θ ∣ rhs
-  frexify {lhs = lhs} {rhs = rhs} θ p = begin
-      ∣ reduce θ ∣ lhs
-    ≈⟨ Setoid.sym ∥ A ∥/≈ (∣ reduce θ ∣-cong (inv SynFrex X A n {x = lhs})) ⟩
-      ∣ reduce θ ∣ (∣ syn ∣ (∣ norm ∣ lhs))
-    ≈⟨ ∣ reduce θ ∣-cong (∣ syn ∣-cong p) ⟩
-      ∣ reduce θ ∣ (∣ syn ∣ (∣ norm ∣ rhs))
-    ≈⟨ ∣ reduce θ ∣-cong (inv SynFrex X A n {x = rhs}) ⟩
-      ∣ reduce θ ∣ rhs
-    ∎
-    where open Reasoning ∥ A ∥/≈
+  module _ (Γ : Vec ∥ A ∥ n) where
+
+    private
+
+      θ : Env ∥ A ∥ₐ n
+      θ = env {A = ∥ A ∥ₐ} Γ
+
+    frexify : ∀ {lhs rhs : Term (BT ∥ A ∥ n)}
+              → ∣ norm ∣ lhs ≋ ∣ norm ∣ rhs
+              → ∣ reduce θ ∣ lhs ≈ ∣ reduce θ ∣ rhs
+    frexify {lhs = lhs} {rhs = rhs} p = begin
+        ∣ reduce θ ∣ lhs
+      ≈⟨ Setoid.sym ∥ A ∥/≈ (∣ reduce θ ∣-cong (inv SynFrex X A n {x = lhs})) ⟩
+        ∣ reduce θ ∣ (∣ syn ∣ (∣ norm ∣ lhs))
+      ≈⟨ ∣ reduce θ ∣-cong (∣ syn ∣-cong p) ⟩
+        ∣ reduce θ ∣ (∣ syn ∣ (∣ norm ∣ rhs))
+      ≈⟨ ∣ reduce θ ∣-cong (inv SynFrex X A n {x = rhs}) ⟩
+        ∣ reduce θ ∣ rhs
+      ∎
+      where open Reasoning ∥ A ∥/≈

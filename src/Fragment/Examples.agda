@@ -7,6 +7,7 @@ open import Fragment.Prelude
 open import Relation.Binary.PropositionalEquality as PE using (_≡_)
 
 open import Data.Nat using (ℕ; _+_)
+open import Data.Vec using ([]; _∷_)
 open import Data.Fin using (Fin; zero; suc; #_)
 open import Data.Nat.Properties using (+-isSemigroup)
 
@@ -22,15 +23,11 @@ simple {f} {m} {n} = frexify Θ-semigroup
                              SemigroupFrex
                              model
                              2
+                             (f m ∷ n ∷ [])
                              {lhs = (⟨ # 0 ⟩ ⟨ • ⟩₂ ⟨ 2 ⟩ₛ) ⟨ • ⟩₂ (⟨ 3 ⟩ₛ ⟨ • ⟩₂ ⟨ # 1 ⟩)}
                              {rhs = (⟨ # 0 ⟩ ⟨ • ⟩₂ ⟨ 5 ⟩ₛ) ⟨ • ⟩₂ ⟨ # 1 ⟩}
-                             θ
                              (≋-refl model 2) -- this is a problem
   where model = semigroup→model +-isSemigroup
-
-        θ : Fin 2 → ℕ
-        θ zero       = f m
-        θ (suc zero) = n
 
 {-
 infix 5 _≈_
