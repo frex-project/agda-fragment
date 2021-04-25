@@ -13,6 +13,8 @@ open import Fragment.Setoid.Morphism using (_↝_)
 open import Level using (Level)
 open import Function using (_∘_)
 
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Fin using (Fin; zero; suc; fromℕ)
 open import Data.Vec using (Vec; map)
 open import Data.Product using (proj₁; proj₂)
 open import Data.Vec.Relation.Binary.Pointwise.Inductive
@@ -75,3 +77,12 @@ module _ {n} (A : Model {a} {ℓ}) (θ : Env ∥ A ∥ₐ n) where
   interp = record { ∣_∣⃗    = ∣interp∣⃗
                   ; ∣_∣-hom = ∣ inst ∥ A ∥ₐ θ ∣-hom
                   }
+
+atomise : (n : ℕ) → ∥ J (suc n) ∥
+atomise n = atom (dyn (fromℕ n))
+
+raise : ∀ {n} → ∥ J n ∥ₐ ⟿ ∥ J (suc n) ∥ₐ
+raise {n} = interp (J (suc n)) (λ k → atom (dyn (lift k)))
+  where lift : ∀ {n} → Fin n → Fin (suc n)
+        lift zero    = zero
+        lift (suc n) = suc (lift n)
