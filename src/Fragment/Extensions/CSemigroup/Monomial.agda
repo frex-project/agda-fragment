@@ -15,11 +15,12 @@ open import Fragment.Setoid.Morphism using (_↝_)
 
 open import Fragment.Extensions.CSemigroup.Nat
 
-open import Data.Nat using (ℕ; suc)
-open import Data.Fin using (Fin; #_; fromℕ)
+open import Data.Nat using (ℕ; zero; suc; _≟_)
+open import Data.Fin using (Fin; #_; zero; suc; toℕ)
 open import Data.Vec using (Vec; []; _∷_)
 open import Data.Vec.Relation.Binary.Pointwise.Inductive using ([]; _∷_)
 
+open import Relation.Nullary using (yes ; no)
 open import Relation.Binary.PropositionalEquality as PE using (_≡_)
 open import Relation.Binary using (Setoid; IsEquivalence)
 import Relation.Binary.Reasoning.Setoid as Reasoning
@@ -28,6 +29,11 @@ data Monomial : ℕ → Set where
   leaf : ∀ {n} → ℕ⁺ → Monomial (suc n)
   skip : ∀ {n} → Monomial n → Monomial (suc n)
   cons : ∀ {n} → ℕ⁺ → Monomial n → Monomial (suc n)
+
+lift : ∀ {n} → Monomial n → Monomial (suc n)
+lift (leaf x)    = leaf x
+lift (skip x)    = skip (lift x)
+lift (cons x xs) = cons x (lift xs)
 
 _⊗_ : ∀ {n} → Monomial n → Monomial n → Monomial n
 leaf x    ⊗ leaf y    = leaf (x + y)
@@ -160,90 +166,115 @@ private
       ∎
       where open Reasoning ∥ J (suc n) ∥/≈
 
-  ∣norm∣ : ∀ {n} → ∥ J' n ∥ → ∥ J n ∥
-  ∣norm∣ {suc n} (leaf k)    = exp n k
-  ∣norm∣ {suc n} (skip x)    = ∣ raise ∣ (∣norm∣ x)
-  ∣norm∣ {suc n} (cons k xs) = exp n k · ∣ raise ∣ (∣norm∣ xs)
+  ∣syn∣ : ∀ {n} → ∥ J' n ∥ → ∥ J n ∥
+  ∣syn∣ {suc n} (leaf k)    = exp n k
+  ∣syn∣ {suc n} (skip x)    = ∣ raise ∣ (∣syn∣ x)
+  ∣syn∣ {suc n} (cons k xs) = exp n k · ∣ raise ∣ (∣syn∣ xs)
 
-  ∣norm∣-cong : ∀ {n} → Congruent _≡_ ≈[ J n ] ∣norm∣
-  ∣norm∣-cong {n} p = Setoid.reflexive ∥ J n ∥/≈ (PE.cong ∣norm∣ p)
+  ∣syn∣-cong : ∀ {n} → Congruent _≡_ ≈[ J n ] ∣syn∣
+  ∣syn∣-cong {n} p = Setoid.reflexive ∥ J n ∥/≈ (PE.cong ∣syn∣ p)
 
-  ∣norm∣⃗ : ∀ {n} → ∥ J' n ∥/≈ ↝ ∥ J n ∥/≈
-  ∣norm∣⃗ {n} = record { ∣_∣      = ∣norm∣ {n}
-                       ; ∣_∣-cong = ∣norm∣-cong {n}
-                       }
+  ∣syn∣⃗ : ∀ {n} → ∥ J' n ∥/≈ ↝ ∥ J n ∥/≈
+  ∣syn∣⃗ {n} = record { ∣_∣      = ∣syn∣ {n}
+                      ; ∣_∣-cong = ∣syn∣-cong {n}
+                      }
 
-  ∣norm∣-hom : ∀ {n} → Homomorphic ∥ J' n ∥ₐ ∥ J n ∥ₐ ∣norm∣
-  ∣norm∣-hom {suc n} • (leaf x    ∷ leaf y    ∷ []) = exp-hom n
-  ∣norm∣-hom {suc n} • (leaf x    ∷ skip y    ∷ []) = refl
-  ∣norm∣-hom {suc n} • (leaf x    ∷ cons y ys ∷ []) = begin
-      exp n x · (exp n y · ∣ raise ∣ (∣norm∣ ys))
+  ∣syn∣-hom : ∀ {n} → Homomorphic ∥ J' n ∥ₐ ∥ J n ∥ₐ ∣syn∣
+  ∣syn∣-hom {suc n} • (leaf x    ∷ leaf y    ∷ []) = exp-hom n
+  ∣syn∣-hom {suc n} • (leaf x    ∷ skip y    ∷ []) = refl
+  ∣syn∣-hom {suc n} • (leaf x    ∷ cons y ys ∷ []) = begin
+      exp n x · (exp n y · ∣ raise ∣ (∣syn∣ ys))
     ≈⟨ sym (·-assoc (exp n x) (exp n y) _) ⟩
-      (exp n x · exp n y) · ∣ raise ∣ (∣norm∣ ys)
+      (exp n x · exp n y) · ∣ raise ∣ (∣syn∣ ys)
     ≈⟨ ·-cong (exp-hom n) refl ⟩
-      exp n (x + y) · ∣ raise ∣ (∣norm∣ ys)
+      exp n (x + y) · ∣ raise ∣ (∣syn∣ ys)
     ∎
     where open Reasoning ∥ J (suc n) ∥/≈
-  ∣norm∣-hom {suc n} • (skip x    ∷ leaf y    ∷ []) = ·-comm _ (exp n y)
-  ∣norm∣-hom {suc n} • (skip x    ∷ skip y    ∷ []) = begin
-      ∣ raise ∣ (∣norm∣ x) · ∣ raise ∣ (∣norm∣ y)
-    ≈⟨ ∣ raise ∣-hom • (∣norm∣ x ∷ ∣norm∣ y ∷ []) ⟩
-      ∣ raise ∣ (∣norm∣ x · ∣norm∣ y)
-    ≈⟨ ∣ raise ∣-cong (∣norm∣-hom • (x ∷ y ∷ [])) ⟩
-      ∣ raise ∣ (∣norm∣ (x ⊗ y))
+  ∣syn∣-hom {suc n} • (skip x    ∷ leaf y    ∷ []) = ·-comm _ (exp n y)
+  ∣syn∣-hom {suc n} • (skip x    ∷ skip y    ∷ []) = begin
+      ∣ raise ∣ (∣syn∣ x) · ∣ raise ∣ (∣syn∣ y)
+    ≈⟨ ∣ raise ∣-hom • (∣syn∣ x ∷ ∣syn∣ y ∷ []) ⟩
+      ∣ raise ∣ (∣syn∣ x · ∣syn∣ y)
+    ≈⟨ ∣ raise ∣-cong (∣syn∣-hom • (x ∷ y ∷ [])) ⟩
+      ∣ raise ∣ (∣syn∣ (x ⊗ y))
     ∎
     where open Reasoning ∥ J (suc n) ∥/≈
-  ∣norm∣-hom {suc n} • (skip x    ∷ cons y ys ∷ []) = begin
-      ∣ raise ∣ (∣norm∣ x) · (exp n y · ∣ raise ∣ (∣norm∣ ys))
+  ∣syn∣-hom {suc n} • (skip x    ∷ cons y ys ∷ []) = begin
+      ∣ raise ∣ (∣syn∣ x) · (exp n y · ∣ raise ∣ (∣syn∣ ys))
     ≈⟨ sym (·-assoc _ (exp n y) _) ⟩
-      (∣ raise ∣ (∣norm∣ x) · exp n y) · ∣ raise ∣ (∣norm∣ ys)
+      (∣ raise ∣ (∣syn∣ x) · exp n y) · ∣ raise ∣ (∣syn∣ ys)
     ≈⟨ ·-cong (·-comm _ (exp n y)) refl ⟩
-      (exp n y · ∣ raise ∣ (∣norm∣ x)) · ∣ raise ∣ (∣norm∣ ys)
+      (exp n y · ∣ raise ∣ (∣syn∣ x)) · ∣ raise ∣ (∣syn∣ ys)
     ≈⟨ ·-assoc (exp n y) _ _ ⟩
-      exp n y · (∣ raise ∣ (∣norm∣ x) · ∣ raise ∣ (∣norm∣ ys))
-    ≈⟨ ·-cong refl (∣ raise ∣-hom • (∣norm∣ x ∷ ∣norm∣ ys ∷ [])) ⟩
-      exp n y · ∣ raise ∣ (∣norm∣ x · ∣norm∣ ys)
-    ≈⟨ ·-cong refl (∣ raise ∣-cong (∣norm∣-hom • (x ∷ ys ∷ []))) ⟩
-      exp n y · ∣ raise ∣ (∣norm∣ (x ⊗ ys))
+      exp n y · (∣ raise ∣ (∣syn∣ x) · ∣ raise ∣ (∣syn∣ ys))
+    ≈⟨ ·-cong refl (∣ raise ∣-hom • (∣syn∣ x ∷ ∣syn∣ ys ∷ [])) ⟩
+      exp n y · ∣ raise ∣ (∣syn∣ x · ∣syn∣ ys)
+    ≈⟨ ·-cong refl (∣ raise ∣-cong (∣syn∣-hom • (x ∷ ys ∷ []))) ⟩
+      exp n y · ∣ raise ∣ (∣syn∣ (x ⊗ ys))
     ∎
     where open Reasoning ∥ J (suc n) ∥/≈
-  ∣norm∣-hom {suc n} • (cons x xs ∷ leaf y    ∷ []) = begin
-      (exp n x · ∣ raise ∣ (∣norm∣ xs)) · exp n y
+  ∣syn∣-hom {suc n} • (cons x xs ∷ leaf y    ∷ []) = begin
+      (exp n x · ∣ raise ∣ (∣syn∣ xs)) · exp n y
     ≈⟨ ·-assoc (exp n x) _ (exp n y) ⟩
-      exp n x · (∣ raise ∣ (∣norm∣ xs) · exp n y)
+      exp n x · (∣ raise ∣ (∣syn∣ xs) · exp n y)
     ≈⟨ ·-cong refl (·-comm _ (exp n y)) ⟩
-      exp n x · (exp n y · ∣ raise ∣ (∣norm∣ xs))
+      exp n x · (exp n y · ∣ raise ∣ (∣syn∣ xs))
     ≈⟨ sym (·-assoc (exp n x) (exp n y) _) ⟩
-      (exp n x · exp n y) · ∣ raise ∣ (∣norm∣ xs)
+      (exp n x · exp n y) · ∣ raise ∣ (∣syn∣ xs)
     ≈⟨ ·-cong (exp-hom n) refl ⟩
-      exp n (x + y) · ∣ raise ∣ (∣norm∣ xs)
+      exp n (x + y) · ∣ raise ∣ (∣syn∣ xs)
     ∎
     where open Reasoning ∥ J (suc n) ∥/≈
-  ∣norm∣-hom {suc n} • (cons x xs ∷ skip y    ∷ []) = begin
-      (exp n x · ∣ raise ∣ (∣norm∣ xs)) · ∣ raise ∣ (∣norm∣ y)
+  ∣syn∣-hom {suc n} • (cons x xs ∷ skip y    ∷ []) = begin
+      (exp n x · ∣ raise ∣ (∣syn∣ xs)) · ∣ raise ∣ (∣syn∣ y)
     ≈⟨ ·-assoc (exp n x) _ _ ⟩
-      exp n x · (∣ raise ∣ (∣norm∣ xs) · ∣ raise ∣ (∣norm∣ y))
-    ≈⟨ ·-cong refl (∣ raise ∣-hom • (∣norm∣ xs ∷ ∣norm∣ y ∷ [])) ⟩
-      exp n x · ∣ raise ∣ (∣norm∣ xs · ∣norm∣ y)
-    ≈⟨ ·-cong refl (∣ raise ∣-cong (∣norm∣-hom • (xs ∷ y ∷ []))) ⟩
-      exp n x · ∣ raise ∣ (∣norm∣ (xs ⊗ y))
+      exp n x · (∣ raise ∣ (∣syn∣ xs) · ∣ raise ∣ (∣syn∣ y))
+    ≈⟨ ·-cong refl (∣ raise ∣-hom • (∣syn∣ xs ∷ ∣syn∣ y ∷ [])) ⟩
+      exp n x · ∣ raise ∣ (∣syn∣ xs · ∣syn∣ y)
+    ≈⟨ ·-cong refl (∣ raise ∣-cong (∣syn∣-hom • (xs ∷ y ∷ []))) ⟩
+      exp n x · ∣ raise ∣ (∣syn∣ (xs ⊗ y))
     ∎
     where open Reasoning ∥ J (suc n) ∥/≈
-  ∣norm∣-hom {suc n} • (cons x xs ∷ cons y ys ∷ []) = begin
-      (exp n x · ∣ raise ∣ (∣norm∣ xs)) · (exp n y · ∣ raise ∣ (∣norm∣ ys))
+  ∣syn∣-hom {suc n} • (cons x xs ∷ cons y ys ∷ []) = begin
+      (exp n x · ∣ raise ∣ (∣syn∣ xs)) · (exp n y · ∣ raise ∣ (∣syn∣ ys))
     ≈⟨ ·-assoc (exp n x) _ _ ⟩
-      exp n x · (∣ raise ∣ (∣norm∣ xs) · (exp n y · ∣ raise ∣ (∣norm∣ ys)))
+      exp n x · (∣ raise ∣ (∣syn∣ xs) · (exp n y · ∣ raise ∣ (∣syn∣ ys)))
     ≈⟨ ·-cong refl (sym (·-assoc _ (exp n y) _)) ⟩
-      exp n x · ((∣ raise ∣ (∣norm∣ xs) · exp n y) · ∣ raise ∣ (∣norm∣ ys))
-    ≈⟨ ·-cong refl (·-cong (·-comm (∣ raise ∣ (∣norm∣ xs)) _) refl) ⟩
-      exp n x · ((exp n y · ∣ raise ∣ (∣norm∣ xs)) · ∣ raise ∣ (∣norm∣ ys))
+      exp n x · ((∣ raise ∣ (∣syn∣ xs) · exp n y) · ∣ raise ∣ (∣syn∣ ys))
+    ≈⟨ ·-cong refl (·-cong (·-comm (∣ raise ∣ (∣syn∣ xs)) _) refl) ⟩
+      exp n x · ((exp n y · ∣ raise ∣ (∣syn∣ xs)) · ∣ raise ∣ (∣syn∣ ys))
     ≈⟨ ·-cong refl (·-assoc (exp n y) _ _) ⟩
-      exp n x · (exp n y · (∣ raise ∣ (∣norm∣ xs) · ∣ raise ∣ (∣norm∣ ys)))
+      exp n x · (exp n y · (∣ raise ∣ (∣syn∣ xs) · ∣ raise ∣ (∣syn∣ ys)))
     ≈⟨ sym (·-assoc (exp n x) (exp n y) _) ⟩
-      (exp n x · exp n y) · (∣ raise ∣ (∣norm∣ xs) · ∣ raise ∣ (∣norm∣ ys))
-    ≈⟨ ·-cong (exp-hom n) (∣ raise ∣-hom • (∣norm∣ xs ∷ ∣norm∣ ys ∷ [])) ⟩
-      exp n (x + y) · ∣ raise ∣ (∣norm∣ xs · ∣norm∣ ys)
-    ≈⟨ ·-cong refl (∣ raise ∣-cong (∣norm∣-hom • (xs ∷ ys ∷ []))) ⟩
-      exp n (x + y) · ∣ raise ∣ (∣norm∣ (xs ⊗ ys))
+      (exp n x · exp n y) · (∣ raise ∣ (∣syn∣ xs) · ∣ raise ∣ (∣syn∣ ys))
+    ≈⟨ ·-cong (exp-hom n) (∣ raise ∣-hom • (∣syn∣ xs ∷ ∣syn∣ ys ∷ [])) ⟩
+      exp n (x + y) · ∣ raise ∣ (∣syn∣ xs · ∣syn∣ ys)
+    ≈⟨ ·-cong refl (∣ raise ∣-cong (∣syn∣-hom • (xs ∷ ys ∷ []))) ⟩
+      exp n (x + y) · ∣ raise ∣ (∣syn∣ (xs ⊗ ys))
     ∎
     where open Reasoning ∥ J (suc n) ∥/≈
+
+syn : ∀ {n} → ∥ J' n ∥ₐ ⟿ ∥ J n ∥ₐ
+syn = record { ∣_∣⃗    = ∣syn∣⃗
+             ; ∣_∣-hom = ∣syn∣-hom
+             }
+
+norm : ∀ {n} → ∥ J n ∥ₐ ⟿ ∥ J' n ∥ₐ
+norm {n} = interp (J' n) tab
+  where tab : ∀ {n} → Fin n → ∥ J' n ∥
+        tab {n = suc zero}    zero    = leaf one
+        tab {n = suc (suc n)} zero    = skip (tab {n = suc n} zero)
+        tab {n = suc n}       (suc k) = lift (tab {n = n} k)
+
+{-
+private
+
+  inv₁ : ∀ {n} → syn {n} ⊙ norm {n} ≗ id
+  inv₁ {x = atom (dyn k)} = {!!}
+  inv₁ {x = term f xs}    = {!!}
+
+  inv₂ : ∀ {n} → norm {n} ⊙ syn {n} ≗ id
+  inv₂ {suc n} {leaf x}    = {!!}
+  inv₂ {suc n} {skip x}    = {!!}
+  inv₂ {suc n} {cons x xs} = {!!}
+-}
