@@ -9,10 +9,13 @@ open import Fragment.Algebra.Free Σ-magma hiding (_~_)
 open import Fragment.Algebra.Homomorphism Σ-magma
 open import Fragment.Algebra.Algebra Σ-magma
   using (Algebra; IsAlgebra; Interpretation; Congruence)
+
+open import Fragment.Equational.FreeExtension Θ-csemigroup
+  using (FreeExtension; IsFreeExtension)
 open import Fragment.Equational.Model Θ-csemigroup
+open import Fragment.Extensions.CSemigroup.Monomial
 
 open import Fragment.Setoid.Morphism using (_↝_)
-open import Fragment.Extensions.CSemigroup.Monomial
 
 open import Level using (Level; _⊔_)
 
@@ -323,3 +326,70 @@ module _ (A : Model {a} {ℓ}) (n : ℕ) where
       _[_,_] = record { ∣_∣⃗    = ∣resid∣⃗
                       ; ∣_∣-hom = ∣resid∣-hom
                       }
+
+  module _ {b ℓ} {X : Model {b} {ℓ}} where
+
+    private
+
+      open module X = Setoid ∥ X ∥/≈ renaming (_≈_ to _~_)
+
+      _⊕_ : ∥ X ∥ → ∥ X ∥ → ∥ X ∥
+      x ⊕ y = X ⟦ • ⟧ (x ∷ y ∷ [])
+
+      ⊕-cong : ∀ {x y z w} → x ~ y → z ~ w → x ⊕ z ~ y ⊕ w
+      ⊕-cong p q = (X ⟦ • ⟧-cong) (p ∷ q ∷ [])
+
+      ⊕-comm : ∀ (x y : ∥ X ∥) → x ⊕ y ~ y ⊕ x
+      ⊕-comm x y = ∥ X ∥ₐ-models comm (env {A = ∥ X ∥ₐ} (x ∷ y ∷ []))
+
+      ⊕-assoc : ∀ (x y z : ∥ X ∥) → (x ⊕ y) ⊕ z ~ x ⊕ (y ⊕ z)
+      ⊕-assoc x y z = ∥ X ∥ₐ-models assoc (env {A = ∥ X ∥ₐ} (x ∷ y ∷ z ∷ []))
+
+    module _
+      {f : ∥ A ∥ₐ ⟿ ∥ X ∥ₐ}
+      {g : ∥ J n ∥ₐ ⟿ ∥ X ∥ₐ}
+      where
+
+      commute₁ : X [ f , g ] ⊙ inl ≗ f
+      commute₁ = X.refl
+
+      commute₂ : X [ f , g ] ⊙ inr ≗ g
+      commute₂ {x} = ∣ g ∣-cong (syn⊙norm≗id {x = x})
+
+      module _ {h : ∥ Frex ∥ₐ ⟿ ∥ X ∥ₐ}
+        (c₁ : h ⊙ inl ≗ f)
+        (c₂ : h ⊙ inr ≗ g)
+        where
+
+        open Reasoning ∥ X ∥/≈
+
+        universal : X [ f , g ] ≗ h
+        universal {sta x}     = X.sym c₁
+        universal {dyn xs}    = begin
+            ∣ g ∣ (∣ syn ∣ xs)
+          ≈⟨ X.sym c₂ ⟩
+            ∣ h ∣ (dyn (∣ norm ∣ (∣ syn ∣ xs)))
+          ≈⟨ ∣ h ∣-cong (dyn norm⊙syn≗id) ⟩
+            ∣ h ∣ (dyn xs)
+          ∎
+        universal {blob xs x} = begin
+            ∣ g ∣ (∣ syn ∣ xs) ⊕ ∣ f ∣ x
+          ≈⟨ ⊕-cong universal universal ⟩
+            ∣ h ∣ (dyn xs) ⊕ ∣ h ∣ (sta x)
+          ≈⟨ ∣ h ∣-hom • (dyn xs ∷ sta x ∷ []) ⟩
+            ∣ h ∣ (blob xs x)
+          ∎
+
+CSemigroupFrex : FreeExtension
+CSemigroupFrex = record { _[_]        = Frex
+                        ; _[_]-isFrex = isFrex
+                        }
+  where isFrex : IsFreeExtension Frex
+        isFrex A n =
+          record { inl       = inl A n
+                 ; inr       = inr A n
+                 ; _[_,_]    = _[_,_] A n
+                 ; commute₁  = λ {_ _ X f g} → commute₁ A n {X = X} {f} {g}
+                 ; commute₂  = λ {_ _ X f g} → commute₂ A n {X = X} {f} {g}
+                 ; universal = λ {_ _ X f g h} → universal A n {X = X} {f} {g} {h}
+                 }

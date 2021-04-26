@@ -45,18 +45,18 @@ private
     infix 4 _≈_
 
     data _≈_ : T.Carrier → T.Carrier → Set (a ⊔ ℓ₁) where
-      refl    : ∀ {x} → x ≈ x
-      sym     : ∀ {x y} → x ≈ y → y ≈ x
-      trans   : ∀ {x y z} → x ≈ y → y ≈ z → x ≈ z
-      inherit : ∀ {x y} → x ~ y → x ≈ y
-      step    : ∀ {n xs} → (f : ops (Σ Θ) n)
-                → term f (map ∣inl∣ xs) ≈ ∣inl∣ (A ⟦ f ⟧ xs)
-      cong    : ∀ {n} → (f : ops (Σ Θ) n)
-                → ∀ {xs ys} → Pointwise _≈_ xs ys
-                → term f xs ≈ term f ys
-      axiom   : ∀ {n} → (eq : eqs Θ n) → (θ : Env Terms n)
-                → ∣ inst Terms θ ∣ (proj₁ (Θ ⟦ eq ⟧ₑ))
-                  ≈ ∣ inst Terms θ ∣ (proj₂ (Θ ⟦ eq ⟧ₑ))
+      refl     : ∀ {x} → x ≈ x
+      sym      : ∀ {x y} → x ≈ y → y ≈ x
+      trans    : ∀ {x y z} → x ≈ y → y ≈ z → x ≈ z
+      inherit  : ∀ {x y} → x ~ y → x ≈ y
+      evaluate : ∀ {n xs} → (f : ops (Σ Θ) n)
+                 → term f (map ∣inl∣ xs) ≈ ∣inl∣ (A ⟦ f ⟧ xs)
+      cong     : ∀ {n} → (f : ops (Σ Θ) n)
+                 → ∀ {xs ys} → Pointwise _≈_ xs ys
+                 → term f xs ≈ term f ys
+      axiom    : ∀ {n} → (eq : eqs Θ n) → (θ : Env Terms n)
+                 → ∣ inst Terms θ ∣ (proj₁ (Θ ⟦ eq ⟧ₑ))
+                   ≈ ∣ inst Terms θ ∣ (proj₂ (Θ ⟦ eq ⟧ₑ))
 
     ≈-isEquivalence : IsEquivalence _≈_
     ≈-isEquivalence = record { refl  = refl
@@ -106,7 +106,7 @@ private
     ∣inl∣-cong p = inherit (atom (sta p))
 
     ∣inl∣-hom : Homomorphic ∥ A ∥ₐ ∥ Syn ∥ₐ ∣inl∣
-    ∣inl∣-hom f xs = step f
+    ∣inl∣-hom f xs = evaluate f
 
     ∣inl∣⃗ : ∥ A ∥/≈ ↝ ∥ Syn ∥/≈
     ∣inl∣⃗ = record { ∣_∣      = ∣inl∣
@@ -153,7 +153,7 @@ private
         ∣resid∣-cong (sym p)     = X.sym (∣resid∣-cong p)
         ∣resid∣-cong (trans p q) = X.trans (∣resid∣-cong p) (∣resid∣-cong q)
         ∣resid∣-cong (inherit p) = ∣ resid ∣-cong p
-        ∣resid∣-cong (step {xs = xs} op) = begin
+        ∣resid∣-cong (evaluate {xs = xs} op) = begin
             ∣ resid ∣ (term op (map ∣inl∣ xs))
           ≈⟨ X.sym (∣ resid ∣-hom op (map ∣inl∣ xs)) ⟩
             X ⟦ op ⟧ (map ∣ resid ∣ (map ∣inl∣ xs))

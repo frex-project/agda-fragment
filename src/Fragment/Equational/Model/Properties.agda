@@ -15,7 +15,7 @@ open import Function using (_∘_)
 
 open import Data.Nat using (ℕ; zero; suc)
 open import Data.Fin using (Fin; zero; suc; fromℕ)
-open import Data.Vec using (Vec; map)
+open import Data.Vec using (Vec; []; _∷_; map)
 open import Data.Product using (proj₁; proj₂)
 open import Data.Vec.Relation.Binary.Pointwise.Inductive
   using (Pointwise; []; _∷_)
@@ -81,8 +81,34 @@ module _ {n} (A : Model {a} {ℓ}) (θ : Env ∥ A ∥ₐ n) where
 atomise : (n : ℕ) → ∥ J (suc n) ∥
 atomise n = atom (dyn (fromℕ n))
 
+up : ∀ {n} → Fin n → Fin (suc n)
+up zero    = zero
+up (suc n) = suc (up n)
+
 raise : ∀ {n} → ∥ J n ∥ₐ ⟿ ∥ J (suc n) ∥ₐ
-raise {n} = interp (J (suc n)) (λ k → atom (dyn (lift k)))
-  where lift : ∀ {n} → Fin n → Fin (suc n)
-        lift zero    = zero
-        lift (suc n) = suc (lift n)
+raise {n} = interp (J (suc n)) (λ k → atom (dyn (up k)))
+
+step : ∀ {n} → ∥ J n ∥ₐ ⟿ ∥ J (suc n) ∥ₐ
+step {n} = interp (J (suc n)) (λ k → atom (dyn (suc k)))
+
+mutual
+
+  map-step-raise : ∀ {n m} → (xs : Vec ∥ J n ∥ m)
+                   → Pointwise ≈[ J (suc (suc n)) ]
+                               (map ∣ step {suc n} ⊙ raise {n} ∣ xs)
+                               (map ∣ raise {suc n} ⊙ step {n} ∣ xs)
+  map-step-raise []       = []
+  map-step-raise (x ∷ xs) = step-raise {x = x} ∷ map-step-raise xs
+
+  step-raise : ∀ {n} → step {suc n} ⊙ raise {n} ≗ raise {suc n} ⊙ step {n}
+  step-raise {n} {atom (dyn k)} = refl
+  step-raise {n} {term f xs}    = begin
+      ∣ step ⊙ raise ∣ (term f xs)
+    ≈⟨ sym (∣ step ⊙ raise ∣-hom f xs) ⟩
+      term f (map ∣ step ⊙ raise ∣ xs)
+    ≈⟨ cong f (map-step-raise xs) ⟩
+      term f (map ∣ raise ⊙ step ∣ xs)
+    ≈⟨ ∣ raise ⊙ step ∣-hom f xs ⟩
+      ∣ raise ⊙ step ∣ (term f xs)
+    ∎
+    where open Reasoning ∥ J (suc (suc n)) ∥/≈

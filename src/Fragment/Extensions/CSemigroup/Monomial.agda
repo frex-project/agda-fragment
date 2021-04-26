@@ -16,7 +16,7 @@ open import Fragment.Setoid.Morphism using (_↝_)
 open import Fragment.Extensions.CSemigroup.Nat
 
 open import Data.Nat using (ℕ; zero; suc; _≟_)
-open import Data.Fin using (Fin; #_; zero; suc; toℕ)
+open import Data.Fin using (Fin; #_; zero; suc; toℕ; fromℕ)
 open import Data.Vec using (Vec; []; _∷_)
 open import Data.Vec.Relation.Binary.Pointwise.Inductive using ([]; _∷_)
 
@@ -259,22 +259,125 @@ syn = record { ∣_∣⃗    = ∣syn∣⃗
              ; ∣_∣-hom = ∣syn∣-hom
              }
 
-norm : ∀ {n} → ∥ J n ∥ₐ ⟿ ∥ J' n ∥ₐ
-norm {n} = interp (J' n) tab
-  where tab : ∀ {n} → Fin n → ∥ J' n ∥
-        tab {n = suc zero}    zero    = leaf one
-        tab {n = suc (suc n)} zero    = skip (tab {n = suc n} zero)
-        tab {n = suc n}       (suc k) = lift (tab {n = n} k)
-
-{-
 private
 
-  inv₁ : ∀ {n} → syn {n} ⊙ norm {n} ≗ id
-  inv₁ {x = atom (dyn k)} = {!!}
-  inv₁ {x = term f xs}    = {!!}
+  tab : ∀ {n} → Fin n → ∥ J' n ∥
+  tab {suc zero}    zero    = leaf one
+  tab {suc (suc n)} zero    = skip (tab {suc n} zero)
+  tab {suc (suc n)} (suc k) = lift (tab {suc n} k)
 
-  inv₂ : ∀ {n} → norm {n} ⊙ syn {n} ≗ id
-  inv₂ {suc n} {leaf x}    = {!!}
-  inv₂ {suc n} {skip x}    = {!!}
-  inv₂ {suc n} {cons x xs} = {!!}
--}
+norm : ∀ {n} → ∥ J n ∥ₐ ⟿ ∥ J' n ∥ₐ
+norm {n} = interp (J' n) tab
+
+private
+
+  step-exp : ∀ {n} → (k : ℕ⁺)
+             → ≈[ J (suc (suc n)) ] (exp (suc n) k)
+                                    (∣ step ∣ (exp n k))
+  step-exp one     = refl
+  step-exp (suc k) = ·-cong refl (step-exp k)
+
+  step-lift : ∀ {n} → (x : ∥ J' n ∥)
+              → ≈[ J (suc n) ] (∣ syn ∣ (lift x))
+                               (∣ step ∣ (∣ syn ∣ x))
+  step-lift {suc n} (leaf x)    = step-exp x
+  step-lift {suc n} (skip x)    = begin
+      ∣ raise ∣ (∣ syn ∣ (lift x))
+    ≈⟨ ∣ raise ∣-cong (step-lift x) ⟩
+      ∣ raise ∣ (∣ step ∣ (∣ syn ∣ x))
+    ≈⟨ sym (step-raise {x = ∣ syn ∣ x}) ⟩
+      ∣ step ∣ (∣ raise ∣ (∣ syn ∣ x))
+    ∎
+    where open Reasoning ∥ J (suc (suc n)) ∥/≈
+  step-lift {suc n} (cons x xs) = begin
+      exp (suc n) x · ∣ raise ∣ (∣ syn ∣ (lift xs))
+    ≈⟨ ·-cong refl (∣ raise ∣-cong (step-lift xs)) ⟩
+      exp (suc n) x · ∣ raise ∣ (∣ step ∣ (∣ syn ∣ xs))
+    ≈⟨ ·-cong (step-exp x) (sym (step-raise {x = ∣ syn ∣ xs})) ⟩
+      ∣ step ∣ (exp n x) · ∣ step ∣ (∣ raise ∣ (∣ syn ∣ xs))
+    ≈⟨ ∣ step ∣-hom • (exp n x ∷ (∣ raise ∣ (∣ syn ∣ xs)) ∷ []) ⟩
+      ∣ step ∣ (exp n x · ∣ raise ∣ (∣ syn ∣ xs))
+    ∎
+    where open Reasoning ∥ J (suc (suc n)) ∥/≈
+
+  syn-tab : ∀ {n} → (k : Fin n)
+            → ≈[ J n ] (∣ syn ∣ (tab k)) (atom (dyn k))
+  syn-tab {suc zero}    zero    = refl
+  syn-tab {suc (suc n)} zero    = ∣ raise ∣-cong (syn-tab zero)
+  syn-tab {suc (suc n)} (suc k) = begin
+      ∣ syn ∣ (lift (tab {suc n} k))
+    ≈⟨ step-lift (tab {suc n} k) ⟩
+      ∣ step ∣ (∣ syn ∣ (tab {suc n} k))
+    ≈⟨ ∣ step ∣-cong (syn-tab k) ⟩
+      ∣ step ∣ (atom (dyn k))
+    ∎
+    where open Reasoning ∥ J (suc (suc n)) ∥/≈
+
+syn⊙norm≗id : ∀ {n} → syn {n} ⊙ norm {n} ≗ id
+syn⊙norm≗id {n} {atom (dyn k)}        = syn-tab k
+syn⊙norm≗id {n} {term • (x ∷ y ∷ [])} = begin
+    ∣ syn ∣ (∣ norm ∣ x ⊗ ∣ norm ∣ y)
+  ≈⟨ sym (∣ syn ∣-hom • (∣ norm ∣ x ∷ ∣ norm ∣ y ∷ [])) ⟩
+    ∣ syn ∣ (∣ norm ∣ x) · ∣ syn ∣ (∣ norm ∣ y)
+  ≈⟨ ·-cong syn⊙norm≗id syn⊙norm≗id ⟩
+    x · y
+  ∎
+  where open Reasoning ∥ J n ∥/≈
+
+private
+
+  tab-diag : ∀ n → tab {suc n} (fromℕ n) ≡ leaf one
+  tab-diag zero    = PE.refl
+  tab-diag (suc n) = PE.cong lift (tab-diag n)
+
+  norm-exp : ∀ {n} (k : ℕ⁺) → ∣ norm ∣ (exp n k) ≡ leaf k
+  norm-exp {n} one     = tab-diag n
+  norm-exp {n} (suc k) = begin
+      ∣ norm ∣ (atomise n · exp n k)
+    ≈⟨ PE.sym (∣ norm ∣-hom • (atomise n ∷ exp n k ∷ [])) ⟩
+      ∣ norm ∣ (atomise n) ⊗ ∣ norm ∣ (exp n k)
+    ≈⟨ ⊗-cong (tab-diag n) (norm-exp k) ⟩
+      leaf one ⊗ leaf k
+    ∎
+    where open Reasoning ∥ J' (suc n) ∥/≈
+
+  tab-skip : ∀ {n} → (k : Fin n) → tab {suc n} (up k) ≡ skip (tab {n} k)
+  tab-skip {suc zero}    zero    = PE.refl
+  tab-skip {suc (suc n)} zero    = PE.refl
+  tab-skip {suc (suc n)} (suc k) = PE.cong lift (tab-skip k)
+
+  norm-raise : ∀ {n x} → ∣ norm {suc n} ∣ (∣ raise ∣ x) ≡ skip (∣ norm {n} ∣ x)
+  norm-raise {n} {atom (dyn k)}        = tab-skip k
+  norm-raise {n} {term • (x ∷ y ∷ [])} = begin
+      ∣ norm ∣ (∣ raise ∣ (x · y))
+    ≡⟨ ∣ norm ∣-cong (sym (∣ raise ∣-hom • (x ∷ y ∷ []))) ⟩
+      ∣ norm ∣ (∣ raise ∣ x · ∣ raise ∣ y)
+    ≡⟨ PE.sym (∣ norm ∣-hom • (∣ raise ∣ x ∷ ∣ raise ∣ y ∷ [])) ⟩
+      ∣ norm ∣ (∣ raise ∣ x) ⊗ ∣ norm ∣ (∣ raise ∣ y)
+    ≡⟨ ⊗-cong (norm-raise {x = x}) (norm-raise {x = y}) ⟩
+      skip (∣ norm ∣ x ⊗ ∣ norm ∣ y)
+    ≡⟨ PE.cong skip (∣ norm ∣-hom • (x ∷ y ∷ [])) ⟩
+      skip (∣ norm ∣ (x · y))
+    ∎
+    where open PE.≡-Reasoning
+
+norm⊙syn≗id : ∀ {n} → norm {n} ⊙ syn {n} ≗ id
+norm⊙syn≗id {suc n} {leaf x} = norm-exp x
+norm⊙syn≗id {suc n} {skip x} = begin
+    ∣ norm ∣ (∣ raise ∣ (∣ syn ∣ x))
+  ≈⟨ norm-raise {x = ∣ syn ∣ x} ⟩
+    skip (∣ norm ∣ (∣ syn ∣ x))
+  ≈⟨ PE.cong skip norm⊙syn≗id ⟩
+    skip x
+  ∎
+  where open Reasoning ∥ J' (suc n) ∥/≈
+norm⊙syn≗id {suc n} {cons x xs} = begin
+    ∣ norm ∣ (exp n x · ∣ raise ∣ (∣ syn ∣ xs))
+  ≈⟨ PE.sym (∣ norm ∣-hom • (exp n x ∷ ∣ raise ∣ (∣ syn ∣ xs) ∷ [])) ⟩
+    ∣ norm ∣ (exp n x) ⊗ ∣ norm ∣ (∣ raise ∣ (∣ syn ∣ xs))
+  ≈⟨ ⊗-cong (norm-exp x) (norm-raise {x = ∣ syn ∣ xs}) ⟩
+    leaf x ⊗ skip (∣ norm ∣ (∣ syn ∣ xs))
+  ≈⟨ ⊗-cong (PE.refl {x = leaf x}) (PE.cong skip (norm⊙syn≗id {x = xs})) ⟩
+    leaf x ⊗ skip xs
+  ∎
+  where open Reasoning ∥ J' (suc n) ∥/≈
