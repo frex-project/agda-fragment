@@ -30,6 +30,9 @@ import Fragment.Equational.Theory.Bundles
 import Fragment.Equational.Theory.Laws
 import Fragment.Examples
 import Fragment.Extensions.CSemigroup
+import Fragment.Extensions.CSemigroup.Base
+import Fragment.Extensions.CSemigroup.Monomial
+import Fragment.Extensions.CSemigroup.Nat
 import Fragment.Extensions.Semigroup
 import Fragment.Macros.Base
 import Fragment.Macros.Environment
