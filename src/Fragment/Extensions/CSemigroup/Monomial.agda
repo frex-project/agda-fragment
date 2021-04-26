@@ -381,3 +381,10 @@ norm⊙syn≗id {suc n} {cons x xs} = begin
     leaf x ⊗ skip xs
   ∎
   where open Reasoning ∥ J' (suc n) ∥/≈
+
+iso : ∀ {n} → ∥ J n ∥ₐ ≃ ∥ J' n ∥ₐ
+iso = record { _⃗   = norm
+             ; _⃖   = syn
+             ; invˡ = norm⊙syn≗id
+             ; invʳ = syn⊙norm≗id
+             }

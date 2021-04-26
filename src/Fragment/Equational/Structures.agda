@@ -78,8 +78,7 @@ module _ {A : Set a} {_≈_ : Rel A ℓ} where
         open IsSemigroup isSemigroup renaming (assoc to •-assoc)
 
         semigroup→models : Models Θ-semigroup (magma→algebra isMagma)
-        semigroup→models assoc θ =
-          •-assoc (θ (# 0)) (θ (# 1)) (θ (# 2))
+        semigroup→models assoc θ = •-assoc (θ (# 0)) (θ (# 1)) (θ (# 2))
 
         semigroup→isModel : IsModel Θ-semigroup (magma→setoid isMagma)
         semigroup→isModel = record { isAlgebra = magma→isAlgebra isMagma
@@ -90,3 +89,24 @@ module _ {A : Set a} {_≈_ : Rel A ℓ} where
       semigroup→model = record { ∥_∥/≈   = magma→setoid isMagma
                                ; isModel = semigroup→isModel
                                }
+
+    module _ (isCSemigroup : IsCommutativeSemigroup _•_) where
+
+      private
+
+        open IsCommutativeSemigroup isCSemigroup
+          renaming (comm to •-comm; assoc to •-assoc)
+
+        csemigroup→models : Models Θ-csemigroup (magma→algebra isMagma)
+        csemigroup→models comm θ = •-comm (θ (# 0)) (θ (# 1))
+        csemigroup→models assoc θ = •-assoc (θ (# 0)) (θ (# 1)) (θ (# 2))
+
+        csemigroup→isModel : IsModel Θ-csemigroup (magma→setoid isMagma)
+        csemigroup→isModel = record { isAlgebra = magma→isAlgebra isMagma
+                                    ; models    = csemigroup→models
+                                    }
+
+      csemigroup→model : Model Θ-csemigroup
+      csemigroup→model = record { ∥_∥/≈   = magma→setoid isMagma
+                                ; isModel = csemigroup→isModel
+                                }

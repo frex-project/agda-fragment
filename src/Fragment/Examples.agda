@@ -9,23 +9,23 @@ open import Relation.Binary.PropositionalEquality as PE using (_≡_)
 open import Data.Nat using (ℕ; _+_)
 open import Data.Vec using ([]; _∷_)
 open import Data.Fin using (Fin; zero; suc; #_)
-open import Data.Nat.Properties using (+-isSemigroup)
+open import Data.Nat.Properties using (+-isCommutativeSemigroup)
 
 open import Relation.Binary using (Setoid; IsEquivalence)
 
-open import Fragment.Equational.Model Θ-semigroup
+open import Fragment.Equational.Model Θ-csemigroup
 open import Fragment.Algebra.Free.Syntax Σ-magma (PE.setoid ℕ)
 open import Fragment.Equational.FreeExtension using (FreeExtension; frexify)
 
-simple : ∀ {f : ℕ → ℕ} {m n} → (f m + 2) + (3 + n) ≡ (f m + 5) + n
-simple {f} {m} {n} = frexify Θ-semigroup
-                             SemigroupFrex
+simple : ∀ {f : ℕ → ℕ} {m n} → (f m + 2) + (3 + n) ≡ f m + (n + 5)
+simple {f} {m} {n} = frexify Θ-csemigroup
+                             CSemigroupFrex
                              model
                              (f m ∷ n ∷ [])
                              {lhs = (⟨ # 0 ⟩ ⟨ • ⟩₂ ⟨ 2 ⟩ₛ) ⟨ • ⟩₂ (⟨ 3 ⟩ₛ ⟨ • ⟩₂ ⟨ # 1 ⟩)}
-                             {rhs = (⟨ # 0 ⟩ ⟨ • ⟩₂ ⟨ 5 ⟩ₛ) ⟨ • ⟩₂ ⟨ # 1 ⟩}
-                             (Setoid.refl ∥ FreeExtension._[_] SemigroupFrex model 2 ∥/≈)
-  where model = semigroup→model +-isSemigroup
+                             {rhs = ⟨ # 0 ⟩ ⟨ • ⟩₂ (⟨ # 1 ⟩ ⟨ • ⟩₂ ⟨ 5 ⟩ₛ)}
+                             (Setoid.refl ∥ FreeExtension._[_] CSemigroupFrex model 2 ∥/≈)
+  where model = csemigroup→model +-isCommutativeSemigroup
 
 {-
 infix 5 _≈_
