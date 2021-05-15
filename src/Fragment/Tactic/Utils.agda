@@ -1,20 +1,21 @@
 {-# OPTIONS --without-K --safe #-}
 
-module Fragment.Macros.Base where
+module Fragment.Tactic.Utils where
 
 open import Reflection hiding (name; Type; _≟_)
 open import Reflection.Term using (_≟_)
 
 open import Data.Nat using (ℕ; zero; suc)
+open import Data.Fin using (Fin)
 open import Data.Nat.Show using (show)
 open import Data.String using (String) renaming (_++_ to _⟨S⟩_)
 open import Data.List using (List; []; _∷_; _++_; drop; take; reverse)
 open import Data.Vec using (Vec; []; _∷_; map; toList)
 open import Data.Bool using (Bool; true; false; if_then_else_)
 open import Data.Maybe using (Maybe; nothing; just)
+open import Data.Product using (_×_; _,_)
 
 open import Relation.Nullary using (yes; no)
-open import Relation.Binary.Structures using (IsDecEquivalence)
 open import Relation.Binary.PropositionalEquality as PE using (_≡_)
 
 vra : ∀ {a} {A : Set a} → A → Arg A
@@ -123,18 +124,39 @@ extract-constructors x
   = do δ ← extract-definition x
        return (constructors δ)
 
+fin : ℕ → Term
+fin zero    = con (quote Fin.zero) []
+fin (suc n) = con (quote Fin.suc) (vra (fin n) ∷ [])
+
 vec : ∀ {n : ℕ} → Vec Term n → Term
 vec []       = con (quote Vec.[]) []
 vec (x ∷ xs) = con (quote Vec._∷_) (vra x ∷ vra (vec xs) ∷ [])
 
 vec-len : Term → TC ℕ
 vec-len (def (quote Vec) (_ ∷ _ ∷ (arg _ n) ∷ [])) = unquoteTC n
-vec-len _ = typeError (strErr "can't get length of type that isn't" ∷ nameErr (quote Vec) ∷ [])
+vec-len t = typeError (termErr t ∷ strErr "isn't a" ∷ nameErr (quote Vec) ∷ [])
 
 panic : ∀ {a} {A : Set a} → Term → TC A
 panic x = typeError (termErr x ∷ [])
 
-≡-isDecEquivalence : IsDecEquivalence (_≡_ {A = Term})
-≡-isDecEquivalence = record { isEquivalence = PE.isEquivalence
-                            ; _≟_           = _≟_
-                            }
+strip-telescope : Term → TC (Term × List (Arg String))
+strip-telescope (pi (vArg _) (abs s x))
+  = do (τ , acc) ← strip-telescope x
+       return (τ , vra s ∷ acc)
+strip-telescope (pi (hArg _) (abs s x))
+  = do (τ , acc) ← strip-telescope x
+       return (τ , hra s ∷ acc)
+strip-telescope (pi _ _) =
+  typeError (strErr "no support for irrelevant goals" ∷ [])
+strip-telescope t        = return (t , [])
+
+restore-telescope : List (Arg String) → Term → TC Term
+restore-telescope [] t = return t
+restore-telescope (vArg x ∷ xs) t
+  = do t ← restore-telescope xs t
+       return (λ⦅ x ⦆→ t)
+restore-telescope (hArg x ∷ xs) t
+  = do t ← restore-telescope xs t
+       return (λ⦃ x ⦄→ t)
+restore-telescope (_ ∷ _) _ =
+  typeError (strErr "no support for irrelevant goals" ∷ [])
