@@ -5,27 +5,19 @@ module Fragment.Examples where
 open import Fragment.Prelude
 
 open import Relation.Binary.PropositionalEquality as PE using (_≡_)
+open import Relation.Binary using (Setoid; IsEquivalence)
 
-open import Data.Nat using (ℕ; _+_)
-open import Data.Nat.Properties using (+-isCommutativeSemigroup)
+open import Data.Nat using (ℕ; _+_; suc)
+open import Data.Nat.Properties using (+-isCommutativeSemigroup; +-isSemigroup)
 
-simple : ∀ {f : ℕ → ℕ} {m n} → (f m + 2) + (3 + n) ≡ f m + (n + 5)
-simple = fragment CSemigroupFrex
-                  (csemigroup→model +-isCommutativeSemigroup)
+simple : ∀ {f : ℕ → ℕ} {m n} → (f m + 2) + (3 + n) ≡ f m + (5 + n)
+simple = fragment SemigroupFrex
+                  (semigroup→model +-isSemigroup)
 
-{-
-simple : ∀ {f : ℕ → ℕ} {m n} → (f m + 2) + (3 + n) ≡ f m + (n + 5)
-simple {f} {m} {n} = frexify Θ-csemigroup
-                             CSemigroupFrex
-                             model
-                             (f m ∷ n ∷ [])
-                             {lhs = (⟨ # 0 ⟩ ⟨ • ⟩₂ ⟨ 2 ⟩ₛ) ⟨ • ⟩₂ (⟨ 3 ⟩ₛ ⟨ • ⟩₂ ⟨ # 1 ⟩)}
-                             {rhs = ⟨ # 0 ⟩ ⟨ • ⟩₂ (⟨ # 1 ⟩ ⟨ • ⟩₂ ⟨ 5 ⟩ₛ)}
-                             (Setoid.refl ∥ FreeExtension._[_] CSemigroupFrex model 2 ∥/≈)
-  where model = csemigroup→model +-isCommutativeSemigroup
--}
+simple' : ∀ {f : ℕ → ℕ} {m n} → (f m + 2) + (3 + n) ≡ f m + (n + 5)
+simple' = fragment CSemigroupFrex
+                   (csemigroup→model +-isCommutativeSemigroup)
 
-{-
 infix 5 _≈_
 
 data _≈_ : ℕ → ℕ → Set where
@@ -92,14 +84,15 @@ left-isSemigroup =
 left-test : ∀ {m n} → left (left m n) (left m n) ≈ left m (left n (left m n))
 left-test = fragment SemigroupFrex (semigroup→model left-isSemigroup)
 
-simple : ∀ {m n} → (m + 2) + (3 + n) ≡ (m + 5) + n
-simple = fragment SemigroupFrex (semigroup→model +-isSemigroup)
-
-open import Data.List using (List; []; _∷_; _++_)
+open import Data.List using (List; []; _∷_; _++_; map)
 open import Data.List.Properties using (++-isSemigroup)
 
 lists : ∀ {m n x y}
         → ((0 ∷ m) ++ (x ∷ [])) ++ ((y ∷ []) ++ n)
           ≡ (0 ∷ m) ++ (x ∷ y ∷ []) ++ n
 lists = fragment SemigroupFrex (semigroup→model (++-isSemigroup {A = ℕ}))
--}
+
+map-lists : ∀ {f : ℕ → ℕ} {m n x y}
+            → ((0 ∷ m) ++ (x ∷ [])) ++ ((y ∷ []) ++ map f n)
+              ≡ (0 ∷ m) ++ (x ∷ y ∷ []) ++ map f n
+map-lists = fragment SemigroupFrex (semigroup→model (++-isSemigroup {A = ℕ}))

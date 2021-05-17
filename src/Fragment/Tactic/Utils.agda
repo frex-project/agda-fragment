@@ -160,3 +160,21 @@ restore-telescope (hArg x ∷ xs) t
        return (λ⦃ x ⦄→ t)
 restore-telescope (_ ∷ _) _ =
   typeError (strErr "no support for irrelevant goals" ∷ [])
+
+hasType : Term → Term → TC Bool
+hasType τ t = runSpeculative inner
+  where inner = do τ' ← inferType t
+                   return (equalTypes τ τ' , false)
+
+insert : List Term → Term → List Term
+insert [] n       = n ∷ []
+insert (x ∷ xs) n with x ≟ n
+...                  | yes _ = x ∷ xs
+...                  | no _  = x ∷ insert xs n
+
+indexOf : List Term → Term → Maybe ℕ
+indexOf [] t = nothing
+indexOf (x ∷ xs) t with x ≟ t | indexOf xs t
+...                   | yes _ | _       = just 0
+...                   | no _  | just n  = just (suc n)
+...                   | no _  | nothing = nothing

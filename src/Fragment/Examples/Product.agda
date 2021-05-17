@@ -2,7 +2,6 @@
 
 module Fragment.Examples.Product where
 
-{-
 open import Level using (suc)
 open import Function.Related
 open import Algebra
@@ -15,13 +14,16 @@ open import Data.Product using (_×_)
                                       ; comm        = λ _ _ → ↔⇒ (×-comm _ _)
                                       }
 
+{-
 open import Fragment.Prelude
 
 simple : ∀ {k ℓ} {A B C : Set ℓ} → ((A × (B × C)) × A) ↔ ((A × A) × (B × C))
-simple =
+simple {k} {ℓ} =
   fragment CSemigroupFrex
-           (csemigroup→model (×-isCommutativeSemigroup _ _))
+           (csemigroup→model (×-isCommutativeSemigroup k ℓ))
+-}
 
+{-
 simple : ∀ {k ℓ} {A B C : Set ℓ} → ((A × (B × C)) × A) ↔ ((A × A) × (B × C))
 simple {k} {_} {A} {B} {C} =
   frexify Θ-csemigroup
