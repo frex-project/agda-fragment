@@ -325,4 +325,5 @@ macro
                            ∷ vra p
                            ∷ []
                            )
+         frexify ← restore-telescope (GlobalCtx.telescope ctx) frexify
          unify frexify goal
