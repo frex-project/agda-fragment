@@ -28,12 +28,10 @@ import Fragment.Equational.Theory
 import Fragment.Equational.Theory.Base
 import Fragment.Equational.Theory.Bundles
 import Fragment.Equational.Theory.Laws
-import Fragment.Examples
 import Fragment.Examples.CSemigroup.Arith.Atomic
 import Fragment.Examples.CSemigroup.Arith.Base
 import Fragment.Examples.CSemigroup.Arith.Functions
 import Fragment.Examples.CSemigroup.Arith.Reasoning
-import Fragment.Examples.Product
 import Fragment.Examples.Semigroup.Arith.Atomic
 import Fragment.Examples.Semigroup.Arith.Base
 import Fragment.Examples.Semigroup.Arith.Functions
