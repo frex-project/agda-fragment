@@ -2,7 +2,7 @@
 
 module Fragment.Tactic.Fragment where
 
-open import Reflection hiding (name; Type; _≟_; reduce)
+open import Reflection hiding (name; Type; _≟_)
 open import Reflection.Term using (_≟_)
 
 open import Level using (_⊔_)
@@ -15,13 +15,13 @@ open import Data.Vec using (fromList)
 open import Data.Product using (_×_; _,_)
 open import Data.Unit using (⊤; tt)
 open import Data.String using (String; _++_)
-open import Data.Maybe using (just; nothing)
+open import Data.Maybe using (Maybe; just; nothing)
 
 open import Fragment.Tactic.Utils
 
 open import Fragment.Equational.Theory
 open import Fragment.Equational.Model
-open import Fragment.Equational.FreeExtension
+open import Fragment.Equational.FreeExtension hiding (reduce)
 open import Fragment.Algebra.Signature
 import Fragment.Algebra.Free as Free
 
@@ -180,11 +180,13 @@ mutual
 
   fold-acc : ∀ {a b} {A : Set a} {B : Set b} → FoldCtx A B → Term → B → TC (A × B)
   fold-acc ctx t acc
-    with find (λ x → prefix (arity x) (normalised x) t) (FoldCtx.operators ctx)
-  ...  | just op
-           = do (args , acc) ← fold-inner ctx op t acc
-                return ((FoldCtx.g ctx) op args , acc)
-  ...  | nothing = return ((FoldCtx.f ctx) t acc)
+    = do op? ← find (λ x → prefix (arity x) (normalised x) t) (FoldCtx.operators ctx)
+         resolve op?
+    where resolve : Maybe Operator → TC _
+          resolve (just op)
+            = do (args , acc) ← fold-inner ctx op t acc
+                 return ((FoldCtx.g ctx) op args , acc)
+          resolve nothing = return ((FoldCtx.f ctx) t acc)
 
 fold : ∀ {a b} {A : Set a} {B : Set b} → FoldCtx A B → Term → TC (A × B)
 fold ctx t = fold-acc ctx t (FoldCtx.ε ctx)

@@ -15,7 +15,7 @@ open import Data.Bool using (Bool; true; false; if_then_else_)
 open import Data.Maybe using (Maybe; nothing; just)
 open import Data.Product using (_×_; _,_)
 
-open import Relation.Nullary using (yes; no)
+open import Relation.Nullary using (yes; no; _because_)
 open import Relation.Binary.PropositionalEquality as PE using (_≡_)
 
 vra : ∀ {a} {A : Set a} → A → Arg A
@@ -50,13 +50,12 @@ prod n xs = reverse (drop n (reverse xs))
 ekat : ∀ {a} {A : Set a} → ℕ → List A → List A
 ekat n xs = reverse (take n (reverse xs))
 
-findMap : ∀ {a b} {A : Set a} {B : Set b}
-          → (A → Bool) → (A → B) → List A → Maybe B
-findMap p f []       = nothing
-findMap p f (x ∷ xs) = if p x then just (f x) else findMap p f xs
-
-find : ∀ {a} {A : Set a} → (A → Bool) → List A → Maybe A
-find p = findMap p (λ x → x)
+find : ∀ {a} {A : Set a} → (A → TC Bool) → List A → TC (Maybe A)
+find p [] = return nothing
+find p (x ∷ xs)
+  = do p? ← p x
+       if p? then return (just x)
+             else find p xs
 
 mapList : ∀ {a b} {A : Set a} {B : Set b}
           → List (A → B) → List A → List B
@@ -97,13 +96,18 @@ debrujin : ∀ (n : ℕ) → Vec Term n
 debrujin zero    = []
 debrujin (suc n) = (var n []) ∷ debrujin n
 
-η-convert : ∀ (n : ℕ) → Term → Term
-η-convert n t = n-ary n (apply t (toList (map vra (debrujin n))))
+η-convert : ∀ (n : ℕ) → Term → TC Term
+η-convert n t = runSpeculative inner
+  where inner : TC (Term × Bool)
+        inner
+          = do t ← normalise (n-ary n (apply t (toList (map vra (debrujin n)))))
+               return (t , false)
 
-prefix : ℕ → Term → Term → Bool
-prefix n x y with x ≟ η-convert n (unapply y n)
-...             | yes _ = true
-...             | no _  = false
+prefix : ℕ → Term → Term → TC Bool
+prefix n x y
+  = do y ← catchTC (η-convert n (unapply y n)) (return y)
+       let (b because _) = x ≟ y
+       return b
 
 extract-type-arg : Term → TC Term
 extract-type-arg (pi (arg _ x) _) = return x

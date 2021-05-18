@@ -32,10 +32,12 @@ import Fragment.Examples.CSemigroup.Arith.Atomic
 import Fragment.Examples.CSemigroup.Arith.Base
 import Fragment.Examples.CSemigroup.Arith.Functions
 import Fragment.Examples.CSemigroup.Arith.Reasoning
+import Fragment.Examples.CSemigroup.Types
 import Fragment.Examples.Semigroup.Arith.Atomic
 import Fragment.Examples.Semigroup.Arith.Base
 import Fragment.Examples.Semigroup.Arith.Functions
 import Fragment.Examples.Semigroup.Arith.Reasoning
+import Fragment.Examples.Semigroup.Types
 import Fragment.Extensions.CSemigroup
 import Fragment.Extensions.CSemigroup.Base
 import Fragment.Extensions.CSemigroup.Monomial
