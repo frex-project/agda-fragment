@@ -6,12 +6,14 @@ module Fragment.Equational.Theory.Laws (Σ : Signature) where
 
 open import Fragment.Equational.Theory.Base using (Eq)
 
+open import Function using (_∘_)
 open import Data.Empty using (⊥)
 open import Data.Fin using (#_)
 open import Data.Sum using (inj₁; inj₂)
 open import Data.Product using (_,_)
 import Relation.Binary.PropositionalEquality as PE
 
+open import Fragment.Algebra.Free Σ
 open import Fragment.Algebra.Free.Syntax Σ (PE.setoid ⊥)
 
 module _ where
@@ -52,6 +54,13 @@ module _ where
     a = # 0
     b = # 1
     c = # 2
+
+  hom : ops Σ 1 → ∀ {n} → ops Σ n → Eq Σ n
+  hom h {n} f =
+      ⟨ h ⟩₁ term f (map ⟨_⟩ (allFin n))
+    ,
+      term f (map (⟨ h ⟩₁_ ∘ ⟨_⟩) (allFin n))
+    where open import Data.Vec using (map; allFin)
 
   comm : ops Σ 2 → Eq Σ 2
   comm • = ⟨ a ⟩ ⟨ • ⟩₂ ⟨ b ⟩ , ⟨ b ⟩ ⟨ • ⟩₂ ⟨ a ⟩

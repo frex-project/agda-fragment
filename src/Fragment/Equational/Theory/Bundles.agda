@@ -4,13 +4,9 @@ module Fragment.Equational.Theory.Bundles where
 
 open import Fragment.Algebra.Signature
 open import Fragment.Equational.Theory.Base
+open import Fragment.Equational.Theory.Combinators
 
 open import Data.Nat using (ℕ)
-open import Data.List using (List; []; _∷_)
-
-open import Relation.Nullary using (yes ; no)
-open import Relation.Binary.Definitions using (Decidable)
-open import Relation.Binary.PropositionalEquality as PE using (_≡_)
 
 module _ where
 
@@ -18,11 +14,7 @@ module _ where
     • : MagmaOp 2
 
   Σ-magma : Signature
-  Σ-magma = record { ops = MagmaOp
-                   ; _≟_ = λ {k} → _≟_ {k}
-                   }
-    where _≟_ : ∀ {k} → Decidable {A = MagmaOp k} _≡_
-          • ≟ • = yes (PE.refl)
+  Σ-magma = record { ops = MagmaOp }
 
   import Fragment.Equational.Theory.Laws Σ-magma as L
 
@@ -63,7 +55,8 @@ module _ where
                       ; _⟦_⟧ₑ = csemigroup-eqs
                       }
 
-{-
 Θ-monoid : Theory
 Θ-monoid = AddId Θ-semigroup •
--}
+
+Θ-cmonoid : Theory
+Θ-cmonoid = AddId Θ-csemigroup •

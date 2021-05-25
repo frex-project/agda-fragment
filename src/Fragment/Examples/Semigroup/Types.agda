@@ -20,5 +20,11 @@ open import Data.Sum using (_⊎_)
 ×-assoc₁ : ∀ {A B C : Set} → (A × (B × C)) ↔ ((A × B) × C)
 ×-assoc₁ = fragment SemigroupFrex ×-semigroup
 
+×-assoc₂ : ∀ {A B C : Set} → ((A × B) × (B × C)) ↔ (A × (B × B) × C)
+×-assoc₂ = fragment SemigroupFrex ×-semigroup
+
 ⊎-assoc₁ : ∀ {A B C : Set} → (A ⊎ (B ⊎ C)) ↔ ((A ⊎ B) ⊎ C)
 ⊎-assoc₁ = fragment SemigroupFrex ⊎-semigroup
+
+⊎-assoc₂ : ∀ {A B C : Set} → ((A ⊎ B) ⊎ (B ⊎ C)) ↔ (A ⊎ (B ⊎ B) ⊎ C)
+⊎-assoc₂ = fragment SemigroupFrex ⊎-semigroup
