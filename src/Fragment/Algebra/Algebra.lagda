@@ -1,3 +1,4 @@
+\begin{code}[hidden]
 {-# OPTIONS --without-K --safe #-}
 
 open import Fragment.Algebra.Signature
@@ -18,26 +19,43 @@ module _ (S : Setoid a ℓ) where
   open import Data.Vec.Relation.Binary.Equality.Setoid S using (_≋_)
 
   open Setoid S renaming (Carrier to A)
+\end{code}
 
+%<*interp>
+\begin{code}
   Interpretation : Set a
   Interpretation = ∀ {arity} → (f : ops Σ arity) → Vec A arity → A
+\end{code}
+%</interp>
 
+%<*cong>
+\begin{code}
   Congruence : Interpretation → Set (a ⊔ ℓ)
   Congruence ⟦_⟧ = ∀ {arity}
                    → (f : ops Σ arity)
                    → ∀ {xs ys} → Pointwise _≈_ xs ys → ⟦ f ⟧ xs ≈ ⟦ f ⟧ ys
+\end{code}
+%</cong>
 
+%<*isalgebra>
+\begin{code}
   record IsAlgebra : Set (a ⊔ ℓ) where
     field
       ⟦_⟧     : Interpretation
       ⟦⟧-cong : Congruence ⟦_⟧
+\end{code}
+%</isalgebra>
 
+%<*algebra>
+\begin{code}
 record Algebra : Set (suc a ⊔ suc ℓ) where
-  constructor algebra
   field
     ∥_∥/≈           : Setoid a ℓ
     ∥_∥/≈-isAlgebra : IsAlgebra ∥_∥/≈
+\end{code}
+%</algebra>
 
+\begin{code}
   ∥_∥ : Set a
   ∥_∥ = Setoid.Carrier ∥_∥/≈
 
@@ -56,10 +74,13 @@ record Algebra : Set (suc a ⊔ suc ℓ) where
   ≈[_]-isEquivalence = Setoid.isEquivalence ∥_∥/≈
 
 open Algebra public
+\end{code}
 
+\begin{code}[hidden]
 infix 5 ≈-syntax
 
 ≈-syntax : (A : Algebra {a} {ℓ}) → ∥ A ∥ → ∥ A ∥ → Set ℓ
 ≈-syntax A x y = Setoid._≈_ ∥ A ∥/≈ x y
 
 syntax ≈-syntax A x y = x =[ A ] y
+\end{code}

@@ -1,3 +1,4 @@
+\begin{code}[hidden]
 {-# OPTIONS --without-K --safe #-}
 
 module Fragment.Equational.Theory.Bundles where
@@ -7,35 +8,39 @@ open import Fragment.Equational.Theory.Base
 open import Fragment.Equational.Theory.Combinators
 
 open import Data.Nat using (ℕ)
+\end{code}
 
-module _ where
+%<*magma>
+\begin{code}
+data MagmaOp : ℕ → Set where
+  • : MagmaOp 2
 
-  data MagmaOp : ℕ → Set where
-    • : MagmaOp 2
+Σ-magma : Signature
+Σ-magma = record { ops = MagmaOp }
+\end{code}
+%</magma>
 
-  Σ-magma : Signature
-  Σ-magma = record { ops = MagmaOp }
+\begin{code}[hidden]
+import Fragment.Equational.Theory.Laws Σ-magma as L
 
-  import Fragment.Equational.Theory.Laws Σ-magma as L
+data MagmaEq : ℕ → Set where
 
-  data MagmaEq : ℕ → Set where
+magma-eqs : ∀ {n} → MagmaEq n → Eq Σ-magma n
+magma-eqs ()
 
-  magma-eqs : ∀ {n} → MagmaEq n → Eq Σ-magma n
-  magma-eqs ()
+data SemigroupEq : ℕ → Set where
+  assoc : SemigroupEq 3
 
-  data SemigroupEq : ℕ → Set where
-    assoc : SemigroupEq 3
+semigroup-eqs : ∀ {n} → SemigroupEq n → Eq Σ-magma n
+semigroup-eqs assoc = L.assoc •
 
-  semigroup-eqs : ∀ {n} → SemigroupEq n → Eq Σ-magma n
-  semigroup-eqs assoc = L.assoc •
+data CSemigroupEq : ℕ → Set where
+  comm  : CSemigroupEq 2
+  assoc : CSemigroupEq 3
 
-  data CSemigroupEq : ℕ → Set where
-    comm  : CSemigroupEq 2
-    assoc : CSemigroupEq 3
-
-  csemigroup-eqs : ∀ {n} → CSemigroupEq n → Eq Σ-magma n
-  csemigroup-eqs comm  = L.comm •
-  csemigroup-eqs assoc = L.assoc •
+csemigroup-eqs : ∀ {n} → CSemigroupEq n → Eq Σ-magma n
+csemigroup-eqs comm  = L.comm •
+csemigroup-eqs assoc = L.assoc •
 
 Θ-magma : Theory
 Θ-magma = record { Σ     = Σ-magma
@@ -60,3 +65,4 @@ module _ where
 
 Θ-cmonoid : Theory
 Θ-cmonoid = AddId Θ-csemigroup •
+\end{code}

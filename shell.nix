@@ -6,6 +6,7 @@ with pkgs;
 
     nativeBuildInputs = [
       git
+      coreutils
       (agda.withPackages (p: [
         p.standard-library
       ]))
