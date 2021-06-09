@@ -36,7 +36,7 @@ private
   module _ (A : Model {a} {ℓ₁}) (n : ℕ) where
 \end{code}
 
-%<terms>
+%<*terms>
 \begin{code}
     Terms : Algebra
     Terms = Free (Atoms ∥ A ∥/≈ n)
