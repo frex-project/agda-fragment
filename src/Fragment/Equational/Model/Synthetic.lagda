@@ -30,14 +30,14 @@ import Relation.Binary.PropositionalEquality as PE
 private
   variable
     a ℓ : Level
+
+module _ (A : Algebra {a} {ℓ}) where
+
+  infix 4 _≊_
 \end{code}
 
 %<*logic>
 \begin{code}
-module _ (A : Algebra {a} {ℓ}) where
-
-  infix 4 _≊_
-
   data _≊_ : ∥ A ∥ → ∥ A ∥ → Set (a ⊔ ℓ) where
     refl    : ∀ {x} → x ≊ x
     sym     : ∀ {x y} → x ≊ y → y ≊ x
@@ -50,7 +50,7 @@ module _ (A : Algebra {a} {ℓ}) where
               → ∣ inst A θ ∣ (proj₁ (Θ ⟦ eq ⟧ₑ))
                 ≊ ∣ inst A θ ∣ (proj₂ (Θ ⟦ eq ⟧ₑ))
 \end{code}
-%<*logic>
+%</logic>
 
 \begin{code}[hidden]
   private

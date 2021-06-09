@@ -29,6 +29,9 @@ tex: Trivial.lagda src/Fragment/Algebra/Signature.lagda src/Fragment/Algebra/Alg
 	agda --latex src/Fragment/Equational/Model/Base.lagda
 	agda --latex src/Fragment/Equational/Model/Satisfaction.lagda
 	agda --latex src/Fragment/Equational/Model/Synthetic.lagda
+	agda --latex src/Fragment/Equational/Coproduct.lagda
+	agda --latex src/Fragment/Equational/FreeExtension/Base.lagda
+	agda --latex src/Fragment/Equational/FreeExtension/Properties.lagda
 
 clean:
 	$(RM) -r latex/

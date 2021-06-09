@@ -1,3 +1,4 @@
+\begin{code}[hidden]
 {-# OPTIONS --without-K --safe #-}
 
 open import Fragment.Equational.Theory
@@ -18,7 +19,9 @@ module _
   (B : Model {b} {ℓ₂})
   (A+B : Model {c} {ℓ₃})
   where
-
+\end{code}
+%<*coproduct>
+\begin{code}
   record IsCoproduct : Setω where
     field
       inl : ∥ A ∥ₐ ⟿ ∥ A+B ∥ₐ
@@ -46,3 +49,5 @@ module _
                   → h ⊙ inl ≗ f
                   → h ⊙ inr ≗ g
                   → X [ f , g ] ≗ h
+\end{code}
+%</coproduct>

@@ -1,3 +1,4 @@
+\begin{code}[hidden]
 {-# OPTIONS --without-K --safe #-}
 
 open import Fragment.Equational.Theory
@@ -37,13 +38,19 @@ module _
   open IsCoproduct (A [ n ]₂-isFrex)
     renaming (inl to inl₂; inr to inr₂; _[_,_] to _[_,_]₂; commute₁ to commute₁₂; commute₂ to commute₂₂)
     using ()
+\end{code}
 
+%<*tofrom>
+\begin{code}
   to : ∥ A [ n ]₂ ∥ₐ ⟿ ∥ A [ n ]₁ ∥ₐ
   to = (A [ n ]₁) [ inl₁ , inr₁ ]₂
 
   from : ∥ A [ n ]₁ ∥ₐ ⟿ ∥ A [ n ]₂ ∥ₐ
   from = (A [ n ]₂) [ inl₂ , inr₂ ]₁
+\end{code}
+%</tofrom>
 
+\begin{code}[hidden]
   inv : to ⊙ from ≗ id
   inv = begin
       to ⊙ from
@@ -87,8 +94,14 @@ module _
 
   open FreeExtension X renaming (_[_] to _[_]₁)
   open FreeExtension Y renaming (_[_] to _[_]₂)
+\end{code}
 
+%<*iso>
+\begin{code}
   iso : ∥ A [ n ]₁ ∥ₐ ≃ ∥ A [ n ]₂ ∥ₐ
+\end{code}
+%</iso>
+\begin{code}
   iso = record { _⃗   = to Y X A n
                ; _⃖   = from Y X A n
                ; invˡ = inv Y X A n
@@ -109,23 +122,39 @@ module _
 
   open Setoid ∥ A [ n ] ∥/≈ renaming (_≈_ to _≋_)
   open Setoid ∥ A ∥/≈ using (_≈_)
+\end{code}
 
+%<*normsyn>
+\begin{code}
   norm = to X SynFrex A n
   syn = from X SynFrex A n
+\end{code}
+%</normsyn>
 
+%<*reduce>
+\begin{code}
   reduce : (θ : Env ∥ A ∥ₐ n) → ∥ A [ n ]ₛ ∥ₐ ⟿ ∥ A ∥ₐ
   reduce θ = A [ id , interp A θ ]ₛ
+\end{code}
+%</reduce>
 
+\begin{code}[hidden]
   module _ (Γ : Vec ∥ A ∥ n) where
 
     private
 
       θ : Env ∥ A ∥ₐ n
       θ = env {A = ∥ A ∥ₐ} Γ
+\end{code}
 
+%<*frexify>
+\begin{code}
     frexify : ∀ {lhs rhs : Term (BT ∥ A ∥ n)}
               → ∣ norm ∣ lhs ≋ ∣ norm ∣ rhs
               → ∣ reduce θ ∣ lhs ≈ ∣ reduce θ ∣ rhs
+\end{code}
+%</frexify>
+\begin{code}
     frexify {lhs = lhs} {rhs = rhs} p = begin
         ∣ reduce θ ∣ lhs
       ≈⟨ Setoid.sym ∥ A ∥/≈ (∣ reduce θ ∣-cong (inv SynFrex X A n {x = lhs})) ⟩
@@ -136,3 +165,4 @@ module _
         ∣ reduce θ ∣ rhs
       ∎
       where open Reasoning ∥ A ∥/≈
+\end{code}

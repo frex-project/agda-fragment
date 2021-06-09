@@ -30,9 +30,9 @@ A ⊨⟨ θ ⟩ (lhs , rhs) =
 \end{code}
 %</sat>
 
-%<*satisfaction>
+%<*allsat>
 \begin{code}
 _⊨_ : ∀ {n} → Algebra {a} {ℓ} → Eq Σ n → Set (a ⊔ ℓ)
 _⊨_ S eq = ∀ θ → S ⊨⟨ θ ⟩ eq
 \end{code}
-%</satisfaction>
+%</allsat>

@@ -1,3 +1,4 @@
+\begin{code}[hidden]
 {-# OPTIONS --without-K --safe #-}
 
 open import Fragment.Equational.Theory
@@ -33,17 +34,26 @@ private
     a b ℓ₁ ℓ₂ ℓ₃ : Level
 
   module _ (A : Model {a} {ℓ₁}) (n : ℕ) where
+\end{code}
 
+%<terms>
+\begin{code}
     Terms : Algebra
     Terms = Free (Atoms ∥ A ∥/≈ n)
+\end{code}
+%</terms>
 
+\begin{code}[hidden]
     open module T = Setoid Algebra.∥ Terms ∥/≈ renaming (_≈_ to _~_) using ()
 
     ∣inl∣ : ∥ A ∥ → T.Carrier
     ∣inl∣ x = atom (sta x)
 
     infix 4 _≈_
+\end{code}
 
+%<*logic>
+\begin{code}
     data _≈_ : T.Carrier → T.Carrier → Set (a ⊔ ℓ₁) where
       refl     : ∀ {x} → x ≈ x
       sym      : ∀ {x y} → x ≈ y → y ≈ x
@@ -57,7 +67,10 @@ private
       axiom    : ∀ {n} → (eq : eqs Θ n) → (θ : Env Terms n)
                  → ∣ inst Terms θ ∣ (proj₁ (Θ ⟦ eq ⟧ₑ))
                    ≈ ∣ inst Terms θ ∣ (proj₂ (Θ ⟦ eq ⟧ₑ))
+\end{code}
+%</logic>
 
+\begin{code}[hidden]
     ≈-isEquivalence : IsEquivalence _≈_
     ≈-isEquivalence = record { refl  = refl
                              ; sym   = sym
@@ -96,12 +109,17 @@ private
     Syn-isModel = record { isAlgebra = Terms / _≈_ -isAlgebra
                          ; models    = Syn-models
                          }
-
+\end{code}
+%<*syn>
+\begin{code}
     Syn : Model
     Syn = record { ∥_∥/≈   = ∥ Terms ∥/ _≈_
                  ; isModel = Syn-isModel
                  }
+\end{code}
+%</syn>
 
+\begin{code}
     ∣inl∣-cong : Congruent ≈[ A ] _≈_ ∣inl∣
     ∣inl∣-cong p = inherit (atom (sta p))
 
@@ -260,8 +278,14 @@ private
              ; commute₂  = λ {_ _ X f g} → commute₂ {X = X} {f} {g}
              ; universal = λ {_ _ X f g h} → universal {X = X} {f} {g} {h}
              }
+\end{code}
 
+%<*synfrex>
+\begin{code}
 SynFrex : FreeExtension
 SynFrex = record { _[_]        = Syn
                  ; _[_]-isFrex = isFrex
                  }
+
+\end{code}
+%</synfrex>
