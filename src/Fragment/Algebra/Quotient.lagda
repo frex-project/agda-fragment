@@ -1,3 +1,4 @@
+\begin{code}[hidden]
 {-# OPTIONS --without-K --safe #-}
 
 open import Fragment.Algebra.Signature
@@ -41,7 +42,10 @@ module _
   (_≈_ : Rel ∥ A ∥ ℓ₄)
   {{isDenom : IsDenominator A _≈_}}
   where
+\end{code}
 
+%<*quotient>
+\begin{code}
   record IsQuotient (A/≈ : Algebra {b} {ℓ₂}) : Setω where
     field
       inc : A ⟿ A/≈
@@ -62,7 +66,10 @@ module _
                   → {h : A/≈ ⟿ X}
                   → h ⊙ inc ≗ f
                   → factor f cong ≗ h
+\end{code}
+%</quotient>
 
+\begin{code}[hidden]
   open IsDenominator isDenom
 
   ∥_∥/_ : Setoid _ _
@@ -128,3 +135,4 @@ module _
                           ; commute   = factor-commute
                           ; universal = factor-universal
                           }
+\end{code}

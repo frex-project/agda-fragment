@@ -1,3 +1,4 @@
+\begin{code}[hidden]
 {-# OPTIONS --without-K --safe #-}
 
 open import Fragment.Algebra.Signature
@@ -15,9 +16,14 @@ open import Function using (Congruent) public
 private
   variable
     a b ℓ₁ ℓ₂ : Level
+\end{code}
 
+%<*homomorphic>
+\begin{code}
 Homomorphic : (S : Algebra {a} {ℓ₁}) (T : Algebra {b} {ℓ₂})
               → (∥ S ∥ → ∥ T ∥) → Set (a ⊔ ℓ₂)
 Homomorphic S T h = ∀ {arity} → (f : ops Σ arity)
                     → (xs : Vec ∥ S ∥ arity)
                     → T ⟦ f ⟧ (map h xs) =[ T ] h (S ⟦ f ⟧ xs)
+\end{code}
+%</homomorphic>

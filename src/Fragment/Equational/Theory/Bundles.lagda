@@ -33,15 +33,25 @@ data SemigroupEq : ℕ → Set where
 
 semigroup-eqs : ∀ {n} → SemigroupEq n → Eq Σ-magma n
 semigroup-eqs assoc = L.assoc •
+\end{code}
 
+%<*csemigroupeqs>
+\begin{code}
 data CSemigroupEq : ℕ → Set where
   comm  : CSemigroupEq 2
   assoc : CSemigroupEq 3
+\end{code}
+%</csemigroupeqs>
 
+%<*csemigroupinterp>
+\begin{code}
 csemigroup-eqs : ∀ {n} → CSemigroupEq n → Eq Σ-magma n
 csemigroup-eqs comm  = L.comm •
 csemigroup-eqs assoc = L.assoc •
+\end{code}
+%</csemigroupinterp>
 
+\begin{code}[hidden]
 Θ-magma : Theory
 Θ-magma = record { Σ     = Σ-magma
                  ; eqs   = MagmaEq
@@ -53,13 +63,19 @@ csemigroup-eqs assoc = L.assoc •
                      ; eqs   = SemigroupEq
                      ; _⟦_⟧ₑ = semigroup-eqs
                      }
+\end{code}
 
+%<*csemigrouptheory>
+\begin{code}
 Θ-csemigroup : Theory
 Θ-csemigroup = record { Σ     = Σ-magma
                       ; eqs   = CSemigroupEq
                       ; _⟦_⟧ₑ = csemigroup-eqs
                       }
+\end{code}
+%</csemigrouptheory>
 
+\begin{code}[hidden]
 Θ-monoid : Theory
 Θ-monoid = AddId Θ-semigroup •
 

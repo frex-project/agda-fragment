@@ -1,3 +1,4 @@
+\begin{code}[hidden]
 {-# OPTIONS --without-K --safe #-}
 
 open import Fragment.Equational.Theory
@@ -17,31 +18,49 @@ open import Relation.Binary using (Setoid)
 private
   variable
     a ℓ : Level
+\end{code}
 
+%<*models>
+\begin{code}
 Models : Algebra {a} {ℓ} → Set (a ⊔ ℓ)
 Models S = ∀ {n} → (eq : eqs Θ n) → S ⊨ (Θ ⟦ eq ⟧ₑ)
+\end{code}
+%</models>
 
+\begin{code}[hidden]
 module _ (S : Setoid a ℓ) where
+\end{code}
 
+%<*ismodel>
+\begin{code}
   record IsModel : Set (a ⊔ ℓ) where
     field
       isAlgebra : IsAlgebra S
       models    : Models (algebra S isAlgebra)
 
     open IsAlgebra isAlgebra public
+\end{code}
+%</ismodel>
 
+%<*model>
+\begin{code}
 record Model : Set (suc a ⊔ suc ℓ) where
   field
     ∥_∥/≈   : Setoid a ℓ
     isModel : IsModel ∥_∥/≈
+\end{code}
+%</model>
 
+\begin{code}[hidden]
   ∥_∥ₐ : Algebra
-  ∥_∥ₐ = algebra ∥_∥/≈ (IsModel.isAlgebra isModel)
+  ∥_∥ₐ = record { ∥_∥/≈ = ∥_∥/≈
+                ; ∥_∥/≈-isAlgebra = IsModel.isAlgebra isModel
+                }
 
   ∥_∥ₐ-models : Models ∥_∥ₐ
   ∥_∥ₐ-models = IsModel.models isModel
 
-  open Algebra (algebra ∥_∥/≈ (IsModel.isAlgebra isModel))
-    hiding (∥_∥/≈) public
+  open Algebra ∥_∥ₐ hiding (∥_∥/≈) public
 
 open Model public
+\end{code}

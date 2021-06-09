@@ -1,3 +1,4 @@
+\begin{code}[hidden]
 {-# OPTIONS --without-K --safe #-}
 
 module Fragment.Algebra.Free.Atoms where
@@ -13,21 +14,31 @@ open import Relation.Binary.PropositionalEquality as PE using (_≡_)
 private
   variable
     a ℓ : Level
+\end{code}
 
-module _ (A : Set a) where
+%<*bt>
+\begin{code}
+data BT (A : Set a) (n : ℕ) : Set a where
+  sta : A → BT A n
+  dyn : Fin n → BT A n
+\end{code}
+%</bt>
 
-  data BT (n : ℕ) : Set a where
-    sta : A → BT n
-    dyn : Fin n → BT n
-
+\begin{code}[hidden]
 module _ (S : Setoid a ℓ) (n : ℕ) where
 
   open Setoid S renaming (Carrier to A)
+\end{code}
 
+%<*bteq>
+\begin{code}
   data _≍_ : BT A n → BT A n → Set (a ⊔ ℓ) where
     sta : ∀ {x y} → x ≈ y → sta x ≍ sta y
     dyn : ∀ {x y} → x ≡ y → dyn x ≍ dyn y
+\end{code}
+%</bteq>
 
+\begin{code}[hidden]
   private
 
     ≍-refl : ∀ {x} → x ≍ x
@@ -47,9 +58,14 @@ module _ (S : Setoid a ℓ) (n : ℕ) where
                              ; sym   = ≍-sym
                              ; trans = ≍-trans
                              }
+\end{code}[hidden]
 
+%<*atoms>
+\begin{code}
   Atoms : Setoid a (a ⊔ ℓ)
   Atoms = record { Carrier       = BT (Setoid.Carrier S) n
                  ; _≈_           = _≍_
                  ; isEquivalence = ≍-isEquivalence
                  }
+\end{code}
+%</atoms>

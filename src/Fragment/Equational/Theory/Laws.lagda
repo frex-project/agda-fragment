@@ -1,3 +1,4 @@
+\begin{code}[hidden]
 {-# OPTIONS --without-K --safe #-}
 
 open import Fragment.Algebra.Signature
@@ -61,7 +62,10 @@ module _ where
     ,
       term f (map (⟨ h ⟩₁_ ∘ ⟨_⟩) (allFin n))
     where open import Data.Vec using (map; allFin)
+\end{code}
 
+%<*laws>
+\begin{code}
   comm : ops Σ 2 → Eq Σ 2
   comm • = ⟨ a ⟩ ⟨ • ⟩₂ ⟨ b ⟩ , ⟨ b ⟩ ⟨ • ⟩₂ ⟨ a ⟩
 
@@ -70,3 +74,5 @@ module _ where
       (⟨ a ⟩ ⟨ • ⟩₂ ⟨ b ⟩) ⟨ • ⟩₂ ⟨ c ⟩
     ,
       ⟨ a ⟩ ⟨ • ⟩₂ (⟨ b ⟩ ⟨ • ⟩₂ ⟨ c ⟩)
+\end{code}
+%</laws>

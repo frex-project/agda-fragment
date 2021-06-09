@@ -1,3 +1,4 @@
+\begin{code}[hidden]
 {-# OPTIONS --without-K --safe #-}
 
 open import Fragment.Algebra.Signature
@@ -77,14 +78,24 @@ module _ (A : Algebra {a} {ℓ₁}) where
 fold : ∀ {A : Setoid a ℓ₁} (B : Algebra {b} {ℓ₂})
        → (A ↝ ∥ B ∥/≈) → Free A ⟿ B
 fold B f = (eval B) ⊙ bind (unit · f)
+\end{code}
 
+%<*env>
+\begin{code}
 Env : (A : Algebra {a} {ℓ₁}) → ℕ → Set _
 Env A n = Fin n → ∥ A ∥
+\end{code}
+%</env>
 
+%<*envswap>
+\begin{code}
 env : ∀ {A : Algebra {a} {ℓ₁}} {n} → (Γ : Vec ∥ A ∥ n) → Env A n
 env {A = _} {suc n} (x ∷ _)  zero    = x
 env {A = A} {suc n} (_ ∷ xs) (suc i) = env {A = A} xs i
+\end{code}
+%</envswap>
 
+\begin{code}
 module _ {n}
   {S : Setoid a ℓ₁}
   (T : Setoid b ℓ₂)
@@ -124,7 +135,13 @@ ignore : ∀ (A : Setoid a ℓ₁) → PE.setoid ⊥ ↝ A
 ignore _ = record { ∣_∣      = λ ()
                   ; ∣_∣-cong = λ {}
                   }
+\end{code}
 
-inst : ∀ {n} (A : Algebra {a} {ℓ₁})
-       → Env A n → F n ⟿ A
+%<*inst>
+\begin{code}
+inst : ∀ {n} (A : Algebra {a} {ℓ₁}) → Env A n → F n ⟿ A
+\end{code}
+%<*inst>
+\begin{code}
 inst {n = n} A θ = subst A (ignore ∥ A ∥/≈) θ
+\end{code}

@@ -1,3 +1,4 @@
+\begin{code}[hidden]
 {-# OPTIONS --without-K --safe #-}
 
 open import Fragment.Algebra.Signature
@@ -18,11 +19,20 @@ open import Relation.Binary using (Setoid)
 private
   variable
     a ℓ : Level
+\end{code}
 
+%<*sat>
+\begin{code}
 _⊨⟨_⟩_ : ∀ {n} → (A : Algebra {a} {ℓ})
          → Env A n → Eq Σ n → Set ℓ
 A ⊨⟨ θ ⟩ (lhs , rhs) =
   ∣ inst A θ ∣ lhs =[ A ] ∣ inst A θ ∣ rhs
+\end{code}
+%</sat>
 
+%<*satisfaction>
+\begin{code}
 _⊨_ : ∀ {n} → Algebra {a} {ℓ} → Eq Σ n → Set (a ⊔ ℓ)
 _⊨_ S eq = ∀ θ → S ⊨⟨ θ ⟩ eq
+\end{code}
+%</satisfaction>

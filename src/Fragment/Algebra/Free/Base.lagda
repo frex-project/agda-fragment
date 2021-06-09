@@ -1,3 +1,4 @@
+\begin{code}[hidden]
 {-# OPTIONS --without-K --safe #-}
 
 open import Fragment.Algebra.Signature
@@ -23,23 +24,33 @@ open import Relation.Binary.PropositionalEquality as PE using (_≡_)
 private
   variable
     a ℓ : Level
+\end{code}
 
-module _ (A : Set a) where
+%<*term>
+\begin{code}
+data Term (A : Set a) : Set a where
+  atom : A → Term A
+  term : ∀ {arity} → (f : ops Σ arity) → Vec (Term A) arity → Term A
+\end{code}
+%</term>
 
-  data Term : Set a where
-    atom : A → Term
-    term : ∀ {arity} → (f : ops Σ arity) → Vec Term arity → Term
-
+\begin{code}[hidden]
 module _ (S : Setoid a ℓ) where
 
   open Setoid S renaming (Carrier to A)
+\end{code}
 
+%<*termeq>
+\begin{code}
   data _~_ : Term A → Term A → Set (a ⊔ ℓ) where
       atom : ∀ {x y} → x ≈ y → atom x ~ atom y
       term : ∀ {arity xs ys} {f : ops Σ arity}
              → Pointwise _~_ xs ys
              → term f xs ~ term f ys
+\end{code}
+%</termeq>
 
+\begin{code}[hidden]
   private
 
     mutual
@@ -83,13 +94,20 @@ module _ (S : Setoid a ℓ) where
                              ; sym   = ~-sym
                              ; trans = ~-trans
                              }
+\end{code}
 
+%<*herbrand>
+\begin{code}
   Herbrand : Setoid _ _
   Herbrand = record { Carrier       = Term A
                     ; _≈_           = _~_
                     ; isEquivalence = ~-isEquivalence
                     }
+\end{code}
+%</herbrand>
 
+%<*free>
+\begin{code}
   Free : Algebra
   Free = record { ∥_∥/≈           = Herbrand
                 ; ∥_∥/≈-isAlgebra = Free-isAlgebra
@@ -101,6 +119,12 @@ module _ (S : Setoid a ℓ) where
           Free-isAlgebra = record { ⟦_⟧     = term
                                   ; ⟦⟧-cong = term-cong
                                   }
+\end{code}
+%</free>
 
+%<*finite>
+\begin{code}
 F : ℕ → Algebra
 F = Free ∘ Atoms (PE.setoid ⊥)
+\end{code}
+%</finite>

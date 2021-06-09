@@ -17,7 +17,18 @@ tex: Trivial.lagda src/Fragment/Algebra/Signature.lagda src/Fragment/Algebra/Alg
 	agda -i. --latex Trivial.lagda
 	agda --latex src/Fragment/Algebra/Signature.lagda
 	agda --latex src/Fragment/Algebra/Algebra.lagda
+	agda --latex src/Fragment/Algebra/Homomorphism/Base.lagda
+	agda --latex src/Fragment/Algebra/Homomorphism/Definitions.lagda
+	agda --latex src/Fragment/Algebra/Quotient.lagda
+	agda --latex src/Fragment/Algebra/Free/Atoms.lagda
+	agda --latex src/Fragment/Algebra/Free/Base.lagda
+	agda --latex src/Fragment/Algebra/Free/Evaluation.lagda
+	agda --latex src/Fragment/Equational/Theory/Base.lagda
+	agda --latex src/Fragment/Equational/Theory/Laws.lagda
 	agda --latex src/Fragment/Equational/Theory/Bundles.lagda
+	agda --latex src/Fragment/Equational/Model/Base.lagda
+	agda --latex src/Fragment/Equational/Model/Satisfaction.lagda
+	agda --latex src/Fragment/Equational/Model/Synthetic.lagda
 
 clean:
 	$(RM) -r latex/

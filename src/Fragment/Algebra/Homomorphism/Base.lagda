@@ -1,3 +1,4 @@
+\begin{code}[hidden]
 {-# OPTIONS --without-K --safe #-}
 
 open import Fragment.Algebra.Signature
@@ -30,12 +31,18 @@ module _
   where
 
   infixr 1 _⟿_
+\end{code}
 
+%<*homomorphism>
+\begin{code}
   record _⟿_ : Set (a ⊔ b ⊔ ℓ₁ ⊔ ℓ₂) where
     field
       ∣_∣⃗    : ∥ A ∥/≈ ↝ ∥ B ∥/≈
       ∣_∣-hom : Homomorphic A B (Morphism.∣_∣ ∣_∣⃗)
+\end{code}
+%</homomorphism>
 
+\begin{code}[hidden]
     ∣_∣ : ∥ A ∥ → ∥ B ∥
     ∣_∣ = Morphism.∣_∣ ∣_∣⃗
 
@@ -88,3 +95,4 @@ module _
   _⊙_ = record { ∣_∣⃗    = ∣ g ∣⃗ · ∣ f ∣⃗
                ; ∣_∣-hom = ⊙-hom
                }
+\end{code}

@@ -1,3 +1,4 @@
+\begin{code}[hidden]
 {-# OPTIONS --without-K --safe #-}
 
 open import Fragment.Equational.Theory
@@ -29,7 +30,10 @@ import Relation.Binary.PropositionalEquality as PE
 private
   variable
     a ℓ : Level
+\end{code}
 
+%<*logic>
+\begin{code}
 module _ (A : Algebra {a} {ℓ}) where
 
   infix 4 _≊_
@@ -45,7 +49,10 @@ module _ (A : Algebra {a} {ℓ}) where
     axiom   : ∀ {n} → (eq : eqs Θ n) → (θ : Env A n)
               → ∣ inst A θ ∣ (proj₁ (Θ ⟦ eq ⟧ₑ))
                 ≊ ∣ inst A θ ∣ (proj₂ (Θ ⟦ eq ⟧ₑ))
+\end{code}
+%<*logic>
 
+\begin{code}[hidden]
   private
 
     ≊-isEquivalence : IsEquivalence _≊_
@@ -60,11 +67,17 @@ module _ (A : Algebra {a} {ℓ}) where
                        ; isCompatible  = cong
                        ; isCoarser     = inherit
                        }
+\end{code}
 
+%<*synthetic>
+\begin{code}
   Synthetic : Model
   Synthetic = record { ∥_∥/≈   = ∥ A ∥/ _≊_
                      ; isModel = isModel
                      }
+\end{code}
+%</synthetic>
+\begin{code}[hidden]
     where open module T = Setoid (∥ A ∥/ _≊_)
           open import Relation.Binary.Reasoning.Setoid (∥ A ∥/ _≊_)
 
@@ -88,6 +101,11 @@ module _ (A : Algebra {a} {ℓ}) where
           isModel = record { isAlgebra = A / _≊_ -isAlgebra
                            ; models    = models
                            }
+\end{code}
 
+%<*finite>
+\begin{code}
 J : ℕ → Model
 J = Synthetic ∘ F
+\end{code}
+%</finite>

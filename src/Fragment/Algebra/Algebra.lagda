@@ -49,6 +49,7 @@ module _ (S : Setoid a ℓ) where
 %<*algebra>
 \begin{code}
 record Algebra : Set (suc a ⊔ suc ℓ) where
+  constructor algebra
   field
     ∥_∥/≈           : Setoid a ℓ
     ∥_∥/≈-isAlgebra : IsAlgebra ∥_∥/≈

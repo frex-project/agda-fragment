@@ -1,3 +1,4 @@
+\begin{code}[hidden]
 {-# OPTIONS --without-K --safe #-}
 
 module Fragment.Equational.Theory.Base where
@@ -12,16 +13,26 @@ open import Fragment.Algebra.Properties
 open import Data.Nat using (ℕ)
 open import Data.Fin using (Fin)
 open import Data.Product using (_×_; map)
+\end{code}
 
+%<*equation>
+\begin{code}
 Eq : (Σ : Signature) → (n : ℕ) → Set
 Eq Σ n = ∥ F Σ n ∥ × ∥ F Σ n ∥
+\end{code}
+%</equation>
 
+%<*theory>
+\begin{code}
 record Theory : Set₁ where
   field
     Σ     : Signature
     eqs   : ℕ → Set
     _⟦_⟧ₑ : ∀ {arity} → eqs arity → Eq Σ arity
+\end{code}
+%</theory>
 
+\begin{code}[hidden]
   open Signature Σ
 
 open Theory public
@@ -54,3 +65,4 @@ _⦅_∣_/_⦆ : (Θ : Theory)
            → (∀ {n} → E n → Eq ((Σ Θ) ⦅ O ⦆) n)
            → Theory
 Θ ⦅ O ∣ E / ⟦_⟧' ⦆ = (Θ ⦅ O ⦆ₒ) ⦅ E / ⟦_⟧' ⦆
+\end{code}
