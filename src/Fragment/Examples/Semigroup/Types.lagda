@@ -1,3 +1,4 @@
+\begin{code}[hidden]
 {-# OPTIONS --without-K --safe #-}
 
 module Fragment.Examples.Semigroup.Types where
@@ -16,7 +17,10 @@ open import Data.Sum using (_⊎_)
 
 ×-semigroup = semigroup→model (×-isSemigroup bijection zero)
 ⊎-semigroup = semigroup→model (⊎-isSemigroup bijection zero)
+\end{code}
 
+%<*types>
+\begin{code}
 ×-assoc₁ : ∀ {A B C : Set} → (A × (B × C)) ↔ ((A × B) × C)
 ×-assoc₁ = fragment SemigroupFrex ×-semigroup
 
@@ -28,3 +32,5 @@ open import Data.Sum using (_⊎_)
 
 ⊎-assoc₂ : ∀ {A B C : Set} → ((A ⊎ B) ⊎ (B ⊎ C)) ↔ (A ⊎ (B ⊎ B) ⊎ C)
 ⊎-assoc₂ = fragment SemigroupFrex ⊎-semigroup
+\end{code}
+%</types>

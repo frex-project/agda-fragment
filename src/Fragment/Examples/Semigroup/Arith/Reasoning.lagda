@@ -1,3 +1,4 @@
+\begin{code}[hidden]
 {-# OPTIONS --without-K --safe #-}
 
 module Fragment.Examples.Semigroup.Arith.Reasoning where
@@ -12,7 +13,10 @@ open import Fragment.Examples.Semigroup.Arith.Base
   ∎
 
 open import Data.Nat.Properties using (*-distribˡ-+)
+\end{code}
 
+%<*reason>
+\begin{code}
 +-inner : ∀ {m n k} → k * (m + 2) + k * (3 + n) ≡ k * (m + 5 + n)
 +-inner {m} {n} {k} = begin
     k * (m + 2) + k * (3 + n)
@@ -21,3 +25,5 @@ open import Data.Nat.Properties using (*-distribˡ-+)
   ≡⟨ cong (k *_) (fragment SemigroupFrex +-semigroup) ⟩
     k * (m + 5 + n)
   ∎
+\end{code}
+%</reason>

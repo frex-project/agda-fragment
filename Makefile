@@ -32,6 +32,9 @@ tex: Trivial.lagda src/Fragment/Algebra/Signature.lagda src/Fragment/Algebra/Alg
 	agda --latex src/Fragment/Equational/Coproduct.lagda
 	agda --latex src/Fragment/Equational/FreeExtension/Base.lagda
 	agda --latex src/Fragment/Equational/FreeExtension/Properties.lagda
+	agda --latex src/Fragment/Examples/CSemigroup/Arith/Functions.lagda
+	agda --latex src/Fragment/Examples/Semigroup/Arith/Reasoning.lagda
+	agda --latex src/Fragment/Examples/Semigroup/Types.lagda
 
 clean:
 	$(RM) -r latex/
