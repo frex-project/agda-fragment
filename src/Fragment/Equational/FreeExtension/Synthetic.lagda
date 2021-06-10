@@ -50,27 +50,27 @@ private
     ∣inl∣ x = atom (sta x)
 
     infix 4 _≈_
-\end{code}
 
-%<*logic>
-\begin{code}
     data _≈_ : T.Carrier → T.Carrier → Set (a ⊔ ℓ₁) where
       refl     : ∀ {x} → x ≈ x
       sym      : ∀ {x y} → x ≈ y → y ≈ x
       trans    : ∀ {x y z} → x ≈ y → y ≈ z → x ≈ z
       inherit  : ∀ {x y} → x ~ y → x ≈ y
+\end{code}
+%<*logic>
+\begin{code}
       evaluate : ∀ {n xs} → (f : ops (Σ Θ) n)
                  → term f (map ∣inl∣ xs) ≈ ∣inl∣ (A ⟦ f ⟧ xs)
+\end{code}
+%</logic>
+\begin{code}[hidden]
       cong     : ∀ {n} → (f : ops (Σ Θ) n)
                  → ∀ {xs ys} → Pointwise _≈_ xs ys
                  → term f xs ≈ term f ys
       axiom    : ∀ {n} → (eq : eqs Θ n) → (θ : Env Terms n)
                  → ∣ inst Terms θ ∣ (proj₁ (Θ ⟦ eq ⟧ₑ))
                    ≈ ∣ inst Terms θ ∣ (proj₂ (Θ ⟦ eq ⟧ₑ))
-\end{code}
-%</logic>
 
-\begin{code}[hidden]
     ≈-isEquivalence : IsEquivalence _≈_
     ≈-isEquivalence = record { refl  = refl
                              ; sym   = sym
