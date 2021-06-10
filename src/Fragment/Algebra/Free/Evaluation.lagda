@@ -141,7 +141,7 @@ ignore _ = record { ∣_∣      = λ ()
 \begin{code}
 inst : ∀ {n} (A : Algebra {a} {ℓ₁}) → Env A n → F n ⟿ A
 \end{code}
-%<*inst>
+%</inst>
 \begin{code}
 inst {n = n} A θ = subst A (ignore ∥ A ∥/≈) θ
 \end{code}

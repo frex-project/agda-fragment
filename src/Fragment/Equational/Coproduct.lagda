@@ -31,7 +31,9 @@ module _
                → ∥ A ∥ₐ ⟿ ∥ X ∥ₐ
                → ∥ B ∥ₐ ⟿ ∥ X ∥ₐ
                → ∥ A+B ∥ₐ ⟿ ∥ X ∥ₐ
-
+\end{code}
+%</coproduct>
+\begin{code}[hidden]
       commute₁ : ∀ {d ℓ₄} {X : Model {d} {ℓ₄}}
                  → {f : ∥ A ∥ₐ ⟿ ∥ X ∥ₐ}
                  → {g : ∥ B ∥ₐ ⟿ ∥ X ∥ₐ}
@@ -50,4 +52,3 @@ module _
                   → h ⊙ inr ≗ g
                   → X [ f , g ] ≗ h
 \end{code}
-%</coproduct>

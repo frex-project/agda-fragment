@@ -37,10 +37,11 @@ module _ (S : Setoid a ℓ) where
     field
       isAlgebra : IsAlgebra S
       models    : Models (algebra S isAlgebra)
-
-    open IsAlgebra isAlgebra public
 \end{code}
 %</ismodel>
+\begin{code}
+    open IsAlgebra isAlgebra public
+\end{code}
 
 %<*model>
 \begin{code}

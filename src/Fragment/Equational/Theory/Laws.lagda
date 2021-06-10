@@ -71,8 +71,6 @@ module _ where
 
   assoc : ops Σ 2 → Eq Σ 3
   assoc • =
-      (⟨ a ⟩ ⟨ • ⟩₂ ⟨ b ⟩) ⟨ • ⟩₂ ⟨ c ⟩
-    ,
-      ⟨ a ⟩ ⟨ • ⟩₂ (⟨ b ⟩ ⟨ • ⟩₂ ⟨ c ⟩)
+      (⟨ a ⟩ ⟨ • ⟩₂ ⟨ b ⟩) ⟨ • ⟩₂ ⟨ c ⟩ , ⟨ a ⟩ ⟨ • ⟩₂ (⟨ b ⟩ ⟨ • ⟩₂ ⟨ c ⟩)
 \end{code}
 %</laws>

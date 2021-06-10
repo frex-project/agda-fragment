@@ -39,10 +39,10 @@ module _ (S : Setoid a ℓ) where
 
 %<*isalgebra>
 \begin{code}
-  record IsAlgebra : Set (a ⊔ ℓ) where
-    field
-      ⟦_⟧     : Interpretation
-      ⟦⟧-cong : Congruence ⟦_⟧
+record IsAlgebra (S : Setoid a ℓ) : Set (a ⊔ ℓ) where
+  field
+    ⟦_⟧     : Interpretation S
+    ⟦⟧-cong : Congruence S ⟦_⟧
 \end{code}
 %</isalgebra>
 
