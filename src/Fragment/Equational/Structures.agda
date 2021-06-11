@@ -1,4 +1,4 @@
-{-# OPTIONS --without-K --safe #-}
+{-# OPTIONS --without-K --exact-split --safe #-}
 
 module Fragment.Equational.Structures where
 

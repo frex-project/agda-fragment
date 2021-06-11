@@ -1,4 +1,4 @@
-{-# OPTIONS --without-K --safe #-}
+{-# OPTIONS --without-K --exact-split --safe #-}
 
 open import Fragment.Algebra.Signature
 
@@ -26,17 +26,17 @@ mutual
   extend : ∀ {Σ O} → {A : Set a}
            → Term Σ A → Term (Σ ⦅ O ⦆) A
   extend (atom x)    = atom x
-  extend (term f xs) = term (old f) (map-extend xs)
+  extend (term f xs) = term (oldₒ f) (map-extend xs)
 
-forget : ∀ {Σ O} → Algebra (Σ ⦅ O ⦆) {a} {ℓ} → Algebra Σ {a} {ℓ}
-forget {Σ = Σ} A = record { ∥_∥/≈           = ∥ A ∥/≈
-                          ; ∥_∥/≈-isAlgebra = forget-isAlgebra
-                          }
+forgetₒ : ∀ {Σ O} → Algebra (Σ ⦅ O ⦆) {a} {ℓ} → Algebra Σ {a} {ℓ}
+forgetₒ {Σ = Σ} A = record { ∥_∥/≈           = ∥ A ∥/≈
+                           ; ∥_∥/≈-isAlgebra = forget-isAlgebra
+                           }
   where forget-⟦_⟧ : Interpretation Σ ∥ A ∥/≈
-        forget-⟦ f ⟧ x = A ⟦ old f ⟧ x
+        forget-⟦ f ⟧ x = A ⟦ oldₒ f ⟧ x
 
         forget-⟦⟧-cong : Congruence Σ ∥ A ∥/≈ forget-⟦_⟧
-        forget-⟦⟧-cong f x = (A ⟦ old f ⟧-cong) x
+        forget-⟦⟧-cong f x = (A ⟦ oldₒ f ⟧-cong) x
 
         forget-isAlgebra : IsAlgebra Σ ∥ A ∥/≈
         forget-isAlgebra = record { ⟦_⟧     = forget-⟦_⟧

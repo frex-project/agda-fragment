@@ -1,4 +1,4 @@
-{-# OPTIONS --without-K --safe #-}
+{-# OPTIONS --without-K --exact-split --safe #-}
 
 module Fragment.Equational.Theory.Base where
 
@@ -27,8 +27,8 @@ record Theory : Set₁ where
 open Theory public
 
 data ExtendedEq (Θ : Theory) (E : ℕ → Set) : ℕ → Set where
-  new : ∀ {n} → E n → ExtendedEq Θ E n
-  old : ∀ {n} → eqs Θ n → ExtendedEq Θ E n
+  newₑ : ∀ {n} → E n → ExtendedEq Θ E n
+  oldₑ : ∀ {n} → eqs Θ n → ExtendedEq Θ E n
 
 _⦅_⦆ₒ : (Θ : Theory) → (O : ℕ → Set) → Theory
 Θ ⦅ O ⦆ₒ = record { Σ     = (Σ Θ) ⦅ O ⦆
@@ -45,8 +45,8 @@ _⦅_/_⦆ : (Θ : Theory)
                         ; _⟦_⟧ₑ = withE
                         }
   where withE : ∀ {n} → ExtendedEq Θ E n → Eq (Σ Θ) n
-        withE (new eq) = ⟦ eq ⟧'
-        withE (old eq) = Θ ⟦ eq ⟧ₑ
+        withE (newₑ eq) = ⟦ eq ⟧'
+        withE (oldₑ eq) = Θ ⟦ eq ⟧ₑ
 
 _⦅_∣_/_⦆ : (Θ : Theory)
            → (O : ℕ → Set)

@@ -1,4 +1,4 @@
-{-# OPTIONS --without-K --safe #-}
+{-# OPTIONS --without-K --exact-split --safe #-}
 
 module Fragment.Algebra.Signature where
 
@@ -11,8 +11,8 @@ record Signature : Set₁ where
 open Signature public
 
 data ExtendedOp (Σ : Signature) (O : ℕ → Set) : ℕ → Set where
-  new : ∀ {n} → O n → ExtendedOp Σ O n
-  old : ∀ {n} → ops Σ n → ExtendedOp Σ O n
+  newₒ : ∀ {n} → O n → ExtendedOp Σ O n
+  oldₒ : ∀ {n} → ops Σ n → ExtendedOp Σ O n
 
 _⦅_⦆ : (Σ : Signature) → (ℕ → Set) → Signature
 Σ ⦅ O ⦆ = record { ops = ExtendedOp Σ O }
