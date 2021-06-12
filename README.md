@@ -27,7 +27,7 @@ For some more examples, see [src/Fragment/Examples](https://github.com/frex-proj
 
 For a full description see the following:
 
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Proof Synthesis with free Extensions in Intensional Type Theory (link to come)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Proof Synthesis with Free Extensions in Intensional Type Theory (link to come)<br/>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Nathan Corbyn<br/>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Master's Thesis 2020<br/>
 
