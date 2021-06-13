@@ -14,7 +14,7 @@ hello_world = fragment CSemigroupFrex +-csemigroup
 
 The tactic builds on a library supporting the presentation of arbitrary finitary, mono-sorted (first-order)
 equational-theories and can automatically derive specifications for solvers for their class of models
-([_free extensions_](https://github.com/frex-project/agda-fragment/blob/main/src/Fragment/Equational/FreeExtensions/Base.agda)).
+([_free extensions_](https://github.com/frex-project/agda-fragment/blob/main/src/Fragment/Equational/FreeExtension/Base.agda)).
 The tactic is compatible with _any_ free extension making it very flexible: if you have an interesting algebraic structure,
 you can write a solver and immediately leverage the tactic.
 
