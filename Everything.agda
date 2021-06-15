@@ -45,7 +45,7 @@ import Fragment.Extensions.CSemigroup
 import Fragment.Extensions.CSemigroup.Base
 import Fragment.Extensions.CSemigroup.Monomial
 import Fragment.Extensions.CSemigroup.Nat
-import Fragment.Extensions.Combinators
+-- import Fragment.Extensions.Combinators
 import Fragment.Extensions.Semigroup
 import Fragment.Prelude
 import Fragment.Setoid.Morphism
