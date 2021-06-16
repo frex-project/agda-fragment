@@ -35,3 +35,5 @@ For a full description see the following:
 
 It's also worth checking out the [other libraries](https://github.com/frex-project/) developed as part of the
 [Frex Project](https://www.cl.cam.ac.uk/~jdy22/projects/frex/), and our publications.
+
+[![Ubuntu build](https://github.com/frex-project/agda-fragment/actions/workflows/ci-ubuntu.yml/badge.svg)](https://github.com/frex-project/agda-fragment/actions/workflows/ci-ubuntu.yml)
