@@ -25,6 +25,8 @@ you can write a solver and immediately leverage the tactic.
 
 For some more examples, see [src/Fragment/Examples](https://github.com/frex-project/agda-fragment/blob/main/src/Fragment/Examples).
 
+For a browsable overview of the interface, see the [API documentation](https://frex-project.github.io/agda-fragment/Everything.html)
+
 For a full description see the following:
 
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Proof Synthesis with Free Extensions in Intensional Type Theory (link to come)<br/>
