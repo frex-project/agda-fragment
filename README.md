@@ -29,9 +29,10 @@ For a browsable overview of the interface, see the [API documentation](https://f
 
 For a full description see the following:
 
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Proof Synthesis with Free Extensions in Intensional Type Theory (link to come)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Proof Synthesis with Free Extensions in Intensional Type Theory<br/>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Nathan Corbyn<br/>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Master's Thesis 2020<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[[bibtex](https://nathancorbyn.com/bib/proof_synthesis.bib)] [[pdf](https://nathancorbyn.com/pdf/proof_synthesis.pdf)]<br/>
 
 It's also worth checking out the [other libraries](https://github.com/frex-project/) developed as part of the
 [Frex Project](https://www.cl.cam.ac.uk/~jdy22/projects/frex/), and our publications.
