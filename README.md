@@ -31,7 +31,7 @@ For a full description see the following:
 
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Proof Synthesis with Free Extensions in Intensional Type Theory<br/>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Nathan Corbyn<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Master's Thesis 2020<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Master's Thesis 2021<br/>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[[bibtex](https://nathancorbyn.com/bib/proof_synthesis.bib)] [[pdf](https://nathancorbyn.com/pdf/proof_synthesis.pdf)]<br/>
 
 It's also worth checking out the [other libraries](https://github.com/frex-project/) developed as part of the
